@@ -1,26 +1,184 @@
-@import "tailwindcss";
-
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --vbnb-bg: #fafaf8;
+  --vbnb-surface: #ffffff;
+  --vbnb-surface-muted: #f4f4f0;
+  --vbnb-border: #e8e8e2;
+  --vbnb-border-strong: #dcddd6;
+  --vbnb-text: #161616;
+  --vbnb-text-secondary: #5f625d;
+  --vbnb-text-muted: #8b8d87;
+  --vbnb-primary: #536b58;
+  --vbnb-primary-dark: #3d5142;
+  --vbnb-primary-soft: #eaf0e8;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html {
+  scroll-behavior: smooth;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+html,
+body {
+  min-height: 100%;
+  background: var(--vbnb-bg);
+  color: var(--vbnb-text);
+  font-family: var(--font-montserrat), Montserrat, system-ui, -apple-system,
+    sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--vbnb-primary);
+  outline-offset: 2px;
+}
+
+.vbnb-asset-card:hover img {
+  transform: scale(1.02);
+}
+
+.vbnb-asset-card img {
+  transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes vbnb-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes vbnb-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.vbnb-landing-fade-up {
+  animation: vbnb-fade-up 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.vbnb-landing-fade-up-delay {
+  animation: vbnb-fade-up 700ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+}
+
+.vbnb-landing-fade-in {
+  animation: vbnb-fade-in 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.vbnb-landing-section {
+  scroll-margin-top: 88px;
+}
+
+.vbnb-landing-hero {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+
+.vbnb-landing-hero-image {
+  position: relative;
+  height: 220px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.vbnb-landing-hero-ctas {
+  width: 100%;
+}
+
+.vbnb-landing-hero-ctas > * {
+  flex: 1 1 100%;
+}
+
+.vbnb-landing-hero-fade {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .vbnb-landing-hero {
+    min-height: clamp(560px, 78vh, 760px);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0;
+  }
+
+  .vbnb-landing-hero-copy {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .vbnb-landing-hero-image {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 52%;
+    height: 100%;
+    border-radius: 0 0 0 16px;
+  }
+
+  .vbnb-landing-hero-fade {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      #fafaf8 0%,
+      rgba(250, 250, 248, 0.82) 18%,
+      rgba(250, 250, 248, 0) 48%
+    );
+  }
+
+  .vbnb-landing-hero-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin-top: 8px;
+  }
+
+  .vbnb-landing-hero-ctas > * {
+    flex: 0 0 auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .vbnb-landing-fade-up,
+  .vbnb-landing-fade-up-delay,
+  .vbnb-landing-fade-in {
+    animation: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .vbnb-villa-search-grid {
+    grid-template-columns: 1fr 1.7fr auto !important;
+    gap: 0 !important;
+  }
+
+  .vbnb-villa-search-grid > * {
+    padding-inline: 16px;
+  }
+
+  .vbnb-villa-search-grid > *:first-child {
+    padding-left: 8px;
+  }
+
+  .vbnb-villa-search-divider {
+    border-left: 1px solid var(--vbnb-border);
+  }
 }
