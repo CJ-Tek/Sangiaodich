@@ -47,7 +47,7 @@ function redirectWithSession(
 export async function middleware(request: NextRequest) {
   const startedAt = Date.now();
   const sessionStartedAt = Date.now();
-  const { supabase, user, supabaseResponse } = await updateSession(request);
+  const { supabase, userId, supabaseResponse } = await updateSession(request);
   const sessionMs = Date.now() - sessionStartedAt;
   const path = request.nextUrl.pathname;
 
@@ -66,7 +66,7 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse;
   }
 
-  if (!user) {
+  if (!userId) {
     logMiddlewarePerf({
       path,
       outcome: 'redirect_login',
@@ -83,7 +83,7 @@ export async function middleware(request: NextRequest) {
   const { data: profile } = await supabase
     .from('profiles')
     .select('role, deleted_at')
-    .eq('id', user.id)
+    .eq('id', userId)
     .maybeSingle();
   const profileMs = Date.now() - profileStartedAt;
 

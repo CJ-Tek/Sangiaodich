@@ -36,33 +36,33 @@ export default async function SaleHomePage({
   const { ym: ymParam } = await searchParams;
   const period = parseYearMonth(ymParam);
   const profile = await getSessionProfile();
-  const active = await saleHasActiveSub(profile!.id);
-  const discountPercent = active
-    ? await resolveSaleCostDiscountPercent(profile!.id)
-    : 0;
   const admin = await createClient();
 
-  const { count: leadCount } = await admin
-    .from('lead_notifications')
-    .select('*', { count: 'exact', head: true })
-    .eq('sale_id', profile!.id)
-    .is('read_at', null);
-
-  const { data: upcoming } = await admin
-    .from('bookings')
-    .select('id, status, check_in, check_out, assets(title)')
-    .eq('sale_id', profile!.id)
-    .in('status', ['PENDING', 'CONFIRMED', 'CHECKED_IN'])
-    .gte('check_in', new Date().toISOString().slice(0, 10))
-    .order('check_in', { ascending: true })
-    .limit(5);
-
+  // Everything below depends only on the profile id, so it runs as one wave
+  // instead of a chain of round-trips to the database.
   const [
+    active,
+    { count: leadCount },
+    { data: upcoming },
     { data: expectedRows },
     { data: periodCheckedOut },
     { count: lifetimeSuccessful },
     { data: sub },
   ] = await Promise.all([
+    saleHasActiveSub(profile!.id),
+    admin
+      .from('lead_notifications')
+      .select('*', { count: 'exact', head: true })
+      .eq('sale_id', profile!.id)
+      .is('read_at', null),
+    admin
+      .from('bookings')
+      .select('id, status, check_in, check_out, assets(title)')
+      .eq('sale_id', profile!.id)
+      .in('status', ['PENDING', 'CONFIRMED', 'CHECKED_IN'])
+      .gte('check_in', new Date().toISOString().slice(0, 10))
+      .order('check_in', { ascending: true })
+      .limit(5),
     admin
       .from('bookings')
       .select('sale_margin_snapshot')
@@ -93,16 +93,19 @@ export default async function SaleHomePage({
   const actualRevenue = sumMargin(periodCheckedOut);
   const periodSuccessful = periodCheckedOut?.length || 0;
 
-  const { data: assets } = active
-    ? await admin
-        .from('assets')
-        .select(
-          'id, slug, title, location, capacity, bedrooms, bathrooms, property_type, asset_images(url, sort_order), asset_costs(cost_weekday, cost_weekend)'
-        )
-        .eq('status', 'ACTIVE')
-        .order('created_at', { ascending: false })
-        .limit(3)
-    : { data: [] as never[] };
+  const [discountPercent, { data: assets }] = active
+    ? await Promise.all([
+        resolveSaleCostDiscountPercent(profile!.id),
+        admin
+          .from('assets')
+          .select(
+            'id, slug, title, location, capacity, bedrooms, bathrooms, property_type, asset_images(url, sort_order), asset_costs(cost_weekday, cost_weekend)'
+          )
+          .eq('status', 'ACTIVE')
+          .order('created_at', { ascending: false })
+          .limit(3),
+      ])
+    : ([0, { data: [] as never[] }] as const);
 
   const periodLabel = `Tháng ${period.month}/${period.year}`;
 

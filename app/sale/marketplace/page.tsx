@@ -18,9 +18,6 @@ export default async function SaleMarketplacePage({
   const { q } = await searchParams;
   const profile = await getSessionProfile();
   const active = await saleHasActiveSub(profile!.id);
-  const discountPercent = active
-    ? await resolveSaleCostDiscountPercent(profile!.id)
-    : 0;
   const admin = await createClient();
 
   if (!active) {
@@ -34,13 +31,20 @@ export default async function SaleMarketplacePage({
     );
   }
 
-  const { data: rows } = await admin
-    .from('assets')
-    .select(
-      'id, slug, title, location, capacity, bedrooms, bathrooms, property_type, asset_images(url, sort_order), asset_costs(cost_weekday, cost_weekend)'
-    )
-    .eq('status', 'ACTIVE')
-    .order('created_at', { ascending: false });
+  // Only the first image is rendered, so let the database pick it instead of
+  // shipping every image row for every asset.
+  const [discountPercent, { data: rows }] = await Promise.all([
+    resolveSaleCostDiscountPercent(profile!.id),
+    admin
+      .from('assets')
+      .select(
+        'id, slug, title, location, capacity, bedrooms, bathrooms, property_type, asset_images(url, sort_order), asset_costs(cost_weekday, cost_weekend)'
+      )
+      .eq('status', 'ACTIVE')
+      .order('created_at', { ascending: false })
+      .order('sort_order', { ascending: true, foreignTable: 'asset_images' })
+      .limit(1, { foreignTable: 'asset_images' }),
+  ]);
 
   const assets = (rows || []).filter((a) =>
     matchesAssetSearch(q || '', {
@@ -91,7 +95,6 @@ export default async function SaleMarketplacePage({
               url: string;
               sort_order: number;
             }[];
-            images.sort((x, y) => x.sort_order - y.sort_order);
             const costs = a.asset_costs as unknown as {
               cost_weekday: number;
               cost_weekend: number;

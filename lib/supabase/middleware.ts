@@ -25,9 +25,12 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Do not run code between createServerClient and getClaims(): it also refreshes
+  // the auth cookies, and reordering makes logout bugs very hard to trace.
+  // getClaims verifies the token locally against the cached JWKS because the
+  // project signs with an asymmetric key, so this costs no Auth round-trip.
+  const { data: claimsData } = await supabase.auth.getClaims();
+  const userId = claimsData?.claims.sub ?? null;
 
-  return { supabase, user, supabaseResponse };
+  return { supabase, userId, supabaseResponse };
 }
