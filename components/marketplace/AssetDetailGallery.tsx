@@ -120,6 +120,7 @@ function MobileGallery({
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
+  const multi = urls.length > 1;
 
   useEffect(() => {
     const el = trackRef.current;
@@ -133,6 +134,23 @@ function MobileGallery({
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
   }, []);
+
+  function goTo(index: number) {
+    const el = trackRef.current;
+    if (!el) return;
+    const next = (index + urls.length) % urls.length;
+    el.scrollTo({ left: next * el.clientWidth, behavior: 'smooth' });
+  }
+
+  const navBtnStyle: CSSProperties = {
+    position: 'absolute',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    zIndex: 3,
+    background: 'rgba(22,22,22,0.55)',
+    color: '#fff',
+    border: '1px solid rgba(255,255,255,0.12)',
+  };
 
   return (
     <Box
@@ -182,24 +200,54 @@ function MobileGallery({
         ))}
       </Box>
 
-      {urls.length > 1 ? (
-        <Text
-          size="xs"
-          fw={600}
-          style={{
-            position: 'absolute',
-            right: 12,
-            bottom: 12,
-            zIndex: 2,
-            background: 'rgba(22,22,22,0.72)',
-            color: '#fff',
-            padding: '4px 10px',
-            borderRadius: radius.full,
-            letterSpacing: '0.02em',
-          }}
-        >
-          {active + 1} / {urls.length}
-        </Text>
+      {multi ? (
+        <>
+          <ActionIcon
+            size="lg"
+            radius="xl"
+            variant="filled"
+            aria-label="Ảnh trước"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              goTo(active - 1);
+            }}
+            style={{ ...navBtnStyle, left: 10 }}
+          >
+            <ChevronLeftIcon />
+          </ActionIcon>
+          <ActionIcon
+            size="lg"
+            radius="xl"
+            variant="filled"
+            aria-label="Ảnh sau"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              goTo(active + 1);
+            }}
+            style={{ ...navBtnStyle, right: 10 }}
+          >
+            <ChevronRightIcon />
+          </ActionIcon>
+          <Text
+            size="xs"
+            fw={600}
+            style={{
+              position: 'absolute',
+              right: 12,
+              bottom: 12,
+              zIndex: 2,
+              background: 'rgba(22,22,22,0.72)',
+              color: '#fff',
+              padding: '4px 10px',
+              borderRadius: radius.full,
+              letterSpacing: '0.02em',
+            }}
+          >
+            {active + 1} / {urls.length}
+          </Text>
+        </>
       ) : null}
 
       <style>{`
