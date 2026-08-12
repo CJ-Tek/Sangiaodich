@@ -3,8 +3,8 @@ import { SubscriptionShell } from '@/components/auth/SubscriptionShell';
 import { getSessionProfile } from '@/lib/auth/session';
 import {
   getLatestSubscription,
-  profileHasActiveSubscription,
 } from '@/lib/engines/subscription-access';
+import { isSubscriptionActive } from '@/lib/engines/subscription';
 import { createClient } from '@/lib/supabase/server';
 import { mapPaymentInfo } from '@/lib/platform/payment-info';
 
@@ -14,10 +14,13 @@ export default async function SaleLayout({
   children: React.ReactNode;
 }) {
   const profile = await getSessionProfile();
-  const active = profile
-    ? await profileHasActiveSubscription(profile.id)
-    : false;
   const sub = profile ? await getLatestSubscription(profile.id) : null;
+  const active = sub
+    ? isSubscriptionActive({
+        status: sub.status,
+        periodEnd: sub.period_end,
+      })
+    : false;
 
   const admin = await createClient();
   const { data: fees } = await admin

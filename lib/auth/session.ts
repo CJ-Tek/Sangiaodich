@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import type { UserRole } from '@/lib/types';
 
@@ -11,33 +12,40 @@ export type SessionProfile = {
   national_id: string | null;
 };
 
-export async function getSessionProfile(): Promise<SessionProfile | null> {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+/**
+ * Memoized per request: layout, page and nested components all resolve the
+ * signed-in profile, and each uncached call costs an Auth round-trip plus a
+ * `profiles` query.
+ */
+export const getSessionProfile = cache(
+  async (): Promise<SessionProfile | null> => {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return null;
 
-  const { data } = await supabase
-    .from('profiles')
-    .select(
-      'id, role, phone, email, full_name, avatar_url, national_id, deleted_at'
-    )
-    .eq('id', user.id)
-    .maybeSingle();
+    const { data } = await supabase
+      .from('profiles')
+      .select(
+        'id, role, phone, email, full_name, avatar_url, national_id, deleted_at'
+      )
+      .eq('id', user.id)
+      .maybeSingle();
 
-  if (!data || data.deleted_at) return null;
+    if (!data || data.deleted_at) return null;
 
-  return {
-    id: data.id,
-    role: data.role,
-    phone: data.phone,
-    email: data.email,
-    full_name: data.full_name,
-    avatar_url: data.avatar_url,
-    national_id: data.national_id,
-  } as SessionProfile;
-}
+    return {
+      id: data.id,
+      role: data.role,
+      phone: data.phone,
+      email: data.email,
+      full_name: data.full_name,
+      avatar_url: data.avatar_url,
+      national_id: data.national_id,
+    } as SessionProfile;
+  }
+);
 
 export async function requireRole(roles: UserRole[]): Promise<SessionProfile> {
   const profile = await getSessionProfile();

@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server';
-import { getSessionProfile } from '@/lib/auth/session';
+import { createClient, createServiceClient } from '@/lib/supabase/server';
+import { getSessionRoleHint } from '@/lib/auth/session-role';
 import { LandingHeader } from '@/components/landing/LandingHeader';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -9,50 +9,109 @@ import { VillaSearch } from '@/components/landing/VillaSearch';
 import { parseTagSearchParam } from '@/config/asset-tags';
 import { landingContainer } from '@/components/landing/landing-media';
 import { SimpleGrid, Box } from '@mantine/core';
+import { unstable_cache } from 'next/cache';
 
 export const revalidate = 60;
+
+const getMarketplaceAssetsCached = unstable_cache(
+  async () => {
+    const admin = createServiceClient();
+    const result = await admin
+      .from('assets')
+      .select(
+        'id, slug, title, location, capacity, bedrooms, bathrooms, property_type, asset_images(url, sort_order)'
+      )
+      .eq('status', 'ACTIVE')
+      .order('created_at', { ascending: false })
+      .order('sort_order', { ascending: true, foreignTable: 'asset_images' })
+      .limit(1, { foreignTable: 'asset_images' });
+
+    return result.data || [];
+  },
+  ['marketplace-assets-default-v1'],
+  { revalidate: 60 }
+);
 
 export default async function MarketplacePage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; tags?: string | string[] }>;
 }) {
+  const startedAt = Date.now();
   const { q, tags: tagsParam } = await searchParams;
   const selectedTags = parseTagSearchParam(tagsParam);
-  const profile = await getSessionProfile();
-  const admin = await createClient();
-
-  let query = admin
-    .from('assets')
-    .select(
-      'id, slug, title, location, capacity, bedrooms, bathrooms, property_type, asset_images(url, sort_order)'
-    )
-    .eq('status', 'ACTIVE')
-    .order('created_at', { ascending: false });
-
   const keyword = q?.trim();
-  if (keyword) {
-    query = query.or(`title.ilike.%${keyword}%,location.ilike.%${keyword}%`);
-  }
-  if (selectedTags.length) {
-    query = query.contains('tags', selectedTags);
-  }
+  const roleStartedAt = Date.now();
+  const rolePromise = getSessionRoleHint().then((value) => ({
+    value,
+    ms: Date.now() - roleStartedAt,
+  }));
+  const assetsStartedAt = Date.now();
+  const assetsPromise =
+    !keyword && selectedTags.length === 0
+      ? getMarketplaceAssetsCached().then((value) => ({
+          value,
+          ms: Date.now() - assetsStartedAt,
+        }))
+      : (async () => {
+          const admin = await createClient();
+          let query = admin
+            .from('assets')
+            .select(
+              'id, slug, title, location, capacity, bedrooms, bathrooms, property_type, asset_images(url, sort_order)'
+            )
+            .eq('status', 'ACTIVE')
+            .order('created_at', { ascending: false })
+            .order('sort_order', {
+              ascending: true,
+              foreignTable: 'asset_images',
+            })
+            .limit(1, { foreignTable: 'asset_images' });
 
-  const { data: assets } = await query;
+          if (keyword) {
+            query = query.or(
+              `title.ilike.%${keyword}%,location.ilike.%${keyword}%`
+            );
+          }
+          if (selectedTags.length) {
+            query = query.contains('tags', selectedTags);
+          }
+
+          const result = await query;
+          return {
+            value: result.data || [],
+            ms: Date.now() - assetsStartedAt,
+          };
+        })();
+
+  const [roleData, assetsData] = await Promise.all([rolePromise, assetsPromise]);
+  const role = roleData.value;
+  const assets = assetsData.value;
+  console.info(
+    `[perf] ${JSON.stringify({
+      scope: 'marketplace',
+      roleMs: roleData.ms,
+      assetsMs: assetsData.ms,
+      assetsCount: assets.length,
+      keyword: keyword ? 'yes' : 'no',
+      tagsCount: selectedTags.length,
+      totalMs: Date.now() - startedAt,
+    })}`
+  );
 
   const appHref =
-    profile?.role === 'ADMIN'
+    role === 'ADMIN'
       ? '/admin'
-      : profile?.role === 'OWNER'
+      : role === 'OWNER'
         ? '/owner'
-        : profile?.role === 'SALE'
+        : role === 'SALE'
           ? '/sale'
           : '/marketplace';
 
   return (
     <>
       <LandingHeader
-        isLoggedIn={!!profile}
+        isLoggedIn={!!role}
         appHref={appHref}
         solid
       />
@@ -87,7 +146,6 @@ export default async function MarketplacePage({
                 url: string;
                 sort_order: number;
               }[];
-              images.sort((x, y) => x.sort_order - y.sort_order);
               return (
                 <AssetCard
                   key={a.id}

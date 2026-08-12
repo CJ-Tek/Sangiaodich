@@ -25,6 +25,26 @@ export function DashboardSkeleton() {
   );
 }
 
+/**
+ * Route-level fallback shared by the role sections. Kept neutral (header plus
+ * blocks) because one boundary covers both dashboards and list pages.
+ */
+export function RouteSkeleton() {
+  return (
+    <Stack gap="xl">
+      <Stack gap={6}>
+        <Skeleton height={32} width={220} radius="sm" />
+        <Skeleton height={14} width={320} radius="sm" />
+      </Stack>
+      <Stack gap="sm">
+        <Skeleton height={72} radius={radius.lg} />
+        <Skeleton height={72} radius={radius.lg} />
+        <Skeleton height={72} radius={radius.lg} />
+      </Stack>
+    </Stack>
+  );
+}
+
 export function PageSkeleton() {
   return (
     <Box

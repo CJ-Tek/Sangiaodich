@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { createServiceClient } from '@/lib/supabase/server';
 import { isSubscriptionActive } from '@/lib/engines/subscription';
 import { todayDateOnly } from '@/lib/dates';
@@ -9,19 +10,23 @@ export type LatestSubscription = {
   amount: number;
 } | null;
 
-export async function getLatestSubscription(
-  profileId: string
-): Promise<LatestSubscription> {
-  const admin = createServiceClient();
-  const { data } = await admin
-    .from('subscriptions')
-    .select('status, period_start, period_end, amount')
-    .eq('profile_id', profileId)
-    .order('period_end', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  return data ?? null;
-}
+/**
+ * Memoized per request: role layouts read the subscription for the banner while
+ * the page below re-checks it as an access guard.
+ */
+export const getLatestSubscription = cache(
+  async (profileId: string): Promise<LatestSubscription> => {
+    const admin = createServiceClient();
+    const { data } = await admin
+      .from('subscriptions')
+      .select('status, period_start, period_end, amount')
+      .eq('profile_id', profileId)
+      .order('period_end', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    return data ?? null;
+  }
+);
 
 export async function profileHasActiveSubscription(
   profileId: string
