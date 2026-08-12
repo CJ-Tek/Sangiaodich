@@ -25,7 +25,10 @@ import {
   IconUsers,
 } from '@/components/shells/NavIcons';
 
-const desktopSections = [
+const desktopSections: {
+  label?: string;
+  items: { label: string; href: string }[];
+}[] = [
   {
     items: [
       { label: 'Home', href: '/sale' },

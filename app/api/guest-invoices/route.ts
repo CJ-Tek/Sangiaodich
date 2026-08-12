@@ -41,11 +41,13 @@ export async function POST(request: Request) {
       },
       INSERT_FAILED: { status: 500, message: result.message || 'Không tạo được invoice' },
     };
-    const meta = messages[result.error] || {
-      status: 500,
-      message: 'Không tạo được invoice',
-    };
-    return NextResponse.json(fail(result.error, meta.message), {
+    const errorCode = result.error;
+    const meta =
+      (errorCode ? messages[errorCode] : undefined) || {
+        status: 500,
+        message: 'Không tạo được invoice',
+      };
+    return NextResponse.json(fail(errorCode ?? 'UNKNOWN', meta.message), {
       status: meta.status,
     });
   }

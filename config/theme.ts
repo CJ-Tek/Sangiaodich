@@ -21,11 +21,9 @@ export const theme = createTheme({
   colors: {
     vbnbGreen: primary,
   },
-  fontFamily:
-    'var(--font-montserrat), Montserrat, system-ui, -apple-system, sans-serif',
+  fontFamily: 'Montserrat, system-ui, -apple-system, sans-serif',
   headings: {
-    fontFamily:
-      'var(--font-montserrat), Montserrat, system-ui, -apple-system, sans-serif',
+    fontFamily: 'Montserrat, system-ui, -apple-system, sans-serif',
     fontWeight: '600',
   },
   defaultRadius: 'md',
