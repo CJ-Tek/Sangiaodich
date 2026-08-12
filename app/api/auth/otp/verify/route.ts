@@ -91,6 +91,10 @@ export async function POST(request: Request) {
       );
     }
     role = 'GUEST';
+    // Ensure profile role matches app_metadata even if insert trigger raced.
+    await admin.rpc('sync_profile_role_from_auth', {
+      p_user_id: created.user.id,
+    });
     await admin.from('guest_membership_states').upsert({
       guest_id: created.user.id,
       current_tier_id: null,

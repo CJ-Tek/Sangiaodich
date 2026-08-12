@@ -126,6 +126,19 @@ export async function POST(request: Request) {
 
   const userId = created.user.id;
 
+  // GoTrue often applies app_metadata via UPDATE after INSERT; the insert
+  // trigger may have created profiles.role=GUEST. Sync from auth metadata.
+  const { error: roleSyncError } = await admin.rpc(
+    'sync_profile_role_from_auth',
+    { p_user_id: userId }
+  );
+  if (roleSyncError) {
+    return NextResponse.json(
+      fail('ROLE_SYNC_FAILED', roleSyncError.message),
+      { status: 500 }
+    );
+  }
+
   // Consume OTP so it cannot be reused
   await admin.from('dev_otp_codes').delete().eq('phone', phone);
 

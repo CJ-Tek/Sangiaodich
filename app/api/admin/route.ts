@@ -71,25 +71,29 @@ export async function PATCH(request: Request) {
   }
 
   if (action === 'update_fees') {
+    // Upsert: bảng singleton (id=1) có thể chưa có row nếu seed chưa chạy.
     const { data, error } = await db
       .from('platform_fee_settings')
-      .update({
-        payment_bank_name: String(body.paymentBankName || '').trim() || null,
-        payment_account_name:
-          String(body.paymentAccountName || '').trim() || null,
-        payment_account_number:
-          String(body.paymentAccountNumber || '').trim() || null,
-        payment_qr_image_url:
-          String(body.paymentQrImageUrl || '').trim() || null,
-        payment_transfer_note:
-          String(body.paymentTransferNote || '').trim() || null,
-        payment_contact: String(body.paymentContact || '').trim() || null,
-        payment_vietqr_bank:
-          String(body.paymentVietqrBank || '').trim() || null,
-        updated_at: new Date().toISOString(),
-        updated_by: adminProfile.id,
-      })
-      .eq('id', 1)
+      .upsert(
+        {
+          id: 1,
+          payment_bank_name: String(body.paymentBankName || '').trim() || null,
+          payment_account_name:
+            String(body.paymentAccountName || '').trim() || null,
+          payment_account_number:
+            String(body.paymentAccountNumber || '').trim() || null,
+          payment_qr_image_url:
+            String(body.paymentQrImageUrl || '').trim() || null,
+          payment_transfer_note:
+            String(body.paymentTransferNote || '').trim() || null,
+          payment_contact: String(body.paymentContact || '').trim() || null,
+          payment_vietqr_bank:
+            String(body.paymentVietqrBank || '').trim() || null,
+          updated_at: new Date().toISOString(),
+          updated_by: adminProfile.id,
+        },
+        { onConflict: 'id' }
+      )
       .select('*')
       .single();
     if (error) {

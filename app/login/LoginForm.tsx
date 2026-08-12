@@ -14,7 +14,7 @@ import {
   Title,
   UnstyledButton,
 } from '@mantine/core';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { colors, radius } from '@/config/design-tokens';
 
@@ -44,8 +44,17 @@ const ROLE_OPTIONS: {
   },
 ];
 
+/** Hard navigation so middleware sees auth cookies set by the login API. */
+function redirectAfterAuth(href: string) {
+  window.location.assign(href);
+}
+
+function safeNextPath(next: string): string | null {
+  if (!next.startsWith('/') || next.startsWith('//')) return null;
+  return next;
+}
+
 export function LoginForm() {
-  const router = useRouter();
   const search = useSearchParams();
   const next = search.get('next') || '';
 
@@ -96,14 +105,15 @@ export function LoginForm() {
   }, [search]);
 
   function redirectByRole(role?: string) {
-    if (next) {
-      router.push(next);
+    const safeNext = safeNextPath(next);
+    if (safeNext) {
+      redirectAfterAuth(safeNext);
       return;
     }
-    if (role === 'ADMIN') router.push('/admin');
-    else if (role === 'OWNER') router.push('/owner');
-    else if (role === 'SALE') router.push('/sale');
-    else router.push('/marketplace');
+    if (role === 'ADMIN') redirectAfterAuth('/admin');
+    else if (role === 'OWNER') redirectAfterAuth('/owner');
+    else if (role === 'SALE') redirectAfterAuth('/sale');
+    else redirectAfterAuth('/marketplace');
   }
 
   function switchMode(m: Mode) {

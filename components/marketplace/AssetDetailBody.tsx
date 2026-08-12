@@ -1,12 +1,4 @@
-import {
-  Badge,
-  Box,
-  Group,
-  Image,
-  Stack,
-  Text,
-  Title,
-} from '@mantine/core';
+import { Badge, Group, Stack, Text, Title } from '@mantine/core';
 import {
   ASSET_TAG_GROUPS,
   ASSET_TAGS,
@@ -15,9 +7,9 @@ import {
   propertyTypeLabel,
   type AssetTagGroupId,
 } from '@/config/asset-tags';
-import { colors, radius } from '@/config/design-tokens';
+import { colors } from '@/config/design-tokens';
 
-const PLACEHOLDER = 'https://placehold.co/1400x900/F3F3EF/536B58?text=VBNB';
+export { AssetDetailGallery } from '@/components/marketplace/AssetDetailGallery';
 
 export type AssetDetailData = {
   title: string;
@@ -30,40 +22,6 @@ export type AssetDetailData = {
   tags: string[];
   images: { url: string; sort_order: number }[];
 };
-
-export function AssetDetailGallery({
-  title,
-  images,
-}: {
-  title: string;
-  images: { url: string; sort_order: number }[];
-}) {
-  const sorted = [...images].sort((a, b) => a.sort_order - b.sort_order);
-  const main = sorted[0]?.url || PLACEHOLDER;
-  const side1 = sorted[1]?.url;
-  const side2 = sorted[2]?.url;
-
-  return (
-    <Box
-      style={{
-        display: 'grid',
-        gridTemplateColumns: side1 ? '1.6fr 1fr' : '1fr',
-        gap: 8,
-        borderRadius: radius.xl,
-        overflow: 'hidden',
-        minHeight: 320,
-      }}
-    >
-      <Image src={main} alt={title} h={420} fit="cover" />
-      {side1 ? (
-        <Stack gap={8} style={{ minHeight: 420 }}>
-          <Image src={side1} alt="" h={side2 ? 206 : 420} fit="cover" />
-          {side2 ? <Image src={side2} alt="" h={206} fit="cover" /> : null}
-        </Stack>
-      ) : null}
-    </Box>
-  );
-}
 
 export function AssetDetailInfo({ asset }: { asset: AssetDetailData }) {
   const propertyType = isPropertyType(asset.propertyType)

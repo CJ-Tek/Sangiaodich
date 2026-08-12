@@ -7,6 +7,28 @@ const ROLE_PREFIX: Record<string, string> = {
   '/sale': 'SALE',
 };
 
+/** Redirect while preserving cookies that updateSession may have refreshed. */
+function redirectWithSession(
+  request: NextRequest,
+  supabaseResponse: NextResponse,
+  pathname: string,
+  params?: Record<string, string>
+) {
+  const url = request.nextUrl.clone();
+  url.pathname = pathname;
+  url.search = '';
+  if (params) {
+    for (const [key, value] of Object.entries(params)) {
+      url.searchParams.set(key, value);
+    }
+  }
+  const redirectResponse = NextResponse.redirect(url);
+  supabaseResponse.cookies.getAll().forEach(({ name, value, ...options }) => {
+    redirectResponse.cookies.set(name, value, options);
+  });
+  return redirectResponse;
+}
+
 export async function middleware(request: NextRequest) {
   const { supabase, user, supabaseResponse } = await updateSession(request);
   const path = request.nextUrl.pathname;
@@ -20,10 +42,9 @@ export async function middleware(request: NextRequest) {
   }
 
   if (!user) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    url.searchParams.set('next', path);
-    return NextResponse.redirect(url);
+    return redirectWithSession(request, supabaseResponse, '/login', {
+      next: path,
+    });
   }
 
   const { data: profile } = await supabase
@@ -33,17 +54,14 @@ export async function middleware(request: NextRequest) {
     .maybeSingle();
 
   if (profile?.deleted_at) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/login';
-    url.searchParams.set('error', 'account_trashed');
-    return NextResponse.redirect(url);
+    return redirectWithSession(request, supabaseResponse, '/login', {
+      error: 'account_trashed',
+    });
   }
 
   const required = ROLE_PREFIX[protectedPrefix];
   if (!profile || profile.role !== required) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/';
-    return NextResponse.redirect(url);
+    return redirectWithSession(request, supabaseResponse, '/');
   }
 
   return supabaseResponse;

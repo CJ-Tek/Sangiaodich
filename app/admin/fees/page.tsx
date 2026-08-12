@@ -20,7 +20,7 @@ export default async function AdminFeesPage({
     .from('platform_fee_settings')
     .select('*')
     .eq('id', 1)
-    .single();
+    .maybeSingle();
 
   const { data: plansRaw } = await admin
     .from('subscription_plans')
