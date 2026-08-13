@@ -11,7 +11,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **App Villa (san giao dich)** (1400 symbols, 3687 relationships, 108 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **Sangiaodich** (1458 symbols, 3809 relationships, 112 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
@@ -35,10 +35,10 @@ This project is indexed by GitNexus as **App Villa (san giao dich)** (1400 symbo
 
 | Resource | Use for |
 |----------|---------|
-| `gitnexus://repo/App Villa (san giao dich)/context` | Codebase overview, check index freshness |
-| `gitnexus://repo/App Villa (san giao dich)/clusters` | All functional areas |
-| `gitnexus://repo/App Villa (san giao dich)/processes` | All execution flows |
-| `gitnexus://repo/App Villa (san giao dich)/process/{name}` | Step-by-step execution trace |
+| `gitnexus://repo/Sangiaodich/context` | Codebase overview, check index freshness |
+| `gitnexus://repo/Sangiaodich/clusters` | All functional areas |
+| `gitnexus://repo/Sangiaodich/processes` | All execution flows |
+| `gitnexus://repo/Sangiaodich/process/{name}` | Step-by-step execution trace |
 
 ## CLI
 
