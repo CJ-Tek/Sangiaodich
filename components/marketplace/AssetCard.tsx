@@ -32,6 +32,9 @@ export type AssetCardData = {
   baseCostWeekend?: number;
   discountPercent?: number;
   showCost?: boolean;
+  /** Route prefix for the detail page, e.g. `/me/explore` keeps the card
+   * inside the guest dashboard. Defaults to the public asset page. */
+  hrefBase?: string;
 };
 
 const PLACEHOLDER =
@@ -42,9 +45,11 @@ function formatVnd(n: number) {
 }
 
 export function AssetCard({ asset }: { asset: AssetCardData }) {
-  const href = asset.showCost
-    ? `/sale/marketplace/${asset.slug}`
-    : `/a/${asset.slug}`;
+  const href = asset.hrefBase
+    ? `${asset.hrefBase}/${asset.slug}`
+    : asset.showCost
+      ? `/sale/marketplace/${asset.slug}`
+      : `/a/${asset.slug}`;
   const discount = Number(asset.discountPercent || 0);
   const showBase =
     discount > 0 &&

@@ -37,17 +37,20 @@ export function VillaSearch({
   defaultQ = '',
   defaultTags = [],
   variant = 'landing',
+  action = '/marketplace',
 }: {
   defaultQ?: string;
   defaultTags?: string[];
   variant?: 'landing' | 'marketplace';
+  /** Where the form submits — the guest dashboard searches its own route. */
+  action?: string;
 }) {
   const [tags, setTags] = useState<string[]>(defaultTags);
 
   return (
     <Box
       component="form"
-      action="/marketplace"
+      action={action}
       method="get"
       className={variant === 'landing' ? 'vbnb-landing-fade-up-delay' : undefined}
       style={{

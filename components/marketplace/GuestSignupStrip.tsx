@@ -1,48 +1,38 @@
-import { Box, Group, Paper, Stack, Text, Title } from '@mantine/core';
-import { colors, radius } from '@/config/design-tokens';
-import { LinkButton } from '@/components/ui/LinkButton';
+import { Group, Text } from '@mantine/core';
+import { colors } from '@/config/design-tokens';
+import { LinkAnchor } from '@/components/ui/LinkAnchor';
 
 /**
- * Shown to anonymous visitors only. Lists what an account actually unlocks —
- * no discount or perk promises, since guest tiers do not grant any.
+ * Shown to anonymous visitors only. One line, no fill — villas are the point
+ * of the page. No perk promises, since guest tiers do not grant any.
  */
-const reasons = [
-  'Sale chỉ tạo được booking cho tài khoản đã có trên hệ thống',
-  'Xem lại toàn bộ booking và số tiền đã thanh toán',
-  'Được ghi nhận tích luỹ booking để lên hạng thành viên',
-];
-
-export function GuestSignupStrip({ compact }: { compact?: boolean }) {
+export function GuestSignupStrip() {
   return (
-    <Paper
-      p={compact ? 'md' : 'lg'}
-      radius={radius.lg}
+    <Group
+      justify="space-between"
+      align="center"
+      gap="sm"
+      wrap="wrap"
+      py="sm"
       style={{
-        border: `1px solid ${colors.border}`,
-        background: colors.primarySoft,
+        borderTop: `1px solid ${colors.border}`,
+        borderBottom: `1px solid ${colors.border}`,
       }}
     >
-      <Group justify="space-between" align="flex-start" gap="lg" wrap="wrap">
-        <Stack gap="xs" style={{ flex: 1, minWidth: 260 }}>
-          <Title order={4} fw={600}>
-            Tạo tài khoản để book villa
-          </Title>
-          {reasons.map((reason) => (
-            <Text key={reason} size="sm" c={colors.textSecondary}>
-              · {reason}
-            </Text>
-          ))}
-        </Stack>
-        <Box>
-          <LinkButton
-            href="/login?mode=register&role=GUEST"
-            color="vbnbGreen"
-            size="md"
-          >
-            Tạo tài khoản
-          </LinkButton>
-        </Box>
-      </Group>
-    </Paper>
+      <Text size="sm" c={colors.textSecondary}>
+        Tạo tài khoản để sale chốt booking và bạn theo dõi được lịch sử.
+      </Text>
+      <LinkAnchor
+        href="/login?mode=register&role=GUEST"
+        size="sm"
+        fw={500}
+        c="vbnbGreen.6"
+        underline="hover"
+        py={6}
+        display="inline-block"
+      >
+        Tạo tài khoản →
+      </LinkAnchor>
+    </Group>
   );
 }

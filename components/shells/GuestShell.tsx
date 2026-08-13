@@ -25,18 +25,21 @@ export function GuestShell({
   const isCompact = useMediaQuery('(max-width: 1023px)');
   const isLoginPage = pathname === '/login' || pathname.startsWith('/login/');
 
+  // Match on the resolved target so anonymous visitors still light up
+  // "Khám phá" while they are on /marketplace.
+  const items = guestNav.map((item) => ({
+    ...item,
+    target: guestNavHref(item, Boolean(isLoggedIn)),
+  }));
+
   // Longest match wins, otherwise `/me` would light up on `/me/bookings` too.
-  const activeHref = guestNav
+  const activeTarget = items
     .filter(
       (item) =>
-        pathname === item.href || pathname.startsWith(`${item.href}/`)
+        pathname === item.target || pathname.startsWith(`${item.target}/`)
     )
-    .sort((a, b) => b.href.length - a.href.length)
-    .at(0)?.href;
-
-  function isActive(href: string) {
-    return activeHref === href;
-  }
+    .sort((a, b) => b.target.length - a.target.length)
+    .at(0)?.target;
 
   return (
     <AppShell
@@ -61,13 +64,13 @@ export function GuestShell({
             </UnstyledButton>
             {!isCompact && !isLoginPage ? (
             <Group gap="md">
-              {guestNav.map((item) => {
-                const active = isActive(item.href);
+              {items.map((item) => {
+                const active = activeTarget === item.target;
                 return (
                   <UnstyledButton
                     key={item.href}
                     component={Link}
-                    href={guestNavHref(item, Boolean(isLoggedIn))}
+                    href={item.target}
                   >
                     <Text
                       size="sm"
@@ -116,15 +119,14 @@ export function GuestShell({
       {isCompact && !isLoginPage ? (
         <AppShell.Footer>
           <Group h="100%" px={4} grow gap={0}>
-            {guestNav.map((item) => {
-              const active = isActive(item.href);
-              const href = guestNavHref(item, Boolean(isLoggedIn));
+            {items.map((item) => {
+              const active = activeTarget === item.target;
               const iconColor = active ? colors.primaryDark : colors.textSecondary;
               return (
                 <UnstyledButton
                   key={item.href}
                   component={Link}
-                  href={href}
+                  href={item.target}
                   title={item.label}
                   aria-label={item.label}
                   style={{ textAlign: 'center', padding: 8, minHeight: 44 }}

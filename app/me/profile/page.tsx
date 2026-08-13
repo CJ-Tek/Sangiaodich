@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { Stack } from '@mantine/core';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
-import { GuestShell } from '@/components/shells/GuestShell';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { GuestProfileForm } from '@/components/me/GuestProfileForm';
@@ -21,7 +20,7 @@ export default async function GuestProfilePage() {
     .single();
 
   return (
-    <GuestShell isLoggedIn>
+    <>
       <PageHeader
         title="Tài khoản"
         description="Cập nhật tên, ảnh đại diện và email."
@@ -37,6 +36,6 @@ export default async function GuestProfilePage() {
         />
         <LogoutButton />
       </Stack>
-    </GuestShell>
+    </>
   );
 }

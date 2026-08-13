@@ -10,8 +10,8 @@ export function GuestSignupSection() {
       aria-label="Tạo tài khoản khách"
       style={{
         ...landingContainer,
-        paddingTop: 'clamp(24px, 4vw, 40px)',
-        paddingBottom: 'clamp(24px, 4vw, 40px)',
+        paddingTop: 'clamp(16px, 2vw, 24px)',
+        paddingBottom: 'clamp(16px, 2vw, 24px)',
       }}
     >
       <GuestSignupStrip />

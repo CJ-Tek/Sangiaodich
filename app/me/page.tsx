@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { Stack } from '@mantine/core';
 import { getSessionProfile } from '@/lib/auth/session';
-import { GuestShell } from '@/components/shells/GuestShell';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { GuestLifetimeStats } from '@/components/me/GuestLifetimeStats';
 import { GuestTierCard } from '@/components/me/GuestTierCard';
@@ -18,7 +17,7 @@ export default async function GuestHomePage() {
   const overview = await loadGuestOverview(profile.id);
 
   return (
-    <GuestShell isLoggedIn>
+    <>
       <PageHeader
         title={`Xin chào ${profile.full_name || 'bạn'}`}
         description="Tổng quan booking và hạng thành viên của bạn."
@@ -31,6 +30,6 @@ export default async function GuestHomePage() {
         <GuestUpcomingCard upcoming={overview.upcoming} />
         <GuestTierCard tier={overview.tier} />
       </Stack>
-    </GuestShell>
+    </>
   );
 }

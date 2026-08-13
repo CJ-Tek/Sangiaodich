@@ -22,7 +22,7 @@ export function GuestUpcomingCard({
         {!upcoming ? (
           <>
             <Text size="sm">Chưa có chuyến nào.</Text>
-            <LinkAnchor href="/marketplace" size="sm" c="vbnbGreen.6">
+            <LinkAnchor href="/me/explore" size="sm" c="vbnbGreen.6">
               Khám phá villa
             </LinkAnchor>
           </>

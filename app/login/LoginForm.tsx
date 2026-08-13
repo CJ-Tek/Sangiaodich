@@ -113,7 +113,7 @@ export function LoginForm() {
     if (role === 'ADMIN') redirectAfterAuth('/admin');
     else if (role === 'OWNER') redirectAfterAuth('/owner');
     else if (role === 'SALE') redirectAfterAuth('/sale');
-    else redirectAfterAuth('/marketplace');
+    else redirectAfterAuth('/me');
   }
 
   function switchMode(m: Mode) {

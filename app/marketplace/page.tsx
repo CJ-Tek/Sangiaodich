@@ -1,5 +1,5 @@
-import { createClient, createServiceClient } from '@/lib/supabase/server';
-import { getSessionRoleHint } from '@/lib/auth/session-role';
+import { redirect } from 'next/navigation';
+import { getSessionProfile } from '@/lib/auth/session';
 import { LandingHeader } from '@/components/landing/LandingHeader';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -7,98 +7,85 @@ import { AssetCard } from '@/components/marketplace/AssetCard';
 import { GuestSignupStrip } from '@/components/marketplace/GuestSignupStrip';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { VillaSearch } from '@/components/landing/VillaSearch';
+import { VillaPagination } from '@/components/marketplace/VillaPagination';
 import { parseTagSearchParam } from '@/config/asset-tags';
 import { landingContainer } from '@/components/landing/landing-media';
 import { SimpleGrid, Box } from '@mantine/core';
-import { unstable_cache } from 'next/cache';
+import { Suspense } from 'react';
+import {
+  exploreListHref,
+  loadExploreAssets,
+  parseExplorePage,
+  toAssetCardData,
+} from '@/lib/engines/explore-assets';
 
 export const revalidate = 60;
-
-const getMarketplaceAssetsCached = unstable_cache(
-  async () => {
-    const admin = createServiceClient();
-    const result = await admin
-      .from('assets')
-      .select(
-        'id, slug, title, location, capacity, bedrooms, bathrooms, property_type, asset_images(url, sort_order)'
-      )
-      .eq('status', 'ACTIVE')
-      .order('created_at', { ascending: false })
-      .order('sort_order', { ascending: true, foreignTable: 'asset_images' })
-      .limit(1, { foreignTable: 'asset_images' });
-
-    return result.data || [];
-  },
-  ['marketplace-assets-default-v1'],
-  { revalidate: 60 }
-);
 
 export default async function MarketplacePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; tags?: string | string[] }>;
+  searchParams: Promise<{
+    q?: string;
+    tags?: string | string[];
+    page?: string | string[];
+  }>;
 }) {
   const startedAt = Date.now();
-  const { q, tags: tagsParam } = await searchParams;
+  const { q, tags: tagsParam, page: pageParam } = await searchParams;
   const selectedTags = parseTagSearchParam(tagsParam);
   const keyword = q?.trim();
+  const page = parseExplorePage(pageParam);
+  // Verified session, not the cookie hint: a stale cookie would otherwise
+  // bounce a visitor to /me/explore and from there to /login.
   const roleStartedAt = Date.now();
-  const rolePromise = getSessionRoleHint().then((value) => ({
-    value,
+  const rolePromise = getSessionProfile().then((profile) => ({
+    value: profile?.role ?? null,
     ms: Date.now() - roleStartedAt,
   }));
   const assetsStartedAt = Date.now();
-  const assetsPromise =
-    !keyword && selectedTags.length === 0
-      ? getMarketplaceAssetsCached().then((value) => ({
-          value,
-          ms: Date.now() - assetsStartedAt,
-        }))
-      : (async () => {
-          const admin = await createClient();
-          let query = admin
-            .from('assets')
-            .select(
-              'id, slug, title, location, capacity, bedrooms, bathrooms, property_type, asset_images(url, sort_order)'
-            )
-            .eq('status', 'ACTIVE')
-            .order('created_at', { ascending: false })
-            .order('sort_order', {
-              ascending: true,
-              foreignTable: 'asset_images',
-            })
-            .limit(1, { foreignTable: 'asset_images' });
-
-          if (keyword) {
-            query = query.or(
-              `title.ilike.%${keyword}%,location.ilike.%${keyword}%`
-            );
-          }
-          if (selectedTags.length) {
-            query = query.contains('tags', selectedTags);
-          }
-
-          const result = await query;
-          return {
-            value: result.data || [],
-            ms: Date.now() - assetsStartedAt,
-          };
-        })();
+  const assetsPromise = loadExploreAssets({
+    keyword,
+    tags: selectedTags,
+    page,
+  }).then((value) => ({ value, ms: Date.now() - assetsStartedAt }));
 
   const [roleData, assetsData] = await Promise.all([rolePromise, assetsPromise]);
   const role = roleData.value;
-  const assets = assetsData.value;
+  const { assets, total, page: resolvedPage, totalPages } = assetsData.value;
   console.info(
     `[perf] ${JSON.stringify({
       scope: 'marketplace',
       roleMs: roleData.ms,
       assetsMs: assetsData.ms,
       assetsCount: assets.length,
+      total,
+      page: resolvedPage,
       keyword: keyword ? 'yes' : 'no',
       tagsCount: selectedTags.length,
       totalMs: Date.now() - startedAt,
     })}`
   );
+
+  // Signed-in guests browse inside their dashboard so they keep the nav bar.
+  if (role === 'GUEST') {
+    redirect(
+      exploreListHref('/me/explore', {
+        q: keyword,
+        tags: selectedTags,
+        page: resolvedPage,
+      })
+    );
+  }
+
+  if (page !== resolvedPage && total > 0) {
+    redirect(
+      exploreListHref('/marketplace', {
+        q: keyword,
+        tags: selectedTags,
+        page: resolvedPage,
+      })
+    );
+  }
 
   const appHref =
     role === 'ADMIN'
@@ -133,11 +120,6 @@ export default async function MarketplacePage({
           defaultQ={keyword || ''}
           defaultTags={selectedTags}
         />
-        {!role ? (
-          <Box mt="xl">
-            <GuestSignupStrip compact />
-          </Box>
-        ) : null}
         {!assets?.length ? (
           <EmptyState
             title="Không tìm thấy"
@@ -146,35 +128,27 @@ export default async function MarketplacePage({
             href="/marketplace"
           />
         ) : (
-          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xl" mt="xl">
-            {assets.map((a) => {
-              const images = (a.asset_images || []) as {
-                url: string;
-                sort_order: number;
-              }[];
-              return (
-                <AssetCard
-                  key={a.id}
-                  asset={{
-                    id: a.id,
-                    slug: a.slug,
-                    title: a.title,
-                    location: a.location,
-                    capacity: a.capacity,
-                    bedrooms: Number(a.bedrooms) || undefined,
-                    bathrooms: Number(a.bathrooms) || undefined,
-                    propertyType:
-                      a.property_type === 'APARTMENT' ||
-                      a.property_type === 'VILLA'
-                        ? a.property_type
-                        : undefined,
-                    imageUrl: images[0]?.url,
-                  }}
-                />
-              );
-            })}
-          </SimpleGrid>
+          <>
+            <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xl" mt="xl">
+              {assets.map((asset) => (
+                <AssetCard key={asset.id} asset={toAssetCardData(asset)} />
+              ))}
+            </SimpleGrid>
+            <Suspense fallback={null}>
+              <VillaPagination
+                page={resolvedPage}
+                totalPages={totalPages}
+                total={total}
+              />
+            </Suspense>
+          </>
         )}
+        {/* After the villas: browsing comes first, the ask comes second. */}
+        {!role ? (
+          <Box mt="xl">
+            <GuestSignupStrip />
+          </Box>
+        ) : null}
       </Box>
       <LandingFooter />
     </>

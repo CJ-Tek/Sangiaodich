@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation';
 import { getSessionProfile } from '@/lib/auth/session';
-import { GuestShell } from '@/components/shells/GuestShell';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { BookingStatusBadge } from '@/components/bookings/BookingStatusBadge';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -17,7 +16,7 @@ export default async function MyBookingsPage() {
   const bookings = await loadGuestBookings(profile.id);
 
   return (
-    <GuestShell isLoggedIn>
+    <>
       <PageHeader
         title="Booking"
         description="Booking do sale tạo hộ — không tự book trên sàn."
@@ -27,7 +26,7 @@ export default async function MyBookingsPage() {
           title="Chưa có booking nào"
           description="Booking sale tạo cho bạn sẽ hiện ở đây."
           actionLabel="Khám phá villa"
-          href="/marketplace"
+          href="/me/explore"
         />
       ) : (
         <Stack gap="sm">
@@ -70,6 +69,6 @@ export default async function MyBookingsPage() {
           ))}
         </Stack>
       )}
-    </GuestShell>
+    </>
   );
 }

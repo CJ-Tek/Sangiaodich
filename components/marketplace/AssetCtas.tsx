@@ -2,7 +2,7 @@
 
 import { Alert, Button, Code, Group, Box, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { colors, radius } from '@/config/design-tokens';
 import { assetPublicCode } from '@/lib/engines/asset-search';
@@ -22,6 +22,7 @@ export function AssetCtas({
   sticky?: boolean;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [loading, setLoading] = useState(false);
   const [showIntent, setShowIntent] = useState(
     Boolean(leadIntent) && isLoggedInGuest
@@ -87,8 +88,9 @@ export function AssetCtas({
             'Đã gửi yêu cầu — sale đang trả phí sẽ thấy thông tin của bạn',
         });
         setShowIntent(false);
-        // Drop ?lead=1 so a refresh does not re-prompt.
-        router.replace(`/a/${slug}`);
+        // Drop ?lead=1 so a refresh does not re-prompt. Stay on the current
+        // route so the guest dashboard does not bounce through /a/[slug].
+        router.replace(pathname);
       }
     } finally {
       setLoading(false);

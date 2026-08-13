@@ -8,38 +8,35 @@ import {
 
 export type GuestNavItem = {
   label: string;
+  /** Dashboard route, used once the guest is signed in. */
   href: string;
   Icon: ComponentType<{ color: string }>;
-  /** Anonymous visitors get bounced to /login?next= instead of the page. */
-  requiresLogin: boolean;
+  /**
+   * Where anonymous visitors go instead. Omit to bounce them through
+   * /login?next= — browsing villas is the only thing they can do signed out.
+   */
+  publicHref?: string;
 };
 
 /**
- * Single source for guest navigation, shared by the desktop header and the
- * mobile tab bar. Keep the login requirement here rather than spreading
+ * Single source for guest navigation, shared by the dashboard shell and the
+ * public shell. Keep the auth branching here rather than spreading
  * `isLoggedIn` checks across pages.
  */
 export const guestNav: GuestNavItem[] = [
-  { label: 'Trang chủ', href: '/me', Icon: IconHome, requiresLogin: true },
+  { label: 'Trang chủ', href: '/me', Icon: IconHome },
   {
     label: 'Khám phá',
-    href: '/marketplace',
+    href: '/me/explore',
     Icon: IconCompass,
-    requiresLogin: false,
+    publicHref: '/marketplace',
   },
-  {
-    label: 'Booking',
-    href: '/me/bookings',
-    Icon: IconCalendar,
-    requiresLogin: true,
-  },
-  { label: 'Tài khoản', href: '/me/profile', Icon: IconUser, requiresLogin: true },
+  { label: 'Booking', href: '/me/bookings', Icon: IconCalendar },
+  { label: 'Tài khoản', href: '/me/profile', Icon: IconUser },
 ];
 
 /** Where a nav item should point for the current auth state. */
 export function guestNavHref(item: GuestNavItem, isLoggedIn: boolean): string {
-  if (item.requiresLogin && !isLoggedIn) {
-    return `/login?next=${encodeURIComponent(item.href)}`;
-  }
-  return item.href;
+  if (isLoggedIn) return item.href;
+  return item.publicHref ?? `/login?next=${encodeURIComponent(item.href)}`;
 }
