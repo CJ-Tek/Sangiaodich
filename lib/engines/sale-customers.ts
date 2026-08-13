@@ -315,7 +315,6 @@ export type ClosedCustomerCard = {
   bookingCount: number;
   totalPaidNet: number;
   tierLabel: string;
-  tierDiscountPercent: number;
   remainingBooks: number | null;
   remainingGmv: number | null;
   nextTierLabel: string | null;
@@ -393,12 +392,12 @@ export async function loadClosedCustomersForSale(
     admin
       .from('guest_membership_states')
       .select(
-        'guest_id, progress_books, progress_gmv, current_tier_id, guest_membership_tiers(sort, label, discount_percent, min_books, min_gmv)'
+        'guest_id, progress_books, progress_gmv, current_tier_id, guest_membership_tiers(sort, label, min_books, min_gmv)'
       )
       .in('guest_id', guestIds),
     admin
       .from('guest_membership_tiers')
-      .select('id, sort, label, discount_percent, min_books, min_gmv')
+      .select('id, sort, label, min_books, min_gmv')
       .order('sort'),
   ]);
 
@@ -406,7 +405,6 @@ export async function loadClosedCustomersForSale(
     id: t.id as string,
     sort: t.sort as number,
     label: (t.label as string) || `Tier ${t.sort}`,
-    discountPercent: Number(t.discount_percent),
     minBooks: Number(t.min_books),
     minGmv: Number(t.min_gmv),
   }));
@@ -422,14 +420,12 @@ export async function loadClosedCustomersForSale(
       | {
           sort?: number;
           label?: string;
-          discount_percent?: number;
           min_books?: number;
           min_gmv?: number;
         }
       | {
           sort?: number;
           label?: string;
-          discount_percent?: number;
           min_books?: number;
           min_gmv?: number;
         }[]
@@ -454,9 +450,6 @@ export async function loadClosedCustomersForSale(
       bookingCount: g.bookings.length,
       totalPaidNet: sumNetPaid(g.bookings),
       tierLabel: currentTier?.label || allTiers[0]?.label || 'Tier 0',
-      tierDiscountPercent: Number(
-        currentTier?.discount_percent ?? allTiers[0]?.discountPercent ?? 0
-      ),
       remainingBooks: remaining.remainingBooks,
       remainingGmv: remaining.remainingGmv,
       nextTierLabel: remaining.nextLabel,

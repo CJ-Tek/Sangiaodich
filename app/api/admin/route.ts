@@ -257,7 +257,6 @@ export async function PATCH(request: Request) {
       sort: Number(body.sort),
       min_books: Number(body.minBooks),
       min_gmv: Number(body.minGmv),
-      discount_percent: Number(body.discountPercent),
       label: String(body.label || ''),
     };
     if (id) row.id = id;

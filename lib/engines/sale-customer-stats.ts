@@ -11,7 +11,6 @@ export type GuestTierProgressInput = {
     minBooks: number;
     minGmv: number;
     label: string;
-    discountPercent: number;
   }>;
 };
 

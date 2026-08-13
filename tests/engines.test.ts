@@ -19,6 +19,7 @@ import { addCalendarMonths, parseYearMonth } from '@/lib/dates';
 import { planDurationLabel, planDiscount } from '@/lib/engines/subscription-plans';
 import {
   applyGuestConfirmProgress,
+  applyGuestProgress,
   applySaleConfirmVolume,
   recomputeGuestFromCollectedAmounts,
   recomputeSaleFromBaseCosts,
@@ -30,6 +31,8 @@ import {
   remainingToNextRank,
   sumNetPaid,
 } from '@/lib/engines/sale-customer-stats';
+import { tierProgressPercent } from '@/lib/engines/guest-overview';
+import { remainingToPay } from '@/lib/engines/guest-bookings';
 import { normalizePhone } from '@/lib/auth/otp';
 import {
   parseChannel,
@@ -80,8 +83,8 @@ describe('pricing', () => {
   });
 
   it('applies floor on guestPay', () => {
-    expect(guestPay(1000, 50, 800)).toBe(800);
-    expect(guestPay(2000, 10, 800)).toBe(1800);
+    expect(guestPay(500, 800)).toBe(800);
+    expect(guestPay(2000, 800)).toBe(2000);
   });
 
   it('computes effective cost from sale discount', () => {
@@ -96,7 +99,6 @@ describe('pricing', () => {
       costWeekend: 1000,
       listSelling: 500,
       saleCostDiscountPercent: 0,
-      guestDiscountPercent: 0,
     });
     expect(p.baseCost).toBe(2000);
     expect(p.guestPay).toBe(2000);
@@ -219,8 +221,8 @@ describe('membership', () => {
 
   it('resets guest progress after rank-up', () => {
     const tiers = [
-      { id: '0', sort: 0, minBooks: 0, minGmv: 0, discountPercent: 0 },
-      { id: '1', sort: 1, minBooks: 2, minGmv: 100, discountPercent: 3 },
+      { id: '0', sort: 0, minBooks: 0, minGmv: 0 },
+      { id: '1', sort: 1, minBooks: 2, minGmv: 100 },
     ];
     const r = applyGuestConfirmProgress({
       currentTier: tiers[0],
@@ -235,6 +237,27 @@ describe('membership', () => {
     expect(r.currentTier.id).toBe('1');
     expect(r.progressBooks).toBe(0);
     expect(r.progressGmv).toBe(0);
+  });
+
+  it('adds later payments as gmv only, without counting a new book', () => {
+    const tiers = [
+      { id: '0', sort: 0, minBooks: 0, minGmv: 0 },
+      { id: '1', sort: 1, minBooks: 2, minGmv: 100 },
+    ];
+    const r = applyGuestProgress({
+      currentTier: tiers[0],
+      progressBooks: 1,
+      progressGmv: 50,
+      lifetimeBooks: 1,
+      lifetimeGmv: 50,
+      addBooks: 0,
+      addGmv: 60,
+      tiers,
+    });
+    expect(r.lifetimeBooks).toBe(1);
+    expect(r.progressBooks).toBe(1);
+    expect(r.progressGmv).toBe(110);
+    expect(r.rankedUp).toBe(false);
   });
 
   it('demotes sale tier when recomputing after lost volume', () => {
@@ -253,8 +276,8 @@ describe('membership', () => {
 
   it('demotes guest tier when replaying without cancelled booking', () => {
     const tiers = [
-      { id: '0', sort: 0, minBooks: 0, minGmv: 0, discountPercent: 0 },
-      { id: '1', sort: 1, minBooks: 2, minGmv: 100, discountPercent: 3 },
+      { id: '0', sort: 0, minBooks: 0, minGmv: 0 },
+      { id: '1', sort: 1, minBooks: 2, minGmv: 100 },
     ];
     const ranked = recomputeGuestFromCollectedAmounts([50, 60], tiers);
     expect(ranked.currentTier.id).toBe('1');
@@ -288,20 +311,8 @@ describe('sale customer stats', () => {
 
   it('remaining to next guest rank uses books + gmv', () => {
     const tiers = [
-      {
-        sort: 0,
-        minBooks: 0,
-        minGmv: 0,
-        label: 'Bronze',
-        discountPercent: 0,
-      },
-      {
-        sort: 1,
-        minBooks: 3,
-        minGmv: 10_000_000,
-        label: 'Silver',
-        discountPercent: 3,
-      },
+      { sort: 0, minBooks: 0, minGmv: 0, label: 'Bronze' },
+      { sort: 1, minBooks: 3, minGmv: 10_000_000, label: 'Silver' },
     ];
     const r = remainingToNextRank({
       currentSort: 0,
@@ -315,20 +326,49 @@ describe('sale customer stats', () => {
     expect(r.remainingGmv).toBe(8_000_000);
   });
 
+  it('tier progress tracks the requirement furthest behind', () => {
+    // Books are complete but GMV is only halfway: must not read 100%.
+    expect(
+      tierProgressPercent({
+        progressBooks: 3,
+        progressGmv: 5_000_000,
+        neededBooks: 3,
+        neededGmv: 10_000_000,
+      })
+    ).toBe(50);
+
+    expect(
+      tierProgressPercent({
+        progressBooks: 3,
+        progressGmv: 10_000_000,
+        neededBooks: 3,
+        neededGmv: 10_000_000,
+      })
+    ).toBe(100);
+
+    // No next tier requirements at all: treat as complete rather than divide by 0.
+    expect(
+      tierProgressPercent({
+        progressBooks: 0,
+        progressGmv: 0,
+        neededBooks: 0,
+        neededGmv: 0,
+      })
+    ).toBe(100);
+  });
+
+  it('remaining to pay never goes negative', () => {
+    expect(remainingToPay(10_000_000, 4_000_000)).toBe(6_000_000);
+    expect(remainingToPay(10_000_000, 12_000_000)).toBe(0);
+    expect(remainingToPay(0, 0)).toBe(0);
+  });
+
   it('marks max tier when no next', () => {
     const r = remainingToNextRank({
       currentSort: 2,
       progressBooks: 0,
       progressGmv: 0,
-      tiers: [
-        {
-          sort: 2,
-          minBooks: 0,
-          minGmv: 0,
-          label: 'Gold',
-          discountPercent: 5,
-        },
-      ],
+      tiers: [{ sort: 2, minBooks: 0, minGmv: 0, label: 'Gold' }],
     });
     expect(r.atMaxTier).toBe(true);
     expect(r.remainingBooks).toBeNull();

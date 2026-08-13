@@ -29,7 +29,6 @@ export type GuestTierRecord = {
   label: string;
   min_books: number;
   min_gmv: number;
-  discount_percent: number;
 };
 
 export function MembershipTiersEditor({
@@ -91,7 +90,6 @@ export function TierEditor({
     costDiscountPercent: Number(saleInit?.cost_discount_percent ?? 0),
     minBooks: Number(guestInit?.min_books ?? 0),
     minGmv: Number(guestInit?.min_gmv ?? 0),
-    discountPercent: Number(guestInit?.discount_percent ?? 0),
   });
 
   async function save() {
@@ -109,7 +107,10 @@ export function TierEditor({
       });
       const json = await res.json();
       if (!json.success) {
-        notifications.show({ color: 'red', message: json.error.message });
+        notifications.show({
+          color: 'red',
+          message: json.error?.message || 'Lưu tier thất bại',
+        });
       } else {
         notifications.show({ color: 'vbnbGreen', message: 'Đã lưu tier' });
         if (!form.id) {
@@ -121,12 +122,16 @@ export function TierEditor({
             costDiscountPercent: 0,
             minBooks: 0,
             minGmv: 0,
-            discountPercent: 0,
           });
         }
         onSaved?.();
         router.refresh();
       }
+    } catch {
+      notifications.show({
+        color: 'red',
+        message: 'Không kết nối được máy chủ. Thử lại.',
+      });
     } finally {
       setLoading(false);
     }
@@ -145,9 +150,12 @@ export function TierEditor({
       <TextInput
         label="Label"
         value={form.label}
-        onChange={(e) =>
-          setForm((f) => ({ ...f, label: e.currentTarget.value }))
-        }
+        onChange={(e) => {
+          // Read now: React nulls currentTarget once the handler returns, and a
+          // functional updater can be replayed later during the render phase.
+          const label = e.currentTarget.value;
+          setForm((f) => ({ ...f, label }));
+        }}
       />
       {isSale ? (
         <>
@@ -195,19 +203,6 @@ export function TierEditor({
             }
             thousandSeparator="."
             decimalSeparator=","
-          />
-          <NumberInput
-            label="Discount %"
-            value={form.discountPercent}
-            onChange={(v) =>
-              setForm((f) => ({
-                ...f,
-                discountPercent: Number(v) || 0,
-              }))
-            }
-            min={0}
-            max={100}
-            decimalScale={2}
           />
         </>
       )}
@@ -261,9 +256,8 @@ function GuestTierRow({
       style={{ border: `1px solid ${colors.border}` }}
     >
       <Text size="xs" c="dimmed" mb="xs">
-        #{tier.sort} · hiện {tier.min_books} books +{' '}
-        {Number(tier.min_gmv).toLocaleString('vi-VN')} GMV →{' '}
-        {tier.discount_percent}%
+        #{tier.sort} · cần {tier.min_books} books +{' '}
+        {Number(tier.min_gmv).toLocaleString('vi-VN')} GMV để lên hạng
       </Text>
       <TierEditor kind="guest" initial={tier} onSaved={onSaved} compact />
     </Paper>

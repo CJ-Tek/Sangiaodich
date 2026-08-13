@@ -155,7 +155,6 @@ export default async function SaleBookingsPage({
         costWeekend: Number(costs.cost_weekend),
         listSelling: Number(b.list_price),
         saleCostDiscountPercent: discountPercent,
-        guestDiscountPercent: 0,
       }).effectiveCost;
     }
     if (!Number.isFinite(floor)) floor = 0;

@@ -10,7 +10,6 @@ export type GuestTier = {
   sort: number;
   minBooks: number;
   minGmv: number;
-  discountPercent: number;
 };
 
 export function pickSaleTier(
@@ -37,31 +36,35 @@ export function applySaleConfirmVolume(input: {
   };
 }
 
-/**
- * Guest progress advances on confirm. Tier can also go down when membership
- * is recomputed after cancel (replay remaining confirms).
- */
-export function applyGuestConfirmProgress(input: {
-  currentTier: GuestTier;
-  progressBooks: number;
-  progressGmv: number;
-  lifetimeBooks: number;
-  lifetimeGmv: number;
-  addAmountCollected: number;
-  tiers: GuestTier[];
-}): {
+export type GuestProgressState = {
   currentTier: GuestTier;
   progressBooks: number;
   progressGmv: number;
   lifetimeBooks: number;
   lifetimeGmv: number;
   rankedUp: boolean;
-} {
+};
+
+/**
+ * Single source of truth for the guest rank-up rule: both the book count and
+ * the GMV threshold of the next tier must be met, and ranking up consumes
+ * progress. `addBooks` is 0 when only more money lands on an existing confirm.
+ */
+export function applyGuestProgress(input: {
+  currentTier: GuestTier;
+  progressBooks: number;
+  progressGmv: number;
+  lifetimeBooks: number;
+  lifetimeGmv: number;
+  addBooks: number;
+  addGmv: number;
+  tiers: GuestTier[];
+}): GuestProgressState {
   const sorted = [...input.tiers].sort((a, b) => a.sort - b.sort);
-  const lifetimeBooks = input.lifetimeBooks + 1;
-  const lifetimeGmv = input.lifetimeGmv + input.addAmountCollected;
-  let progressBooks = input.progressBooks + 1;
-  let progressGmv = input.progressGmv + input.addAmountCollected;
+  const lifetimeBooks = input.lifetimeBooks + input.addBooks;
+  const lifetimeGmv = input.lifetimeGmv + input.addGmv;
+  let progressBooks = input.progressBooks + input.addBooks;
+  let progressGmv = input.progressGmv + input.addGmv;
   let currentTier = input.currentTier;
   let rankedUp = false;
 
@@ -85,6 +88,31 @@ export function applyGuestConfirmProgress(input: {
     lifetimeGmv,
     rankedUp,
   };
+}
+
+/**
+ * Guest progress advances on confirm. Tier can also go down when membership
+ * is recomputed after cancel (replay remaining confirms).
+ */
+export function applyGuestConfirmProgress(input: {
+  currentTier: GuestTier;
+  progressBooks: number;
+  progressGmv: number;
+  lifetimeBooks: number;
+  lifetimeGmv: number;
+  addAmountCollected: number;
+  tiers: GuestTier[];
+}): GuestProgressState {
+  return applyGuestProgress({
+    currentTier: input.currentTier,
+    progressBooks: input.progressBooks,
+    progressGmv: input.progressGmv,
+    lifetimeBooks: input.lifetimeBooks,
+    lifetimeGmv: input.lifetimeGmv,
+    addBooks: 1,
+    addGmv: input.addAmountCollected,
+    tiers: input.tiers,
+  });
 }
 
 /** Rebuild sale volume + tier from remaining confirmed booking base costs. */
@@ -127,7 +155,6 @@ export function recomputeGuestFromCollectedAmounts(
         sort: 0,
         minBooks: 0,
         minGmv: 0,
-        discountPercent: 0,
       },
       progressBooks: 0,
       progressGmv: 0,
@@ -164,13 +191,4 @@ export function recomputeGuestFromCollectedAmounts(
     lifetimeBooks: state.lifetimeBooks,
     lifetimeGmv: state.lifetimeGmv,
   };
-}
-
-export function guestDiscountFromTier(
-  currentTierId: string | null,
-  tiers: GuestTier[]
-): number {
-  const sorted = [...tiers].sort((a, b) => a.sort - b.sort);
-  const tier = tiers.find((t) => t.id === currentTierId) ?? sorted[0];
-  return tier?.discountPercent ?? 0;
 }

@@ -148,10 +148,10 @@ insert into public.sale_membership_tiers (id, sort, min_lifetime_cost_volume, co
   ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', 2, 150000000, 10, 'Tier 2')
 on conflict do nothing;
 
-insert into public.guest_membership_tiers (id, sort, min_books, min_gmv, discount_percent, label) values
-  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb0', 0, 0, 0, 0, 'Tier 0'),
-  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', 1, 3, 50000000, 3, 'Tier 1'),
-  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', 2, 7, 150000000, 5, 'Tier 2')
+insert into public.guest_membership_tiers (id, sort, min_books, min_gmv, label) values
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb0', 0, 0, 0, 'Tier 0'),
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', 1, 3, 50000000, 'Tier 1'),
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb2', 2, 7, 150000000, 'Tier 2')
 on conflict do nothing;
 
 insert into public.sale_membership_states (sale_id, current_tier_id, lifetime_cost_volume)

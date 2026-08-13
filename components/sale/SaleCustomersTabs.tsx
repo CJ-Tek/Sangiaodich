@@ -131,9 +131,6 @@ export function SaleCustomersTabs({
                         <Badge color="vbnbGreen" variant="light">
                           {c.tierLabel}
                         </Badge>
-                        <Text size="xs" c="dimmed">
-                          −{c.tierDiscountPercent}% guest
-                        </Text>
                       </Group>
                     </Stack>
                     <Stack gap={2} align="flex-end">

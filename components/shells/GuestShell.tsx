@@ -12,18 +12,7 @@ import { useMediaQuery } from '@mantine/hooks';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { colors, radius } from '@/config/design-tokens';
-import { IconCalendar, IconCompass, IconUser } from '@/components/shells/NavIcons';
-
-const topNav = [
-  { label: 'Explore', href: '/marketplace' },
-  { label: 'Bookings', href: '/me/bookings' },
-];
-
-const mobileNav = [
-  { label: 'Explore', href: '/marketplace', Icon: IconCompass },
-  { label: 'Bookings', href: '/me/bookings', Icon: IconCalendar },
-  { label: 'Profile', href: '/me/membership', Icon: IconUser },
-];
+import { guestNav, guestNavHref } from '@/components/shells/guest-nav';
 
 export function GuestShell({
   children,
@@ -36,8 +25,17 @@ export function GuestShell({
   const isCompact = useMediaQuery('(max-width: 1023px)');
   const isLoginPage = pathname === '/login' || pathname.startsWith('/login/');
 
+  // Longest match wins, otherwise `/me` would light up on `/me/bookings` too.
+  const activeHref = guestNav
+    .filter(
+      (item) =>
+        pathname === item.href || pathname.startsWith(`${item.href}/`)
+    )
+    .sort((a, b) => b.href.length - a.href.length)
+    .at(0)?.href;
+
   function isActive(href: string) {
-    return pathname === href || pathname.startsWith(`${href}/`);
+    return activeHref === href;
   }
 
   return (
@@ -63,10 +61,14 @@ export function GuestShell({
             </UnstyledButton>
             {!isCompact && !isLoginPage ? (
             <Group gap="md">
-              {topNav.map((item) => {
+              {guestNav.map((item) => {
                 const active = isActive(item.href);
                 return (
-                  <UnstyledButton key={item.href} component={Link} href={item.href}>
+                  <UnstyledButton
+                    key={item.href}
+                    component={Link}
+                    href={guestNavHref(item, Boolean(isLoggedIn))}
+                  >
                     <Text
                       size="sm"
                       fw={active ? 600 : 500}
@@ -82,9 +84,9 @@ export function GuestShell({
           </Group>
           <Group gap="sm">
             {isLoggedIn ? (
-              <UnstyledButton component={Link} href="/me/membership">
+              <UnstyledButton component={Link} href="/me/profile">
                 <Text size="sm" c="dimmed">
-                  Profile
+                  Tài khoản
                 </Text>
               </UnstyledButton>
             ) : (
@@ -114,12 +116,9 @@ export function GuestShell({
       {isCompact && !isLoginPage ? (
         <AppShell.Footer>
           <Group h="100%" px={4} grow gap={0}>
-            {mobileNav.map((item) => {
+            {guestNav.map((item) => {
               const active = isActive(item.href);
-              const href =
-                !isLoggedIn && item.href.startsWith('/me')
-                  ? `/login?next=${item.href}`
-                  : item.href;
+              const href = guestNavHref(item, Boolean(isLoggedIn));
               const iconColor = active ? colors.primaryDark : colors.textSecondary;
               return (
                 <UnstyledButton

@@ -91,13 +91,12 @@ export function quoteAssetCosts(
   };
 }
 
+/** List price, floored at effective cost so a booking never sells below cost. */
 export function guestPay(
   listSelling: number,
-  guestDiscountPercent: number,
   floorEffectiveCost: number
 ): number {
-  const discounted = Math.round(listSelling * (1 - guestDiscountPercent / 100));
-  return Math.max(discounted, floorEffectiveCost);
+  return Math.max(Math.round(listSelling), floorEffectiveCost);
 }
 
 export function saleMargin(guestPayAmount: number, effective: number): number {
@@ -123,7 +122,6 @@ export type PricingPreview = {
   guestPay: number;
   saleMargin: number;
   saleDiscountPercent: number;
-  guestDiscountPercent: number;
 };
 
 export function previewPricing(input: {
@@ -133,7 +131,6 @@ export function previewPricing(input: {
   costWeekend: number;
   listSelling: number;
   saleCostDiscountPercent: number;
-  guestDiscountPercent: number;
 }): PricingPreview {
   const base = sumBaseCost(
     input.checkIn,
@@ -142,13 +139,12 @@ export function previewPricing(input: {
     input.costWeekend
   );
   const eff = effectiveCost(base, input.saleCostDiscountPercent);
-  const pay = guestPay(input.listSelling, input.guestDiscountPercent, eff);
+  const pay = guestPay(input.listSelling, eff);
   return {
     baseCost: base,
     effectiveCost: eff,
     guestPay: pay,
     saleMargin: saleMargin(pay, eff),
     saleDiscountPercent: input.saleCostDiscountPercent,
-    guestDiscountPercent: input.guestDiscountPercent,
   };
 }

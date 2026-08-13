@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { GuestShell } from '@/components/shells/GuestShell';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -8,66 +7,67 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { Paper, Stack, Text, Group } from '@mantine/core';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
 import { colors, radius } from '@/config/design-tokens';
+import { loadGuestBookings } from '@/lib/engines/guest-bookings';
 
 export default async function MyBookingsPage() {
   const profile = await getSessionProfile();
   if (!profile) redirect('/login?next=/me/bookings');
   if (profile.role === 'SALE') redirect('/sale/bookings');
 
-  const admin = await createClient();
-  const { data: bookings } = await admin
-    .from('bookings')
-    .select('id, status, check_in, check_out, assets(title, slug)')
-    .eq('guest_id', profile.id)
-    .order('created_at', { ascending: false });
+  const bookings = await loadGuestBookings(profile.id);
 
   return (
     <GuestShell isLoggedIn>
       <PageHeader
-        title="Bookings"
+        title="Booking"
         description="Booking do sale tạo hộ — không tự book trên sàn."
       />
-      {!bookings?.length ? (
+      {!bookings.length ? (
         <EmptyState
-          title="No upcoming bookings"
-          description="Your confirmed bookings will appear here."
-          actionLabel="Explore marketplace"
+          title="Chưa có booking nào"
+          description="Booking sale tạo cho bạn sẽ hiện ở đây."
+          actionLabel="Khám phá villa"
           href="/marketplace"
         />
       ) : (
         <Stack gap="sm">
-          {bookings.map((b) => {
-            const asset = b.assets as unknown as { title: string; slug: string };
-            return (
-              <Paper
-                key={b.id}
-                p="lg"
-                radius={radius.lg}
-                style={{ border: `1px solid ${colors.border}` }}
-              >
-                <Group justify="space-between" wrap="wrap">
-                  <div>
-                    <Text fw={600}>{asset?.title}</Text>
-                    <Text size="sm" c="dimmed" mt={4}>
-                      {b.check_in} → {b.check_out}
-                    </Text>
-                    {asset?.slug ? (
-                      <LinkAnchor
-                        href={`/a/${asset.slug}`}
-                        size="sm"
-                        c="vbnbGreen.6"
-                        mt={6}
-                        display="inline-block"
-                      >
-                        View property
-                      </LinkAnchor>
-                    ) : null}
-                  </div>
+          {bookings.map((b) => (
+            <Paper
+              key={b.id}
+              p="lg"
+              radius={radius.lg}
+              style={{ border: `1px solid ${colors.border}` }}
+            >
+              <Group justify="space-between" align="flex-start" wrap="wrap">
+                <div>
+                  <Text fw={600}>{b.assetTitle}</Text>
+                  <Text size="sm" c="dimmed" mt={4}>
+                    {b.checkIn} → {b.checkOut}
+                  </Text>
+                  <LinkAnchor
+                    href={`/me/bookings/${b.id}`}
+                    size="sm"
+                    c="vbnbGreen.6"
+                    mt={6}
+                    display="inline-block"
+                  >
+                    Xem chi tiết
+                  </LinkAnchor>
+                </div>
+                <Stack gap={2} align="flex-end">
                   <BookingStatusBadge status={b.status} />
-                </Group>
-              </Paper>
-            );
-          })}
+                  <Text size="sm" fw={600} mt={6}>
+                    {b.listPrice.toLocaleString('vi-VN')} ₫
+                  </Text>
+                  <Text size="xs" c="dimmed">
+                    {b.remaining > 0
+                      ? `Còn ${b.remaining.toLocaleString('vi-VN')} ₫`
+                      : 'Đã thanh toán đủ'}
+                  </Text>
+                </Stack>
+              </Group>
+            </Paper>
+          ))}
         </Stack>
       )}
     </GuestShell>

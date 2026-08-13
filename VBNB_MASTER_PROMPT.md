@@ -145,13 +145,13 @@ Quy tắc:
 ```
 effectiveCost = baseCost × (1 − saleCostDiscountPercent)   // sale membership PLATFORM (Admin)
 listSelling   = giá sale đặt (template hoặc nhập khi tạo booking)
-guestPay      = max( listSelling × (1 − guestDiscountPercent), effectiveCost )  // FLOOR = effectiveCost
+guestPay      = max( listSelling, effectiveCost )  // FLOOR = effectiveCost
 ownerEarns    = effectiveCost   // snapshot lúc confirm
 saleMargin    = guestPay − effectiveCost
 ```
 
 - Guest **không bao giờ** thấy số tiền trên UI sàn / trang asset.
-- Sale thấy cost, effectiveCost, guest discount, suggested guestPay, margin.
+- Sale thấy cost, effectiveCost, suggested guestPay, margin.
 - Payment **offline**; sale ghi `amountCollected` khi confirm.
 
 ### 3.5 Booking flow (Sale tạo hộ)
@@ -165,7 +165,7 @@ Guest **không** self-serve tạo booking trên sàn.
 5. Confirm: bắt buộc `amountCollected`; validate `amountCollected ≥ effectiveCost`.
 6. Snapshot lúc confirm (bắt buộc):
    - `baseCostSnapshot`, `effectiveCostSnapshot`, `listPriceSnapshot`
-   - `saleDiscountPercentSnapshot`, `guestDiscountPercentSnapshot`
+   - `saleDiscountPercentSnapshot` (`guestDiscountPercentSnapshot` deprecated, luôn 0)
    - `amountCollected`, `ownerEarnSnapshot`, `saleMarginSnapshot`
 
 ### 3.6 Lead: “Cần liên lạc sale”
@@ -251,9 +251,9 @@ Owner vẫn có thể xem P&L và (optional) thống kê sale trên asset mình,
 
 **Cửa sổ:** lifetime.
 
-**Rank chỉ lên.** Sau khi lên rank → **reset progress** (progress_books / progress_gmv = 0) cho mốc sau; giữ `currentTier` + `discountPercent`.
+**Rank chỉ lên.** Sau khi lên rank → **reset progress** (progress_books / progress_gmv = 0) cho mốc sau; giữ `currentTier`.
 
-Admin UI chỉnh `min_books`, `min_gmv`, `discount_percent` từng tier (ví dụ 3 book + 50tr → 3%; rồi 7 book + 150tr → 5%).
+Admin UI chỉnh `min_books`, `min_gmv` từng tier (ví dụ 3 book + 50tr lên Tier 1; rồi 7 book + 150tr lên Tier 2). Hạng chỉ là ghi nhận tích luỹ — **không** kèm discount. Benefits cho từng hạng chưa chốt, sẽ thiết kế riêng.
 
 **Floor = effectiveCost:** không cho guestPay / amountCollected < effectiveCost.
 
@@ -309,7 +309,7 @@ RLS theo role. Bảng tối thiểu:
 - `lead_requests` (asset_id, guest_id, status, created_at, …) — no expiry, no claim
 - `sale_membership_tiers` (min_lifetime_cost_volume, cost_discount_percent, sort) — **platform**, Admin
 - `sale_membership_states` (sale_id, current_tier, lifetime_cost_volume)
-- `guest_membership_tiers` (min_books, min_gmv, discount_percent, sort) — Admin
+- `guest_membership_tiers` (min_books, min_gmv, sort) — Admin
 - `guest_membership_states` (guest_id, current_tier, progress_books, progress_gmv, lifetime_books, lifetime_gmv)
 
 Khi booking → CONFIRMED:

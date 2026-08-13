@@ -27,14 +27,13 @@ export default async function AdminMembershipPage() {
     label: t.label || '',
     min_books: t.min_books,
     min_gmv: Number(t.min_gmv),
-    discount_percent: Number(t.discount_percent),
   }));
 
   return (
     <>
       <PageHeader
         title="Membership"
-        description="Chọn Sale hoặc Guest để chỉnh ngưỡng / % discount. Áp dụng booking mới."
+        description="Sale: ngưỡng volume và % discount trên base cost. Guest: ngưỡng book và GMV để lên hạng. Áp dụng booking mới."
       />
       <MembershipCategoryTabs sale={sale} guest={guest} />
     </>

@@ -36,7 +36,7 @@ One account = one role. One Next.js app with role shells.
 
 ```
 effectiveCost = baseCost × (1 − saleCostDiscountPercent)
-guestPay      = max(listSelling × (1 − guestDiscountPercent), effectiveCost)
+guestPay      = max(listSelling, effectiveCost)
 ownerEarns    = effectiveCost   // snapshot at confirm
 saleMargin    = amountCollected − effectiveCost
 ```

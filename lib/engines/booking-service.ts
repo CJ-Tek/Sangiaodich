@@ -2,8 +2,8 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { hasConfirmedConflict, INVENTORY_LOCK_STATUSES } from '@/lib/engines/inventory';
 import {
   applyGuestConfirmProgress,
+  applyGuestProgress,
   applySaleConfirmVolume,
-  guestDiscountFromTier,
   recomputeGuestFromCollectedAmounts,
   recomputeSaleFromBaseCosts,
   type GuestTier,
@@ -65,7 +65,6 @@ export async function createBooking(input: {
     costWeekend: Number(costs.cost_weekend),
     listSelling: input.listPrice,
     saleCostDiscountPercent: saleDiscount,
-    guestDiscountPercent: 0,
   });
 
   if (input.listPrice < pricing.effectiveCost) {
@@ -168,30 +167,6 @@ export async function submitToOwner(input: {
 
   const saleMembership = await resolveSaleMembership(booking.sale_id);
 
-  const { data: guestState } = await admin
-    .from('guest_membership_states')
-    .select('*')
-    .eq('guest_id', booking.guest_id)
-    .maybeSingle();
-
-  const { data: guestTiersRaw } = await admin
-    .from('guest_membership_tiers')
-    .select('*')
-    .order('sort');
-
-  const guestTiers: GuestTier[] = (guestTiersRaw || []).map((t) => ({
-    id: t.id,
-    sort: t.sort,
-    minBooks: t.min_books,
-    minGmv: Number(t.min_gmv),
-    discountPercent: Number(t.discount_percent),
-  }));
-
-  const guestDiscount = guestDiscountFromTier(
-    guestState?.current_tier_id || null,
-    guestTiers
-  );
-
   const pricing = previewPricing({
     checkIn: booking.check_in,
     checkOut: booking.check_out,
@@ -199,7 +174,6 @@ export async function submitToOwner(input: {
     costWeekend: Number(costs.cost_weekend),
     listSelling: Number(booking.list_price),
     saleCostDiscountPercent: saleMembership.discountPercent,
-    guestDiscountPercent: guestDiscount,
   });
 
   const listPrice = Number(booking.list_price);
@@ -265,7 +239,8 @@ export async function submitToOwner(input: {
       effective_cost_snapshot: pricing.effectiveCost,
       list_price_snapshot: listPrice,
       sale_discount_percent_snapshot: pricing.saleDiscountPercent,
-      guest_discount_percent_snapshot: pricing.guestDiscountPercent,
+      // Guest tier no longer discounts price; 0 marks "no discount policy"
+      guest_discount_percent_snapshot: 0,
       owner_earn_snapshot: pricing.effectiveCost,
       sale_margin_snapshot: agreedMargin,
       sale_tier_id_snapshot: saleMembership.tierId,
@@ -354,7 +329,6 @@ export async function ownerConfirmBooking(input: {
     sort: t.sort,
     minBooks: t.min_books,
     minGmv: Number(t.min_gmv),
-    discountPercent: Number(t.discount_percent),
   }));
 
   const now = new Date().toISOString();
@@ -558,37 +532,32 @@ export async function recordBookingPayment(input: {
       sort: t.sort,
       minBooks: t.min_books,
       minGmv: Number(t.min_gmv),
-      discountPercent: Number(t.discount_percent),
     }));
 
     const sorted = [...guestTiers].sort((a, b) => a.sort - b.sort);
-    let currentTier =
+    const currentTier =
       guestTiers.find((t) => t.id === guestState?.current_tier_id) || sorted[0];
-    let progressBooks = guestState?.progress_books || 0;
-    let progressGmv = Number(guestState?.progress_gmv || 0) + delta;
-    const lifetimeBooks = guestState?.lifetime_books || 0;
-    const lifetimeGmv = Number(guestState?.lifetime_gmv || 0) + delta;
-
-    const nextTier = sorted.find((t) => t.sort === (currentTier?.sort ?? 0) + 1);
-    if (
-      currentTier &&
-      nextTier &&
-      progressBooks >= nextTier.minBooks &&
-      progressGmv >= nextTier.minGmv
-    ) {
-      currentTier = nextTier;
-      progressBooks = 0;
-      progressGmv = 0;
-    }
 
     if (currentTier) {
+      // The booking itself was already counted on confirm, so addBooks is 0.
+      const progress = applyGuestProgress({
+        currentTier,
+        progressBooks: guestState?.progress_books || 0,
+        progressGmv: Number(guestState?.progress_gmv || 0),
+        lifetimeBooks: guestState?.lifetime_books || 0,
+        lifetimeGmv: Number(guestState?.lifetime_gmv || 0),
+        addBooks: 0,
+        addGmv: delta,
+        tiers: guestTiers,
+      });
+
       await admin.from('guest_membership_states').upsert({
         guest_id: booking.guest_id,
-        current_tier_id: currentTier.id,
-        progress_books: progressBooks,
-        progress_gmv: progressGmv,
-        lifetime_books: lifetimeBooks,
-        lifetime_gmv: lifetimeGmv,
+        current_tier_id: progress.currentTier.id,
+        progress_books: progress.progressBooks,
+        progress_gmv: progress.progressGmv,
+        lifetime_books: progress.lifetimeBooks,
+        lifetime_gmv: progress.lifetimeGmv,
         updated_at: new Date().toISOString(),
       });
     }
@@ -818,7 +787,6 @@ async function recomputeGuestMembershipState(guestId: string) {
     sort: t.sort,
     minBooks: t.min_books,
     minGmv: Number(t.min_gmv),
-    discountPercent: Number(t.discount_percent),
   }));
 
   const next = recomputeGuestFromCollectedAmounts(

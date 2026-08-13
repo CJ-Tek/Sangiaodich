@@ -110,7 +110,6 @@ export function CreateBookingForm({
       costWeekend,
       listSelling: listPrice,
       saleCostDiscountPercent,
-      guestDiscountPercent: 0,
     });
   }, [range, listPrice, costWeekday, costWeekend, saleCostDiscountPercent]);
 
