@@ -7,6 +7,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-self.addEventListener('fetch', (event) => {
-  event.respondWith(fetch(event.request));
-});
+// No fetch handler on purpose. A pass-through `respondWith(fetch(request))`
+// rejects whenever the browser aborts a request — which Next.js does routinely
+// for RSC prefetches — surfacing as random "This page couldn't load" errors.
+// Chrome 108+ (mobile) / 112+ (desktop) no longer require one to install.
