@@ -16,7 +16,7 @@ import {
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
-import { useState, useTransition } from 'react';
+import { useEffect, useState, useTransition } from 'react';
 import { colors, radius } from '@/config/design-tokens';
 import {
   formatVnd,
@@ -24,6 +24,10 @@ import {
   planDurationLabel,
   type SubscriptionPlan,
 } from '@/lib/engines/subscription-plans';
+
+const POLL_INTERVAL_MS = 5_000;
+/** Bank transfers land within minutes; stop nagging the API after that. */
+const POLL_TIMEOUT_MS = 10 * 60 * 1_000;
 
 export type PendingCheckout = {
   intentId: string;
@@ -84,6 +88,44 @@ export function SubscriptionPlanPicker({
       setLoadingPlanId(null);
     }
   }
+
+  const pendingIntentId = pending?.intentId ?? null;
+
+  useEffect(() => {
+    if (!pendingIntentId) return;
+
+    const startedAt = Date.now();
+    let stopped = false;
+
+    const timer = setInterval(async () => {
+      if (stopped) return;
+      if (Date.now() - startedAt > POLL_TIMEOUT_MS) {
+        clearInterval(timer);
+        return;
+      }
+      try {
+        const res = await fetch(
+          `/api/subscription/intents?intentId=${pendingIntentId}`
+        );
+        const json = await res.json();
+        if (stopped || !json.success || !json.data?.intent?.paid) return;
+        clearInterval(timer);
+        setPending(null);
+        notifications.show({
+          color: 'vbnbGreen',
+          message: 'Đã nhận thanh toán — subscription được kích hoạt',
+        });
+        router.refresh();
+      } catch {
+        // Transient network error: keep polling until the timeout.
+      }
+    }, POLL_INTERVAL_MS);
+
+    return () => {
+      stopped = true;
+      clearInterval(timer);
+    };
+  }, [pendingIntentId, router]);
 
   async function payViaGateway() {
     if (!pending) return;
@@ -199,9 +241,8 @@ export function SubscriptionPlanPicker({
         >
           <Stack gap="sm">
             <Alert color="yellow" title="Đang chờ thanh toán">
-              Sau khi chuyển khoản, hệ thống xử lý trong 1–3 phút. Vui lòng
-              refresh trang để cập nhật. Nếu quá 15 phút chưa ACTIVE, liên hệ
-              Admin.
+              Sau khi chuyển khoản, trang sẽ tự cập nhật trong 1–3 phút, không
+              cần refresh. Nếu quá 15 phút chưa ACTIVE, liên hệ Admin.
             </Alert>
 
             <Text size="sm" c="dimmed">

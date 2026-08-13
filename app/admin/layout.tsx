@@ -5,6 +5,7 @@ const nav = [
   { label: 'Asset approval', href: '/admin/assets' },
   { label: 'Users', href: '/admin/users' },
   { label: 'Fees & TT', href: '/admin/fees' },
+  { label: 'Thanh toán', href: '/admin/payments' },
   { label: 'Membership', href: '/admin/membership' },
 ];
 

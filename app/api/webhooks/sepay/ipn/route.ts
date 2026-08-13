@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase/server';
 import { verifySePayIpnSecret } from '@/lib/sepay/verify';
+import { extractPaymentCode } from '@/lib/sepay/payment-code';
+import {
+  markSepayEventFailed,
+  markSepayEventProcessed,
+  recordSepayEvent,
+} from '@/lib/sepay/event-log';
 import { matchAndActivatePayment } from '@/lib/engines/subscription-payment';
 import { getRequiredSecret, isProductionRuntime } from '@/lib/security/secrets';
 
@@ -42,65 +47,76 @@ export async function POST(request: Request) {
   const transaction = (body.transaction || {}) as Record<string, unknown>;
 
   const invoice = String(order.order_invoice_number || '');
+  const paymentCode = extractPaymentCode({
+    code: invoice,
+    content: order.order_description,
+  });
+
+  // Deterministic id so a retry of the same notification dedupes instead of
+  // creating a second event row.
   const sepayId = String(
-    transaction.id || body.id || `ipn-${invoice}-${Date.now()}`
+    transaction.id || body.id || `ipn-${invoice}-${notificationType}`
   );
   const amount = Number(
     transaction.transaction_amount || order.order_amount || 0
   );
   const txStatus = String(transaction.transaction_status || '');
+  const referenceCode = transaction.payment_id
+    ? String(transaction.payment_id)
+    : null;
 
-  const admin = createServiceClient();
-  const { error: insertErr } = await admin.from('sepay_webhook_events').insert({
-    sepay_id: sepayId,
+  const { shouldProcess } = await recordSepayEvent({
+    sepayId,
     source: 'gateway_ipn',
-    transfer_type: 'in',
-    transfer_amount: amount || null,
-    payment_code: invoice ? invoice.toUpperCase() : null,
-    reference_code: transaction.payment_id
-      ? String(transaction.payment_id)
-      : null,
-    raw_body: body,
-    processed: false,
+    transferType: 'in',
+    transferAmount: amount || null,
+    paymentCode,
+    referenceCode,
+    rawBody: body,
   });
 
-  if (insertErr?.code === '23505') {
+  if (!shouldProcess) {
     return NextResponse.json({ success: true });
   }
-
-  let note = `IGNORED type=${notificationType} status=${txStatus}`;
 
   const paid =
     notificationType === 'ORDER_PAID' ||
     txStatus === 'COMPLETED' ||
     txStatus === 'SUCCESS';
 
-  if (paid && invoice) {
-    try {
-      const result = await matchAndActivatePayment({
-        paymentCode: invoice.toUpperCase(),
-        transferAmount: amount,
-        sepayTransactionId: sepayId,
-        referenceCode: transaction.payment_id
-          ? String(transaction.payment_id)
-          : null,
-        source: 'sepay_ipn',
-      });
-      note = result.note;
-    } catch (e) {
-      note = e instanceof Error ? e.message : 'PROCESS_ERROR';
-      await admin
-        .from('sepay_webhook_events')
-        .update({ process_note: note })
-        .eq('sepay_id', sepayId);
-      return NextResponse.json({ success: false }, { status: 500 });
-    }
+  if (!paid) {
+    await markSepayEventProcessed(
+      sepayId,
+      `IGNORED type=${notificationType} status=${txStatus}`
+    );
+    return NextResponse.json({ success: true });
   }
 
-  await admin
-    .from('sepay_webhook_events')
-    .update({ processed: true, process_note: note })
-    .eq('sepay_id', sepayId);
+  if (!paymentCode) {
+    await markSepayEventFailed(sepayId, 'NO_PAYMENT_CODE');
+    return NextResponse.json({ success: true });
+  }
 
-  return NextResponse.json({ success: true });
+  try {
+    const result = await matchAndActivatePayment({
+      paymentCode,
+      transferAmount: amount,
+      sepayTransactionId: sepayId,
+      referenceCode,
+      source: 'sepay_ipn',
+    });
+
+    if (result.activated) {
+      await markSepayEventProcessed(sepayId, result.note);
+    } else {
+      await markSepayEventFailed(sepayId, result.note);
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    const note = e instanceof Error ? e.message : 'PROCESS_ERROR';
+    console.error('sepay ipn match error', note);
+    await markSepayEventFailed(sepayId, note);
+    return NextResponse.json({ success: false }, { status: 500 });
+  }
 }

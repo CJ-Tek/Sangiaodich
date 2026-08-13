@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createServiceClient } from '@/lib/supabase/server';
 import { verifySePayWebhookSignature } from '@/lib/sepay/verify';
+import { extractPaymentCode } from '@/lib/sepay/payment-code';
+import {
+  markSepayEventFailed,
+  markSepayEventProcessed,
+  recordSepayEvent,
+} from '@/lib/sepay/event-log';
 import { matchAndActivatePayment } from '@/lib/engines/subscription-payment';
 import { getRequiredSecret, isProductionRuntime } from '@/lib/security/secrets';
 
@@ -62,70 +67,61 @@ export async function POST(request: Request) {
     );
   }
 
-  const admin = createServiceClient();
-
-  // Dedup — insert event; if conflict, already processed
-  const { error: insertErr } = await admin.from('sepay_webhook_events').insert({
-    sepay_id: sepayId,
-    source: 'bank_webhook',
-    transfer_type: data.transferType ? String(data.transferType) : null,
-    transfer_amount:
-      data.transferAmount != null ? Number(data.transferAmount) : null,
-    payment_code: data.code ? String(data.code).toUpperCase() : null,
-    reference_code: data.referenceCode
-      ? String(data.referenceCode)
-      : null,
-    account_number: data.accountNumber
-      ? String(data.accountNumber)
-      : null,
-    raw_body: data,
-    processed: false,
+  const transferType = String(data.transferType || '');
+  const amount = Number(data.transferAmount || 0);
+  const paymentCode = extractPaymentCode({
+    code: data.code,
+    content: data.content,
   });
 
-  if (insertErr) {
-    if (insertErr.code === '23505') {
-      return NextResponse.json({ success: true });
-    }
-    console.error('sepay webhook log error', insertErr.message);
+  const { shouldProcess } = await recordSepayEvent({
+    sepayId,
+    source: 'bank_webhook',
+    transferType: transferType || null,
+    transferAmount: data.transferAmount != null ? amount : null,
+    paymentCode,
+    referenceCode: data.referenceCode ? String(data.referenceCode) : null,
+    accountNumber: data.accountNumber ? String(data.accountNumber) : null,
+    rawBody: data,
+  });
+
+  if (!shouldProcess) {
+    return NextResponse.json({ success: true });
   }
 
-  const transferType = String(data.transferType || '');
-  const code = data.code ? String(data.code).toUpperCase() : '';
-  const amount = Number(data.transferAmount || 0);
-
-  let note = 'IGNORED';
-  if (transferType === 'in' && code) {
-    try {
-      const result = await matchAndActivatePayment({
-        paymentCode: code,
-        transferAmount: amount,
-        sepayTransactionId: sepayId,
-        referenceCode: data.referenceCode
-          ? String(data.referenceCode)
-          : null,
-        source: 'sepay_webhook',
-      });
-      note = result.note;
-    } catch (e) {
-      note = e instanceof Error ? e.message : 'PROCESS_ERROR';
-      console.error('sepay match error', note);
-      await admin
-        .from('sepay_webhook_events')
-        .update({ process_note: note })
-        .eq('sepay_id', sepayId);
-      return NextResponse.json(
-        { success: false, message: 'Internal error' },
-        { status: 500 }
-      );
-    }
-  } else {
-    note = !code ? 'NO_PAYMENT_CODE' : 'NOT_INCOMING';
+  if (transferType !== 'in') {
+    await markSepayEventProcessed(sepayId, 'NOT_INCOMING');
+    return NextResponse.json({ success: true });
   }
 
-  await admin
-    .from('sepay_webhook_events')
-    .update({ processed: true, process_note: note })
-    .eq('sepay_id', sepayId);
+  if (!paymentCode) {
+    await markSepayEventFailed(sepayId, 'NO_PAYMENT_CODE');
+    return NextResponse.json({ success: true });
+  }
 
-  return NextResponse.json({ success: true });
+  try {
+    const result = await matchAndActivatePayment({
+      paymentCode,
+      transferAmount: amount,
+      sepayTransactionId: sepayId,
+      referenceCode: data.referenceCode ? String(data.referenceCode) : null,
+      source: 'sepay_webhook',
+    });
+
+    if (result.activated) {
+      await markSepayEventProcessed(sepayId, result.note);
+    } else {
+      await markSepayEventFailed(sepayId, result.note);
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    const note = e instanceof Error ? e.message : 'PROCESS_ERROR';
+    console.error('sepay match error', note);
+    await markSepayEventFailed(sepayId, note);
+    return NextResponse.json(
+      { success: false, message: 'Internal error' },
+      { status: 500 }
+    );
+  }
 }

@@ -70,6 +70,7 @@ See `.env.example`.
 - **QStash**: set `QSTASH_*` for lead fan-out; without token, create-lead uses local signed fetch fallback (`x-local-fanout-secret` = `CRON_SECRET`).
 - **Cron / webhooks**: `CRON_SECRET` is required (no default). Production also requires `SEPAY_WEBHOOK_SECRET` (HMAC) and `SEPAY_IPN_SECRET`.
 - Cron: `GET /api/cron/expire-subscriptions` with `Authorization: Bearer $CRON_SECRET` (also in `vercel.json` daily).
+- SePay: `POST /api/webhooks/sepay` (bank) and `POST /api/webhooks/sepay/ipn` (gateway). The `VB********` code is read from `code`, falling back to a scan of the raw transfer content. Deliveries that could not be activated stay unprocessed and are listed at `/admin/payments`.
 - Auth: public email signup is disabled locally (`enable_signup = false`); users are created via service-role APIs. Roles come from `app_metadata`, not `user_metadata`.
 
 ## Key product rules

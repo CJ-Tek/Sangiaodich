@@ -10,17 +10,24 @@ import {
   resolveVietQrBank,
 } from '@/lib/sepay/vietqr';
 import { mapPaymentInfo } from '@/lib/platform/payment-info';
+import {
+  PAYMENT_CODE_ALPHABET,
+  PAYMENT_CODE_LENGTH,
+  PAYMENT_CODE_PREFIX,
+} from '@/lib/sepay/payment-code';
+import {
+  buildActivationNote,
+  decidePaymentMatch,
+} from '@/lib/engines/subscription-payment-match';
 
-const PAYMENT_CODE_PREFIX = 'VB';
 const INTENT_TTL_HOURS = 24;
 
 /** SePay-friendly code: VB + 8 alphanumeric (uppercase). */
 export function generatePaymentCode(): string {
-  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const bytes = randomBytes(8);
+  const bytes = randomBytes(PAYMENT_CODE_LENGTH);
   let suffix = '';
-  for (let i = 0; i < 8; i++) {
-    suffix += alphabet[bytes[i]! % alphabet.length];
+  for (let i = 0; i < PAYMENT_CODE_LENGTH; i++) {
+    suffix += PAYMENT_CODE_ALPHABET[bytes[i]! % PAYMENT_CODE_ALPHABET.length];
   }
   return `${PAYMENT_CODE_PREFIX}${suffix}`;
 }
@@ -93,16 +100,8 @@ export async function createPaymentIntent(input: {
   if (!plan || !plan.is_active) throw new Error('PLAN_NOT_FOUND');
   if (plan.role !== input.role) throw new Error('PLAN_ROLE_MISMATCH');
 
-  // Cancel other pending intents for this profile
-  await admin
-    .from('subscription_payment_intents')
-    .update({
-      status: 'CANCELLED',
-      updated_at: new Date().toISOString(),
-    })
-    .eq('profile_id', input.profileId)
-    .eq('status', 'PENDING');
-
+  // Earlier intents stay claimable: a user who already transferred against an
+  // older QR before switching plans must still get that plan activated.
   const expiresAt = new Date(
     Date.now() + INTENT_TTL_HOURS * 60 * 60 * 1000
   ).toISOString();
@@ -238,22 +237,46 @@ export async function getPendingIntentForProfile(profileId: string) {
   };
 }
 
-/**
- * Match SePay bank webhook / IPN to a pending intent.
- * Exact amount required — mismatch leaves intent pending (or marks AMOUNT_MISMATCH note).
- */
-export async function matchAndActivatePayment(input: {
+/** Scoped by profile so a client cannot poll someone else's intent. */
+export async function getIntentStatus(input: {
+  profileId: string;
+  intentId: string;
+}): Promise<{ status: string; paid: boolean } | null> {
+  const admin = createServiceClient();
+  const { data } = await admin
+    .from('subscription_payment_intents')
+    .select('status')
+    .eq('id', input.intentId)
+    .eq('profile_id', input.profileId)
+    .maybeSingle();
+
+  if (!data) return null;
+  return { status: data.status, paid: data.status === 'PAID' };
+}
+
+export type PaymentMatchInput = {
   paymentCode: string;
   transferAmount: number;
   sepayTransactionId: string;
   referenceCode?: string | null;
   source: 'sepay_webhook' | 'sepay_ipn';
-}): Promise<{
+};
+
+export type PaymentMatchResult = {
   matched: boolean;
   activated: boolean;
   note: string;
   subscriptionId?: string;
-}> {
+};
+
+/**
+ * Match a SePay bank webhook / IPN delivery to an intent and activate it.
+ * Exact amount is required; the intent is claimed before activation so a retry
+ * or a concurrent delivery of the same transfer cannot extend the period twice.
+ */
+export async function matchAndActivatePayment(
+  input: PaymentMatchInput
+): Promise<PaymentMatchResult> {
   const admin = createServiceClient();
   const code = input.paymentCode.trim().toUpperCase();
 
@@ -267,77 +290,125 @@ export async function matchAndActivatePayment(input: {
     return { matched: false, activated: false, note: 'INTENT_NOT_FOUND' };
   }
 
-  if (intent.status === 'PAID') {
+  const decision = decidePaymentMatch({
+    intentStatus: intent.status,
+    expectedAmount: Number(intent.amount),
+    transferAmount: Number(input.transferAmount),
+  });
+
+  if (decision.action === 'ALREADY_PAID') {
     return {
       matched: true,
       activated: true,
-      note: 'ALREADY_PAID',
+      note: decision.note,
       subscriptionId: intent.subscription_id || undefined,
     };
   }
 
-  if (intent.status !== 'PENDING') {
-    return {
-      matched: true,
-      activated: false,
-      note: `INTENT_STATUS_${intent.status}`,
-    };
+  if (decision.action === 'AMOUNT_MISMATCH') {
+    await flagAmountMismatch(intent.id, input);
+    return { matched: true, activated: false, note: decision.note };
   }
 
-  if (new Date(intent.expires_at).getTime() < Date.now()) {
-    await admin
-      .from('subscription_payment_intents')
-      .update({ status: 'EXPIRED', updated_at: new Date().toISOString() })
-      .eq('id', intent.id);
-    return { matched: true, activated: false, note: 'INTENT_EXPIRED' };
+  const claim = await claimIntent(intent.id, input);
+  if (claim !== 'CLAIMED') {
+    return { matched: true, activated: true, note: claim };
   }
 
-  const expected = Number(intent.amount);
-  if (Number(input.transferAmount) !== expected) {
+  try {
+    const result = await activateSubscription({
+      profileId: intent.profile_id,
+      months: intent.months,
+      amount: Number(intent.amount),
+      planId: intent.plan_id,
+      paymentIntentId: intent.id,
+      source: input.source,
+    });
+
     await admin
       .from('subscription_payment_intents')
       .update({
-        status: 'AMOUNT_MISMATCH',
-        mismatch_amount: input.transferAmount,
-        sepay_transaction_id: String(input.sepayTransactionId),
-        sepay_reference_code: input.referenceCode || null,
+        subscription_id: result.subscriptionId,
         updated_at: new Date().toISOString(),
       })
       .eq('id', intent.id);
+
     return {
       matched: true,
-      activated: false,
-      note: `AMOUNT_MISMATCH expected=${expected} got=${input.transferAmount}`,
+      activated: true,
+      note: buildActivationNote({
+        extended: result.extended,
+        claimedFromStatus: intent.status,
+      }),
+      subscriptionId: result.subscriptionId,
     };
+  } catch (e) {
+    await releaseIntentClaim(intent.id, intent.status);
+    throw e;
   }
+}
 
-  const result = await activateSubscription({
-    profileId: intent.profile_id,
-    months: intent.months,
-    amount: expected,
-    planId: intent.plan_id,
-    paymentIntentId: intent.id,
-    source: input.source,
-  });
+/**
+ * Flip the intent to PAID only while it is not already PAID, so the winner of a
+ * race is the single caller allowed to extend the subscription.
+ */
+async function claimIntent(
+  intentId: string,
+  input: PaymentMatchInput
+): Promise<'CLAIMED' | 'ALREADY_PAID' | 'DUPLICATE_TRANSACTION'> {
+  const admin = createServiceClient();
+  const now = new Date().toISOString();
 
-  await admin
+  const { data, error } = await admin
     .from('subscription_payment_intents')
     .update({
       status: 'PAID',
-      paid_at: new Date().toISOString(),
+      paid_at: now,
       sepay_transaction_id: String(input.sepayTransactionId),
       sepay_reference_code: input.referenceCode || null,
-      subscription_id: result.subscriptionId,
+      updated_at: now,
+    })
+    .eq('id', intentId)
+    .neq('status', 'PAID')
+    .select('id')
+    .maybeSingle();
+
+  if (error) {
+    // The partial unique index on sepay_transaction_id means this transfer was
+    // already applied to another intent.
+    if (error.code === '23505') return 'DUPLICATE_TRANSACTION';
+    throw new Error(error.message);
+  }
+
+  return data ? 'CLAIMED' : 'ALREADY_PAID';
+}
+
+/** Hand the intent back so a SePay retry can activate it after a failed run. */
+async function releaseIntentClaim(intentId: string, previousStatus: string) {
+  const admin = createServiceClient();
+  const { error } = await admin
+    .from('subscription_payment_intents')
+    .update({
+      status: previousStatus,
+      paid_at: null,
       updated_at: new Date().toISOString(),
     })
-    .eq('id', intent.id);
+    .eq('id', intentId);
+  if (error) console.error('sepay claim release error', error.message);
+}
 
-  return {
-    matched: true,
-    activated: true,
-    note: result.extended ? 'EXTENDED' : 'ACTIVATED',
-    subscriptionId: result.subscriptionId,
-  };
+async function flagAmountMismatch(intentId: string, input: PaymentMatchInput) {
+  const admin = createServiceClient();
+  const { error } = await admin
+    .from('subscription_payment_intents')
+    .update({
+      status: 'AMOUNT_MISMATCH',
+      mismatch_amount: input.transferAmount,
+      sepay_reference_code: input.referenceCode || null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', intentId);
+  if (error) console.error('sepay mismatch flag error', error.message);
 }
 
 /** Used by register — still create PENDING_PAYMENT placeholder. */
