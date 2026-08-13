@@ -4,6 +4,7 @@ import { LandingHeader } from '@/components/landing/LandingHeader';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { AssetCard } from '@/components/marketplace/AssetCard';
+import { GuestSignupStrip } from '@/components/marketplace/GuestSignupStrip';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { VillaSearch } from '@/components/landing/VillaSearch';
 import { parseTagSearchParam } from '@/config/asset-tags';
@@ -132,6 +133,11 @@ export default async function MarketplacePage({
           defaultQ={keyword || ''}
           defaultTags={selectedTags}
         />
+        {!role ? (
+          <Box mt="xl">
+            <GuestSignupStrip compact />
+          </Box>
+        ) : null}
         {!assets?.length ? (
           <EmptyState
             title="Không tìm thấy"

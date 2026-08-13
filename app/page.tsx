@@ -10,6 +10,7 @@ import { OwnerFeatureSection } from '@/components/landing/OwnerFeatureSection';
 import { PricingSection } from '@/components/landing/PricingSection';
 import { FeaturedStays } from '@/components/landing/FeaturedStays';
 import { FinalCTA } from '@/components/landing/FinalCTA';
+import { GuestSignupSection } from '@/components/landing/GuestSignupSection';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 import { listAllPlans } from '@/lib/engines/subscription-payment';
 import type { AssetCardData } from '@/components/marketplace/AssetCard';
@@ -140,6 +141,7 @@ export default async function HomePage() {
           <PricingSectionStream />
         </Suspense>
         <FeaturedStays assets={featured} />
+        {!role ? <GuestSignupSection /> : null}
         <FinalCTA />
       </main>
       <LandingFooter />

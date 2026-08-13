@@ -1,7 +1,8 @@
 'use client';
 
-import { Button, Code, Group, Box } from '@mantine/core';
+import { Alert, Button, Code, Group, Box, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { colors, radius } from '@/config/design-tokens';
 import { assetPublicCode } from '@/lib/engines/asset-search';
@@ -10,14 +11,21 @@ export function AssetCtas({
   slug,
   assetId,
   isLoggedInGuest,
+  leadIntent,
   sticky,
 }: {
   slug: string;
   assetId: string;
   isLoggedInGuest: boolean;
+  /** Guest arrived back here after logging in from the contact CTA. */
+  leadIntent?: boolean;
   sticky?: boolean;
 }) {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [showIntent, setShowIntent] = useState(
+    Boolean(leadIntent) && isLoggedInGuest
+  );
   const url =
     typeof window !== 'undefined'
       ? `${window.location.origin}/a/${slug}`
@@ -53,7 +61,10 @@ export function AssetCtas({
 
   async function contactSale() {
     if (!isLoggedInGuest) {
-      window.location.href = `/login?next=/a/${slug}`;
+      // Carry the intent through login so the guest lands back on a page that
+      // remembers why they left. The lead is never sent automatically.
+      const next = encodeURIComponent(`/a/${slug}?lead=1`);
+      router.push(`/login?next=${next}`);
       return;
     }
     setLoading(true);
@@ -75,11 +86,37 @@ export function AssetCtas({
           message:
             'Đã gửi yêu cầu — sale đang trả phí sẽ thấy thông tin của bạn',
         });
+        setShowIntent(false);
+        // Drop ?lead=1 so a refresh does not re-prompt.
+        router.replace(`/a/${slug}`);
       }
     } finally {
       setLoading(false);
     }
   }
+
+  const intentBanner = showIntent ? (
+    <Alert
+      color="vbnbGreen"
+      variant="light"
+      radius={radius.sm}
+      withCloseButton
+      onClose={() => setShowIntent(false)}
+      title="Đã đăng nhập"
+    >
+      <Text size="sm">
+        Bấm “Cần liên lạc sale” để gửi yêu cầu cho villa này. Chúng tôi chỉ chia
+        sẻ số điện thoại của bạn khi bạn tự bấm.
+      </Text>
+    </Alert>
+  ) : null;
+
+  const loginHint = !isLoggedInGuest ? (
+    <Text size="xs" c="dimmed">
+      Cần đăng nhập để liên lạc sale — sale chỉ tạo được booking cho tài khoản
+      đã có trên hệ thống.
+    </Text>
+  ) : null;
 
   const actions = (
     <Group grow preventGrowOverflow={false} gap="sm" wrap="wrap">
@@ -106,10 +143,24 @@ export function AssetCtas({
     </Group>
   );
 
-  if (!sticky) return actions;
+  if (!sticky) {
+    return (
+      <Stack gap="xs">
+        {intentBanner}
+        {actions}
+        {loginHint}
+      </Stack>
+    );
+  }
 
   return (
     <>
+      {intentBanner || loginHint ? (
+        <Stack gap="xs">
+          {intentBanner}
+          {loginHint}
+        </Stack>
+      ) : null}
       <Box visibleFrom="sm">{actions}</Box>
       <Box
         hiddenFrom="sm"

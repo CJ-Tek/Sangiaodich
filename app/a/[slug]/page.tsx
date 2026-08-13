@@ -15,10 +15,13 @@ export const revalidate = 60;
 
 export default async function AssetPublicPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ lead?: string }>;
 }) {
   const { slug } = await params;
+  const { lead } = await searchParams;
   const profile = await getSessionProfile();
   if (profile?.role === 'SALE') {
     redirect(`/sale/marketplace/${slug}`);
@@ -93,6 +96,7 @@ export default async function AssetPublicPage({
               slug={asset.slug}
               assetId={asset.id}
               isLoggedInGuest={profile?.role === 'GUEST'}
+              leadIntent={lead === '1'}
               sticky
             />
           </Stack>
