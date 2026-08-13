@@ -1,6 +1,7 @@
 import { createServiceClient } from '@/lib/supabase/server';
 import { writeAudit } from '@/lib/auth/session';
 import { todayDateOnly } from '@/lib/dates';
+import { escapeIlikePattern, vnPhoneSearchVariants } from '@/lib/phone/vn-search';
 import type { UserRole } from '@/lib/types';
 import type { SubscriptionPlan } from '@/lib/engines/subscription-plans';
 import {
@@ -28,26 +29,128 @@ async function suspendOwnerActiveAssets(profileId: string) {
     .eq('status', 'ACTIVE');
 }
 
-export async function listAdminUsers(): Promise<{
+const PROFILE_COLUMNS =
+  'id, role, full_name, phone, email, deleted_at, deleted_by, delete_reason';
+
+export const ADMIN_USERS_PAGE_SIZE = 25;
+
+export const ADMIN_USER_TABS = [
+  'OWNER',
+  'SALE',
+  'GUEST',
+  'ADMIN',
+  'TRASH',
+] as const;
+
+export type AdminUserTab = (typeof ADMIN_USER_TABS)[number];
+
+export type AdminUsersPage = {
   users: AdminUserRow[];
   plans: SubscriptionPlan[];
-}> {
-  const admin = createServiceClient();
+  tab: AdminUserTab;
+  q: string;
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  counts: Record<AdminUserTab, number>;
+};
 
-  const { data: profiles, error: profilesErr } = await admin
-    .from('profiles')
-    .select(
-      'id, role, full_name, phone, email, deleted_at, deleted_by, delete_reason'
+export function parseAdminUserTab(raw?: string | null): AdminUserTab {
+  const value = String(raw || '').toUpperCase();
+  return ADMIN_USER_TABS.includes(value as AdminUserTab)
+    ? (value as AdminUserTab)
+    : 'OWNER';
+}
+
+/** Same fields as matchesAdminUserSearch, expressed for the database. */
+function searchFilter(q: string): string | null {
+  const trimmed = q.trim();
+  if (!trimmed) return null;
+
+  const escaped = escapeIlikePattern(trimmed);
+  const parts = [`full_name.ilike.%${escaped}%`, `email.ilike.%${escaped}%`];
+  for (const variant of vnPhoneSearchVariants(trimmed)) {
+    parts.push(`phone.ilike.%${escapeIlikePattern(variant)}%`);
+  }
+  return parts.join(',');
+}
+
+/**
+ * The trash tab is the soft-deleted rows of every role; the others are one live
+ * role each.
+ */
+async function countTab(
+  admin: ReturnType<typeof createServiceClient>,
+  tab: AdminUserTab,
+  filter: string | null
+): Promise<number> {
+  const base = admin.from('profiles').select('id', {
+    count: 'exact',
+    head: true,
+  });
+  let query =
+    tab === 'TRASH'
+      ? base.not('deleted_at', 'is', null)
+      : base.eq('role', tab).is('deleted_at', null);
+  if (filter) query = query.or(filter);
+  const { count } = await query;
+  return count || 0;
+}
+
+export async function listAdminUsers(input?: {
+  tab?: string | null;
+  q?: string | null;
+  page?: number;
+  pageSize?: number;
+}): Promise<AdminUsersPage> {
+  const admin = createServiceClient();
+  const tab = parseAdminUserTab(input?.tab);
+  const q = (input?.q || '').trim();
+  const pageSize = Math.min(
+    Math.max(input?.pageSize ?? ADMIN_USERS_PAGE_SIZE, 1),
+    100
+  );
+  const filter = searchFilter(q);
+
+  const counts = Object.fromEntries(
+    await Promise.all(
+      ADMIN_USER_TABS.map(
+        async (t) => [t, await countTab(admin, t, filter)] as const
+      )
     )
-    .order('role');
+  ) as Record<AdminUserTab, number>;
+
+  const total = counts[tab];
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(Math.max(input?.page ?? 1, 1), totalPages);
+  const from = (page - 1) * pageSize;
+
+  let listQuery = admin.from('profiles').select(PROFILE_COLUMNS);
+  listQuery =
+    tab === 'TRASH'
+      ? listQuery.not('deleted_at', 'is', null)
+      : listQuery.eq('role', tab).is('deleted_at', null);
+  if (filter) listQuery = listQuery.or(filter);
+
+  const { data: profiles, error: profilesErr } = await listQuery
+    .order('created_at', { ascending: false })
+    .range(from, from + pageSize - 1);
   if (profilesErr) {
     throw new AdminUserError('LIST_FAILED', profilesErr.message);
   }
 
-  const { data: subs } = await admin
-    .from('subscriptions')
-    .select('profile_id, status, period_end')
-    .order('period_end', { ascending: false });
+  const pageIds = (profiles || []).map((u) => u.id);
+
+  // Only the subscriptions of the rows actually rendered.
+  const { data: subs } = pageIds.length
+    ? await admin
+        .from('subscriptions')
+        .select('profile_id, status, period_end')
+        .in('profile_id', pageIds)
+        .order('period_end', { ascending: false })
+        .limit(pageIds.length * 20)
+    : { data: [] };
 
   const { data: plansRaw } = await admin
     .from('subscription_plans')
@@ -88,7 +191,17 @@ export async function listAdminUsers(): Promise<{
     subscription: latestSub.get(u.id) ?? null,
   }));
 
-  return { users, plans };
+  return {
+    users,
+    plans,
+    tab,
+    q,
+    page,
+    pageSize,
+    total,
+    totalPages,
+    counts,
+  };
 }
 
 export async function removeSubscription(input: {

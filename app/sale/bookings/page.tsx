@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 import { getSessionProfile } from '@/lib/auth/session';
 import { PageHeader } from '@/components/ui/PageHeader';
 import {
@@ -118,10 +119,9 @@ export default async function SaleBookingsPage({
   if (filter !== 'ALL') {
     bookingsQuery = bookingsQuery.eq('status', filter);
   }
-  const { data: bookings } = await bookingsQuery.order(
-    'created_at',
-    { ascending: false }
-  );
+  const { data: bookings } = await bookingsQuery
+    .order('created_at', { ascending: false })
+    .limit(LIST_VIEW_LIMIT);
 
   const empty = FILTER_META[filter];
 

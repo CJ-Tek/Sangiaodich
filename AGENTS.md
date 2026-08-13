@@ -1,3 +1,78 @@
+# VBNB — project state
+
+Hand-written section. Keep it above the generated blocks below: `next dev` and GitNexus
+rewrite everything between their own markers.
+
+## Orient before you work
+
+Never assume the working tree matches `main`, and never assume the GitNexus index is fresh.
+At the start of any non-trivial task, run these and report what you find:
+
+```bash
+git status --short          # uncommitted work in progress
+git log --oneline -10       # recent intent
+git log origin/main..HEAD   # committed but not deployed
+npm run db:status           # migrations applied to production
+```
+
+Reported state beats remembered state: this file describes how the project works, not what
+it currently contains. For "what changed" and "what exists", always measure.
+
+## GitNexus index freshness
+
+`impact`, `detect_changes`, and `api_impact` only see what the index has. If
+`.gitnexus/meta.json` is older than the newest source file, the index is stale and those
+tools will confidently report no impact for symbols they have never seen.
+
+Check before trusting them, and re-run `node .gitnexus/run.cjs analyze` when stale.
+
+## Environments
+
+This project is **already deployed**. The local Supabase stack and the hosted Supabase
+project both exist — never conflate them.
+
+| | Local | Production |
+|---|---|---|
+| Database | Supabase CLI via `npm run local`, ports 58321+ (`supabase/config.toml`) | Hosted Supabase project |
+| App | http://localhost:3000 | Vercel project `sangiaodich` |
+| Env vars | `.env.local`, generated (see below) | Vercel → Settings → Environment Variables |
+
+`.env.local` is **overwritten** with local Supabase keys every time `npm run local` runs
+(`scripts/run-local.ps1`). Never store hosted credentials there — they get wiped. Production
+values live only in Vercel.
+
+Check live state instead of trusting anything written here:
+
+- `npm run db:status` — migrations already applied to production
+- `vercel env ls` — env vars that exist in production
+- `git log origin/main..HEAD` — commits not yet deployed
+
+## Deploy flow
+
+`git commit` is local only. `git push` uploads to GitHub, and Vercel auto-builds from that
+push: `main` deploys to production, any other branch or PR gets a preview URL.
+
+**Migrations do not run on deploy.** Vercel builds Next.js and never touches the database.
+Apply them to the hosted DB *before* the code that depends on them reaches `main`:
+
+```bash
+npm run db:link -- --project-ref <ref>   # once per machine; ref is in the Supabase dashboard URL
+npm run db:status
+npm run db:push
+```
+
+The Supabase CLI is not linked on a fresh clone (`supabase/.temp/project-ref` is absent), so
+`db:push` fails until `db:link` has been run.
+
+## Never do
+
+- NEVER run `npm run db:reset` (or `supabase db reset`) against the hosted project — it drops
+  all data. Only `db:link`, `db:push`, and `db:status` touch production; every other `db:*`
+  script is local-only.
+- NEVER write production secrets into `.env.local` or any committed file.
+- NEVER treat a green Vercel build as a healthy release. A missing migration builds fine and
+  then fails at runtime.
+
 <!-- BEGIN:nextjs-agent-rules -->
 
 # This is NOT the Next.js you know
@@ -11,7 +86,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **Sangiaodich** (1458 symbols, 3809 relationships, 112 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **Sangiaodich** (1729 symbols, 4577 relationships, 132 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 

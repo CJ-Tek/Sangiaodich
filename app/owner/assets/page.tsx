@@ -1,5 +1,6 @@
 import { Button, Badge, Paper, Group, Stack, Text } from '@mantine/core';
 import { createClient } from '@/lib/supabase/server';
+import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 import { getSessionProfile } from '@/lib/auth/session';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -21,7 +22,8 @@ export default async function OwnerAssetsPage() {
     .from('assets')
     .select('id, title, status, slug, location, property_type, bedrooms, bathrooms, asset_costs(cost_weekday, cost_weekend)')
     .eq('owner_id', profile!.id)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(LIST_VIEW_LIMIT);
 
   return (
     <>

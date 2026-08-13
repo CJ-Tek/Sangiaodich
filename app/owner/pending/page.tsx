@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 import { getSessionProfile } from '@/lib/auth/session';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -32,7 +33,8 @@ export default async function OwnerPendingBookingsPage() {
   const { data: assets } = await admin
     .from('assets')
     .select('id, title, location')
-    .eq('owner_id', profile!.id);
+    .eq('owner_id', profile!.id)
+    .limit(LIST_VIEW_LIMIT);
 
   const assetIds = (assets || []).map((a) => a.id);
   const assetById = new Map((assets || []).map((a) => [a.id, a]));
@@ -48,6 +50,7 @@ export default async function OwnerPendingBookingsPage() {
         .in('asset_id', assetIds)
         .eq('status', 'AWAITING_OWNER')
         .order('submitted_to_owner_at', { ascending: false })
+        .limit(LIST_VIEW_LIMIT)
     : { data: [] as never[] };
 
   const saleIds = [
@@ -64,7 +67,8 @@ export default async function OwnerPendingBookingsPage() {
       .from('profiles')
       .select('id, full_name, avatar_url, phone')
       .in('id', saleIds)
-      .eq('role', 'SALE');
+      .eq('role', 'SALE')
+      .limit(saleIds.length);
     for (const s of sales || []) {
       saleById.set(s.id, {
         full_name: s.full_name || 'Sale',

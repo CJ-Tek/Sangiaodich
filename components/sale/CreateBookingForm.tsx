@@ -3,7 +3,6 @@
 import {
   Button,
   NumberInput,
-  Select,
   Stack,
   Text,
   Title,
@@ -24,6 +23,8 @@ import {
 } from '@/lib/engines/inventory';
 import { colors, radius } from '@/config/design-tokens';
 import { todayDateOnly } from '@/lib/dates';
+import { GuestPicker } from '@/components/sale/GuestPicker';
+import type { GuestOption } from '@/lib/engines/sale-guest-search';
 
 export function CreateBookingForm({
   assetId,
@@ -31,7 +32,7 @@ export function CreateBookingForm({
   costWeekday,
   costWeekend,
   saleCostDiscountPercent = 0,
-  guests,
+  guestSuggestions,
   confirmedRanges = [],
   awaitingOwnerRanges = [],
 }: {
@@ -40,14 +41,16 @@ export function CreateBookingForm({
   costWeekday: number;
   costWeekend: number;
   saleCostDiscountPercent?: number;
-  guests: { value: string; label: string }[];
+  /** Saved customers only — the full list is searched on the server. */
+  guestSuggestions: GuestOption[];
   confirmedRanges?: DateRange[];
   /** Soft-hold nights — highlight only, still selectable */
   awaitingOwnerRanges?: DateRange[];
 }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
-  const [guestId, setGuestId] = useState<string | null>(guests[0]?.value || null);
+  const [guest, setGuest] = useState<GuestOption | null>(null);
+  const guestId = guest?.value ?? null;
   const [range, setRange] = useState<[string | null, string | null]>([null, null]);
   const [listPrice, setListPrice] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -123,7 +126,7 @@ export function CreateBookingForm({
     );
   }, [range, quoted.effectiveWeekday, quoted.effectiveWeekend]);
 
-  const guestLabel = guests.find((g) => g.value === guestId)?.label;
+  const guestLabel = guest?.label;
 
   async function create() {
     if (!guestId || !range[0] || !range[1]) return;
@@ -231,14 +234,10 @@ export function CreateBookingForm({
       ) : null}
 
       {step === 1 ? (
-        <Select
-          label="Guest"
-          description="Chọn guest đã có trên hệ thống"
-          data={guests}
-          value={guestId}
-          onChange={setGuestId}
-          searchable
-          nothingFoundMessage="Không có guest"
+        <GuestPicker
+          value={guest}
+          onChange={setGuest}
+          suggestions={guestSuggestions}
         />
       ) : null}
 

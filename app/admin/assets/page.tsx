@@ -1,5 +1,6 @@
 import { Badge, Group, Image, Paper, Stack, Text } from '@mantine/core';
 import { createClient } from '@/lib/supabase/server';
+import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
@@ -35,7 +36,8 @@ export default async function AdminAssetsPage({
     .select(
       'id, title, description, status, location, slug, property_type, profiles!assets_owner_id_fkey(full_name), asset_images(url, sort_order)'
     )
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(LIST_VIEW_LIMIT);
 
   const rows = assets || [];
   const counts: Record<AdminAssetFilterStatus, number> = {

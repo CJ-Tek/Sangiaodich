@@ -20,17 +20,20 @@ export type SessionProfile = {
 export const getSessionProfile = cache(
   async (): Promise<SessionProfile | null> => {
     const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return null;
+
+    // getClaims verifies the token locally against the cached JWKS because the
+    // project signs with an asymmetric key, so it costs no Auth round-trip —
+    // unlike getUser, which called out on every page render.
+    const { data: claimsData } = await supabase.auth.getClaims();
+    const userId = claimsData?.claims.sub;
+    if (!userId) return null;
 
     const { data } = await supabase
       .from('profiles')
       .select(
         'id, role, phone, email, full_name, avatar_url, national_id, deleted_at'
       )
-      .eq('id', user.id)
+      .eq('id', userId)
       .maybeSingle();
 
     if (!data || data.deleted_at) return null;

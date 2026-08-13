@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
 import { escapeIlikePattern } from '@/lib/phone/vn-search';
-import { assetPublicCode } from '@/lib/engines/asset-search';
 import {
   EXPLORE_PAGE_SIZE,
   parseExplorePage,
@@ -67,6 +66,8 @@ export async function loadSaleMarketplaceAssets(input: {
   q?: string;
   page?: number;
   pageSize?: number;
+  /** Guards the last-page retry against recursing on an estimated total. */
+  retried?: boolean;
 }): Promise<SaleMarketplacePage> {
   const pageSize = Math.min(
     Math.max(input.pageSize ?? EXPLORE_PAGE_SIZE, 1),
@@ -80,7 +81,8 @@ export async function loadSaleMarketplaceAssets(input: {
   const admin = await createClient();
   let query = admin
     .from('assets')
-    .select(SALE_ASSET_COLUMNS, { count: 'exact' })
+    // See explore-assets.ts: `exact` counts every matching row per page load.
+    .select(SALE_ASSET_COLUMNS, { count: 'estimated' })
     .eq('status', 'ACTIVE')
     .order('created_at', { ascending: false })
     .order('sort_order', { ascending: true, foreignTable: 'asset_images' })
@@ -105,16 +107,6 @@ export async function loadSaleMarketplaceAssets(input: {
 
   const result = await query;
 
-  // Column missing / filter rejected — fall back to in-memory code match.
-  if (result.error && q && looksLikePublicCode(q)) {
-    const fallback = await loadSaleMarketplaceAssetsByCodeFallback({
-      q,
-      page,
-      pageSize,
-    });
-    if (fallback) return fallback;
-  }
-
   if (result.error) {
     console.error('[sale-marketplace] list failed', result.error.message);
     return toPageResult([], 0, 1, pageSize);
@@ -123,59 +115,15 @@ export async function loadSaleMarketplaceAssets(input: {
   const assets = (result.data || []) as unknown as SaleMarketplaceAssetRow[];
   const total = result.count ?? 0;
 
-  if (page > 1 && assets.length === 0 && total > 0) {
+  if (!input.retried && page > 1 && assets.length === 0 && total > 0) {
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     return loadSaleMarketplaceAssets({
       q,
       page: totalPages,
       pageSize,
+      retried: true,
     });
   }
 
   return toPageResult(assets, total, page, pageSize);
-}
-
-/** Last-resort when public_code is unavailable — scan ACTIVE then page. */
-async function loadSaleMarketplaceAssetsByCodeFallback(input: {
-  q: string;
-  page: number;
-  pageSize: number;
-}): Promise<SaleMarketplacePage | null> {
-  const admin = await createClient();
-  const { data, error } = await admin
-    .from('assets')
-    .select(SALE_ASSET_COLUMNS)
-    .eq('status', 'ACTIVE')
-    .order('created_at', { ascending: false })
-    .order('sort_order', { ascending: true, foreignTable: 'asset_images' })
-    .limit(1, { foreignTable: 'asset_images' });
-
-  if (error || !data) return null;
-
-  const compact = input.q.trim().toLowerCase().replace(/\s+/g, '');
-  const raw = input.q.trim().toLowerCase();
-  const matched = (data as unknown as SaleMarketplaceAssetRow[]).filter((a) => {
-    if (a.title.toLowerCase().includes(raw)) return true;
-    if (a.location.toLowerCase().includes(raw)) return true;
-    if (a.slug.toLowerCase().includes(raw)) return true;
-    const code = assetPublicCode(a.id);
-    const idCompact = a.id.replace(/-/g, '').toLowerCase();
-    return (
-      code === compact ||
-      code.startsWith(compact) ||
-      compact.endsWith(code) ||
-      idCompact.includes(compact)
-    );
-  });
-
-  const total = matched.length;
-  const totalPages = Math.max(1, Math.ceil(total / input.pageSize));
-  const page = Math.min(input.page, totalPages);
-  const start = (page - 1) * input.pageSize;
-  return toPageResult(
-    matched.slice(start, start + input.pageSize),
-    total,
-    page,
-    input.pageSize
-  );
 }

@@ -115,22 +115,27 @@ export function applyGuestConfirmProgress(input: {
   });
 }
 
+/** Place an already-summed sale volume on the tier ladder. */
+export function resolveSaleVolumeTier(
+  lifetimeCostVolume: number,
+  tiers: SaleTier[]
+): { lifetimeCostVolume: number; tier: SaleTier | null } {
+  const clamped = Math.max(0, Number(lifetimeCostVolume) || 0);
+  if (!tiers.length) {
+    return { lifetimeCostVolume: clamped, tier: null };
+  }
+  return { lifetimeCostVolume: clamped, tier: pickSaleTier(clamped, tiers) };
+}
+
 /** Rebuild sale volume + tier from remaining confirmed booking base costs. */
 export function recomputeSaleFromBaseCosts(
   baseCosts: number[],
   tiers: SaleTier[]
 ): { lifetimeCostVolume: number; tier: SaleTier | null } {
-  const lifetimeCostVolume = Math.max(
-    0,
-    baseCosts.reduce((sum, cost) => sum + Number(cost || 0), 0)
+  return resolveSaleVolumeTier(
+    baseCosts.reduce((sum, cost) => sum + Number(cost || 0), 0),
+    tiers
   );
-  if (!tiers.length) {
-    return { lifetimeCostVolume, tier: null };
-  }
-  return {
-    lifetimeCostVolume,
-    tier: pickSaleTier(lifetimeCostVolume, tiers),
-  };
 }
 
 /**

@@ -30,7 +30,17 @@ export async function updateSession(request: NextRequest) {
   // getClaims verifies the token locally against the cached JWKS because the
   // project signs with an asymmetric key, so this costs no Auth round-trip.
   const { data: claimsData } = await supabase.auth.getClaims();
-  const userId = claimsData?.claims.sub ?? null;
+  const claims = claimsData?.claims ?? null;
 
-  return { supabase, userId, supabaseResponse };
+  // profiles.role is synced *from* app_metadata (see
+  // 20260812105505_sync_profile_role_from_app_metadata.sql), so the claim is
+  // the source of truth and reading it costs nothing.
+  const appMetadata = claims?.app_metadata as { role?: string } | undefined;
+
+  return {
+    supabase,
+    userId: claims?.sub ?? null,
+    role: appMetadata?.role ?? null,
+    supabaseResponse,
+  };
 }

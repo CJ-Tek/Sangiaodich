@@ -13,7 +13,12 @@
     "local:reset": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/run-local.ps1 -ResetDb",
     "db:start": "npx supabase start",
     "db:reset": "npx supabase db reset",
-    "db:stop": "npx supabase stop"
+    "db:stop": "npx supabase stop",
+    "db:link": "npx supabase link",
+    "db:push": "npx supabase db push",
+    "db:status": "npx supabase migration list --linked",
+    "ship:fast": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/ship.ps1 -Mode Fast",
+    "ship:solid": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/ship.ps1 -Mode Solid"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -24,7 +29,6 @@
     "@mantine/notifications": "^9.5.1",
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.0",
-    "@upstash/qstash": "^2.11.3",
     "@vercel/kv": "^3.0.0",
     "dayjs": "^1.11.21",
     "next": "16.3.0",

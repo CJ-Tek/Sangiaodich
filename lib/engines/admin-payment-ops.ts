@@ -28,6 +28,9 @@ export type UnresolvedEventRow = {
 
 const EVENT_LIMIT = 50;
 
+/** Both lists are a work queue an admin clears by hand, not an archive. */
+const MISMATCH_LIMIT = 100;
+
 export async function listMismatchIntents(): Promise<MismatchIntentRow[]> {
   const admin = createServiceClient();
   const { data } = await admin
@@ -36,7 +39,8 @@ export async function listMismatchIntents(): Promise<MismatchIntentRow[]> {
       'id, profile_id, payment_code, amount, mismatch_amount, months, updated_at, profiles!inner(full_name, phone, role)'
     )
     .eq('status', 'AMOUNT_MISMATCH')
-    .order('updated_at', { ascending: false });
+    .order('updated_at', { ascending: false })
+    .limit(MISMATCH_LIMIT);
 
   return (data || []).map((row) => {
     const profile = firstRelated<{

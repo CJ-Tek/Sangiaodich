@@ -1,11 +1,12 @@
 import { createServiceClient } from '@/lib/supabase/server';
+import { fetchAllPages } from '@/lib/supabase/query-guard';
 import { hasConfirmedConflict, INVENTORY_LOCK_STATUSES } from '@/lib/engines/inventory';
 import {
   applyGuestConfirmProgress,
   applyGuestProgress,
   applySaleConfirmVolume,
   recomputeGuestFromCollectedAmounts,
-  recomputeSaleFromBaseCosts,
+  resolveSaleVolumeTier,
   type GuestTier,
   type SaleTier,
 } from '@/lib/engines/membership';
@@ -17,6 +18,13 @@ import {
   resolveSaleCostDiscountPercent,
   resolveSaleMembership,
 } from '@/lib/engines/sale-pricing';
+
+/**
+ * The date filters already narrow these reads to overlapping rows, so any row
+ * that comes back is a conflict and a page of them answers the question. The
+ * cap only keeps a pathological asset from pulling an unbounded set.
+ */
+const OVERLAP_PROBE_LIMIT = 50;
 
 export async function saleHasActiveSub(saleId: string): Promise<boolean> {
   return profileHasActiveSubscription(saleId);
@@ -76,11 +84,17 @@ export async function createBooking(input: {
 
   const candidate = { checkIn: input.checkIn, checkOut: input.checkOut };
 
+  // Stays are half-open [check_in, check_out), so only rows starting before the
+  // candidate ends and ending after it starts can overlap. Without this the read
+  // grew with the villa's whole booking history.
   const { data: confirmed } = await admin
     .from('bookings')
     .select('check_in, check_out')
     .eq('asset_id', input.assetId)
-    .in('status', [...INVENTORY_LOCK_STATUSES]);
+    .in('status', [...INVENTORY_LOCK_STATUSES])
+    .lt('check_in', input.checkOut)
+    .gt('check_out', input.checkIn)
+    .limit(OVERLAP_PROBE_LIMIT);
 
   if (
     hasConfirmedConflict(
@@ -99,7 +113,10 @@ export async function createBooking(input: {
     .select('check_in, check_out, status')
     .eq('asset_id', input.assetId)
     .eq('guest_id', input.guestId)
-    .in('status', ['PENDING', 'AWAITING_OWNER', ...INVENTORY_LOCK_STATUSES]);
+    .in('status', ['PENDING', 'AWAITING_OWNER', ...INVENTORY_LOCK_STATUSES])
+    .lt('check_in', input.checkOut)
+    .gt('check_out', input.checkIn)
+    .limit(OVERLAP_PROBE_LIMIT);
 
   if (
     hasConfirmedConflict(
@@ -191,7 +208,10 @@ export async function submitToOwner(input: {
     .from('bookings')
     .select('check_in, check_out')
     .eq('asset_id', booking.asset_id)
-    .in('status', [...INVENTORY_LOCK_STATUSES]);
+    .in('status', [...INVENTORY_LOCK_STATUSES])
+    .lt('check_in', booking.check_out)
+    .gt('check_out', booking.check_in)
+    .limit(OVERLAP_PROBE_LIMIT);
 
   if (
     hasConfirmedConflict(
@@ -294,7 +314,10 @@ export async function ownerConfirmBooking(input: {
     .select('check_in, check_out')
     .eq('asset_id', booking.asset_id)
     .neq('id', booking.id)
-    .in('status', [...INVENTORY_LOCK_STATUSES]);
+    .in('status', [...INVENTORY_LOCK_STATUSES])
+    .lt('check_in', booking.check_out)
+    .gt('check_out', booking.check_in)
+    .limit(OVERLAP_PROBE_LIMIT);
 
   if (
     hasConfirmedConflict(
@@ -737,12 +760,8 @@ const MEMBERSHIP_CREDIT_STATUSES = [
 
 async function recomputeSaleMembershipState(saleId: string) {
   const admin = createServiceClient();
-  const [{ data: bookings }, { data: saleTiersRaw }] = await Promise.all([
-    admin
-      .from('bookings')
-      .select('base_cost_snapshot')
-      .eq('sale_id', saleId)
-      .in('status', [...MEMBERSHIP_CREDIT_STATUSES]),
+  const [{ data: volume }, { data: saleTiersRaw }] = await Promise.all([
+    admin.rpc('sale_membership_volume', { p_sale_id: saleId }),
     admin
       .from('sale_membership_tiers')
       .select('id, sort, min_lifetime_cost_volume, cost_discount_percent')
@@ -756,10 +775,7 @@ async function recomputeSaleMembershipState(saleId: string) {
     costDiscountPercent: Number(t.cost_discount_percent),
   }));
 
-  const next = recomputeSaleFromBaseCosts(
-    (bookings || []).map((b) => Number(b.base_cost_snapshot || 0)),
-    tiers
-  );
+  const next = resolveSaleVolumeTier(Number(volume ?? 0), tiers);
 
   await admin.from('sale_membership_states').upsert({
     sale_id: saleId,
@@ -769,16 +785,37 @@ async function recomputeSaleMembershipState(saleId: string) {
   });
 }
 
+/**
+ * Guest tiers cannot be summed: ranking up zeroes progress, so the ladder has
+ * to be replayed booking by booking in confirm order. The history is therefore
+ * read in full — but in pages, because a single read would be cut at the row cap
+ * and the truncated replay would be written over the real state. `id` breaks
+ * ties so a row cannot shift between pages.
+ */
+async function loadGuestCreditedAmounts(
+  admin: ReturnType<typeof createServiceClient>,
+  guestId: string
+): Promise<number[]> {
+  const rows = await fetchAllPages<{ amount_collected: number | null }>(
+    (from, to) =>
+      admin
+        .from('bookings')
+        .select('amount_collected')
+        .eq('guest_id', guestId)
+        .in('status', [...MEMBERSHIP_CREDIT_STATUSES])
+        .order('confirmed_at', { ascending: true, nullsFirst: false })
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(from, to)
+  );
+
+  return rows.map((booking) => Number(booking.amount_collected || 0));
+}
+
 async function recomputeGuestMembershipState(guestId: string) {
   const admin = createServiceClient();
-  const [{ data: bookings }, { data: guestTiersRaw }] = await Promise.all([
-    admin
-      .from('bookings')
-      .select('amount_collected, confirmed_at, created_at')
-      .eq('guest_id', guestId)
-      .in('status', [...MEMBERSHIP_CREDIT_STATUSES])
-      .order('confirmed_at', { ascending: true, nullsFirst: false })
-      .order('created_at', { ascending: true }),
+  const [amountsCollected, { data: guestTiersRaw }] = await Promise.all([
+    loadGuestCreditedAmounts(admin, guestId),
     admin.from('guest_membership_tiers').select('*').order('sort'),
   ]);
 
@@ -789,10 +826,7 @@ async function recomputeGuestMembershipState(guestId: string) {
     minGmv: Number(t.min_gmv),
   }));
 
-  const next = recomputeGuestFromCollectedAmounts(
-    (bookings || []).map((b) => Number(b.amount_collected || 0)),
-    tiers
-  );
+  const next = recomputeGuestFromCollectedAmounts(amountsCollected, tiers);
 
   await admin.from('guest_membership_states').upsert({
     guest_id: guestId,

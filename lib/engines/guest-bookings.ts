@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 
 export type GuestBookingListItem = {
   id: string;
@@ -51,7 +52,8 @@ export async function loadGuestBookings(
       'id, status, check_in, check_out, list_price, amount_collected, assets(title, slug)'
     )
     .eq('guest_id', guestId)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: false })
+    .limit(LIST_VIEW_LIMIT);
 
   return (data || []).map((b) => {
     const asset = firstJoin(b.assets as unknown as AssetJoin | AssetJoin[]);

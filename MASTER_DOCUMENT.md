@@ -20,7 +20,7 @@
 | Inventory | Only **CONFIRMED** blocks dates (Postgres exclusion constraint) |
 | Guest calendar | Only **CONFIRMED** shown as booked |
 | Rate limit | Vercel KV (memory fallback locally) |
-| Lead notify | QStash fan-out → `lead_notifications` (local signed fallback if no QStash token) |
+| Lead notify | Read-time feed from `lead_requests`, scoped to the sale's membership period; `sale_lead_reads` holds one unread watermark per sale |
 | Money | `effectiveCost`, guestPay floor, snapshots on confirm — unchanged |
 
 ## Roles
@@ -60,6 +60,8 @@ saleMargin    = amountCollected − effectiveCost
 
 ## Ops
 
+- Production runs on **hosted Supabase + Vercel** (project `sangiaodich`); see `AGENTS.md` for
+  the environment table and deploy flow. Migrations never run as part of a Vercel build.
 - Local Supabase ports: **58321+** (see `supabase/config.toml`)
 - Seed users documented in README
 - Cron expires ACTIVE subscriptions past `period_end` and suspends owner ACTIVE assets

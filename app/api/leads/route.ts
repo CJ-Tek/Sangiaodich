@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { rateLimit } from '@/lib/kv/rate-limit';
-import { publishLeadFanout } from '@/lib/qstash/client';
 import { fail, ok } from '@/lib/types';
 
 export async function POST(request: Request) {
@@ -52,11 +51,8 @@ export async function POST(request: Request) {
     });
   }
 
-  try {
-    await publishLeadFanout(lead.id);
-  } catch (err) {
-    console.error('[leads] fanout failed after create', err);
-  }
-
+  // Sales read the lead straight off `lead_requests`, so creating one is a
+  // single insert — no queue, and no window where the lead exists but has not
+  // reached anybody yet.
   return NextResponse.json(ok({ leadId: lead.id }));
 }

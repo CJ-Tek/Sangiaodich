@@ -1,4 +1,5 @@
 import { createServiceClient } from '@/lib/supabase/server';
+import { fetchAllPages, fetchByIds } from '@/lib/supabase/query-guard';
 import { normalizePhone } from '@/lib/auth/otp';
 import {
   bookingNetPaid,
@@ -345,17 +346,38 @@ type BookingGuestRow = {
   assets: { title: string } | null;
 };
 
+function loadGuestStates(
+  admin: ReturnType<typeof createServiceClient>,
+  guestIds: string[]
+) {
+  return fetchByIds(guestIds, (chunk) =>
+    admin
+      .from('guest_membership_states')
+      .select(
+        'guest_id, progress_books, progress_gmv, current_tier_id, guest_membership_tiers(sort, label, min_books, min_gmv)'
+      )
+      .in('guest_id', chunk)
+      .limit(chunk.length)
+  );
+}
+
 export async function loadClosedCustomersForSale(
   saleId: string
 ): Promise<ClosedCustomerCard[]> {
   const admin = createServiceClient();
-  const { data: bookings } = await admin
-    .from('bookings')
-    .select(
-      'guest_id, status, check_in, amount_collected, refund_amount, profiles!bookings_guest_id_fkey(full_name, phone)'
-    )
-    .eq('sale_id', saleId)
-    .in('status', ['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT']);
+  // Totals are grouped per guest, so a truncated read would understate the
+  // amounts these cards are ranked by.
+  const bookings = await fetchAllPages((from, to) =>
+    admin
+      .from('bookings')
+      .select(
+        'guest_id, status, check_in, amount_collected, refund_amount, profiles!bookings_guest_id_fkey(full_name, phone)'
+      )
+      .eq('sale_id', saleId)
+      .in('status', ['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT'])
+      .order('id', { ascending: true })
+      .range(from, to)
+  );
 
   const rows = (bookings || []) as unknown as BookingGuestRow[];
   if (!rows.length) return [];
@@ -388,13 +410,8 @@ export async function loadClosedCustomersForSale(
   }
 
   const guestIds = [...byGuest.keys()];
-  const [{ data: states }, { data: tiers }] = await Promise.all([
-    admin
-      .from('guest_membership_states')
-      .select(
-        'guest_id, progress_books, progress_gmv, current_tier_id, guest_membership_tiers(sort, label, min_books, min_gmv)'
-      )
-      .in('guest_id', guestIds),
+  const [states, { data: tiers }] = await Promise.all([
+    loadGuestStates(admin, guestIds),
     admin
       .from('guest_membership_tiers')
       .select('id, sort, label, min_books, min_gmv')
@@ -466,14 +483,19 @@ export async function loadCancelledCustomersForSale(
   saleId: string
 ): Promise<CancelledCustomerCard[]> {
   const admin = createServiceClient();
-  const { data: bookings } = await admin
-    .from('bookings')
-    .select(
-      'guest_id, cancelled_at, refund_amount, refund_kept_amount, profiles!bookings_guest_id_fkey(full_name, phone), assets(title)'
-    )
-    .eq('sale_id', saleId)
-    .eq('status', 'CANCELLED')
-    .order('cancelled_at', { ascending: false });
+  // cancelCount is a group-by, so every cancellation has to be seen.
+  const bookings = await fetchAllPages((from, to) =>
+    admin
+      .from('bookings')
+      .select(
+        'guest_id, cancelled_at, refund_amount, refund_kept_amount, profiles!bookings_guest_id_fkey(full_name, phone), assets(title)'
+      )
+      .eq('sale_id', saleId)
+      .eq('status', 'CANCELLED')
+      .order('cancelled_at', { ascending: false })
+      .order('id', { ascending: true })
+      .range(from, to)
+  );
 
   const rows = (bookings || []) as unknown as BookingGuestRow[];
   if (!rows.length) return [];

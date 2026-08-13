@@ -3,9 +3,10 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { saleHasActiveSub } from '@/lib/engines/booking-service';
+import { countUnreadLeads, UNREAD_LEAD_CAP } from '@/lib/engines/sale-leads';
 import { resolveSaleCostDiscountPercent } from '@/lib/engines/sale-pricing';
 import { quoteAssetCosts } from '@/lib/engines/pricing';
-import { parseYearMonth } from '@/lib/dates';
+import { parseYearMonth, todayDateOnly } from '@/lib/dates';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LinkButton } from '@/components/ui/LinkButton';
 import { StatCard } from '@/components/ui/StatCard';
@@ -42,7 +43,7 @@ export default async function SaleHomePage({
   // instead of a chain of round-trips to the database.
   const [
     active,
-    { count: leadCount },
+    unreadLeads,
     { data: upcoming },
     { data: expectedRows },
     { data: periodCheckedOut },
@@ -50,17 +51,13 @@ export default async function SaleHomePage({
     { data: sub },
   ] = await Promise.all([
     saleHasActiveSub(profile!.id),
-    admin
-      .from('lead_notifications')
-      .select('*', { count: 'exact', head: true })
-      .eq('sale_id', profile!.id)
-      .is('read_at', null),
+    countUnreadLeads(),
     admin
       .from('bookings')
       .select('id, status, check_in, check_out, assets(title)')
       .eq('sale_id', profile!.id)
       .in('status', ['PENDING', 'CONFIRMED', 'CHECKED_IN'])
-      .gte('check_in', new Date().toISOString().slice(0, 10))
+      .gte('check_in', todayDateOnly())
       .order('check_in', { ascending: true })
       .limit(5),
     admin
@@ -150,9 +147,10 @@ export default async function SaleHomePage({
           <Title order={4} fw={600}>
             Needs action
           </Title>
-          {(leadCount || 0) > 0 ? (
+          {unreadLeads > 0 ? (
             <LinkButton href="/sale/leads" variant="light" color="vbnbGreen" size="xs">
-              {leadCount} unread leads
+              {unreadLeads > UNREAD_LEAD_CAP ? `${UNREAD_LEAD_CAP}+` : unreadLeads}{' '}
+              unread leads
             </LinkButton>
           ) : null}
         </Group>

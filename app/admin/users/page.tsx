@@ -3,9 +3,18 @@ import { AdminUsersPanel } from '@/components/admin/AdminUsersPanel';
 import { listAdminUsers } from '@/lib/engines/admin-user-management';
 import { getSessionProfile } from '@/lib/auth/session';
 
-export default async function AdminUsersPage() {
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string; q?: string; page?: string }>;
+}) {
+  const { tab, q, page } = await searchParams;
   const profile = await getSessionProfile();
-  const { users, plans } = await listAdminUsers();
+  const result = await listAdminUsers({
+    tab,
+    q,
+    page: Number(page) || 1,
+  });
 
   return (
     <>
@@ -14,8 +23,7 @@ export default async function AdminUsersPage() {
         description="Quản lý theo role, gỡ subscription, trash/restore. Mark paid là fallback khi SePay chưa nhận được."
       />
       <AdminUsersPanel
-        users={users}
-        plans={plans}
+        {...result}
         currentAdminId={profile?.id || ''}
       />
     </>

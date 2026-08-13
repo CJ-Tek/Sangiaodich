@@ -1,5 +1,6 @@
 import { Stack, Group, SimpleGrid, Alert } from '@mantine/core';
 import { createClient } from '@/lib/supabase/server';
+import { fetchAllPages } from '@/lib/supabase/query-guard';
 import { getSessionProfile } from '@/lib/auth/session';
 import { isSubscriptionActive } from '@/lib/engines/subscription';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -15,10 +16,14 @@ export default async function OwnerDashboard() {
   const profile = await getSessionProfile();
   const admin = await createClient();
 
-  const { data: assets } = await admin
-    .from('assets')
-    .select('id, title, status')
-    .eq('owner_id', profile!.id);
+  const assets = await fetchAllPages((from, to) =>
+    admin
+      .from('assets')
+      .select('id, title, status')
+      .eq('owner_id', profile!.id)
+      .order('id', { ascending: true })
+      .range(from, to)
+  );
 
   const { data: payoutRow } = await admin
     .from('profiles')
@@ -30,21 +35,14 @@ export default async function OwnerDashboard() {
   const payout = mapOwnerPayoutInfo(payoutRow);
   const hasPayout = hasOwnerPayoutInfo(payout);
 
-  const ids = (assets || []).map((a) => a.id);
-  let pnl = 0;
-  let confirmedCount = 0;
-  if (ids.length) {
-    const { data: bookings } = await admin
-      .from('bookings')
-      .select('owner_earn_snapshot')
-      .in('status', ['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT'])
-      .in('asset_id', ids);
-    confirmedCount = bookings?.length || 0;
-    pnl = (bookings || []).reduce(
-      (s, b) => s + Number(b.owner_earn_snapshot || 0),
-      0
-    );
-  }
+  // Summed in the database: reading every booking to add them up in Node meant
+  // the figure silently stopped growing at the PostgREST row cap.
+  const { data: earnings } = await admin
+    .rpc('owner_earnings_summary', { p_owner_id: profile!.id })
+    .maybeSingle<{ confirmed_bookings: number; owner_earn_total: number }>();
+
+  const confirmedCount = Number(earnings?.confirmed_bookings || 0);
+  const pnl = Number(earnings?.owner_earn_total || 0);
 
   const { data: sub } = await admin
     .from('subscriptions')

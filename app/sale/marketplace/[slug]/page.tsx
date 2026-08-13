@@ -1,7 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
+import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
+import { todayDateOnly } from '@/lib/dates';
 import { getSessionProfile } from '@/lib/auth/session';
 import { saleHasActiveSub } from '@/lib/engines/booking-service';
 import { resolveSaleCostDiscountPercent } from '@/lib/engines/sale-pricing';
+import { loadSaleGuestSuggestions } from '@/lib/engines/sale-guest-search';
 import { CreateBookingForm } from '@/components/sale/CreateBookingForm';
 import { MarketplaceCalendar } from '@/components/marketplace/MarketplaceCalendar';
 import {
@@ -36,10 +39,7 @@ export default async function SaleAssetDetailPage({
     .maybeSingle();
   if (!asset) notFound();
 
-  const { data: guests } = await admin
-    .from('profiles')
-    .select('id, full_name, phone')
-    .eq('role', 'GUEST');
+  const guestSuggestions = await loadSaleGuestSuggestions(profile!.id);
 
   const costs = asset.asset_costs as unknown as {
     cost_weekday: number;
@@ -53,11 +53,16 @@ export default async function SaleAssetDetailPage({
     p_asset_id: asset.id,
   });
 
+  // Soft-hold nights are only drawn on the calendar ahead of today, so past
+  // stays never need to travel.
   const { data: awaitingRows } = await admin
     .from('bookings')
     .select('check_in, check_out')
     .eq('asset_id', asset.id)
-    .eq('status', 'AWAITING_OWNER');
+    .eq('status', 'AWAITING_OWNER')
+    .gte('check_out', todayDateOnly())
+    .order('check_in', { ascending: true })
+    .limit(LIST_VIEW_LIMIT);
 
   const images = (asset.asset_images || []) as {
     url: string;
@@ -128,10 +133,7 @@ export default async function SaleAssetDetailPage({
             checkIn: r.check_in,
             checkOut: r.check_out,
           }))}
-          guests={(guests || []).map((g) => ({
-            value: g.id,
-            label: `${g.full_name} (${g.phone})`,
-          }))}
+          guestSuggestions={guestSuggestions}
         />
       </Paper>
     </Stack>

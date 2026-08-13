@@ -4,6 +4,7 @@ import {
   Badge,
   Button,
   Group,
+  Pagination,
   Paper,
   Stack,
   Tabs,
@@ -11,22 +12,25 @@ import {
   TextInput,
   Tooltip,
 } from '@mantine/core';
+import { useDebouncedValue } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
-import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { colors, radius } from '@/config/design-tokens';
 import { bookingStatusColors } from '@/config/booking-status';
 import { MarkPaidButton } from '@/components/admin/MarkPaidButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import {
   hardDeleteBlockedMessage,
-  matchesAdminUserSearch,
   type AdminUserRow,
 } from '@/lib/engines/admin-user-shared';
+import type {
+  AdminUserTab,
+  AdminUsersPage,
+} from '@/lib/engines/admin-user-management';
 import type { SubscriptionPlan } from '@/lib/engines/subscription-plans';
-import type { UserRole } from '@/lib/types';
 
-const ROLE_TABS: { value: UserRole | 'TRASH'; label: string }[] = [
+const ROLE_TABS: { value: AdminUserTab; label: string }[] = [
   { value: 'OWNER', label: 'Owner' },
   { value: 'SALE', label: 'Sale' },
   { value: 'GUEST', label: 'Guest' },
@@ -169,41 +173,47 @@ function UserCard({
   );
 }
 
+/**
+ * Tab, search and page live in the URL: the list is paginated in the database,
+ * so the server needs them to build the query. It used to receive every profile
+ * and filter in the browser.
+ */
 export function AdminUsersPanel({
   users,
   plans,
+  tab,
+  q,
+  page,
+  totalPages,
+  total,
+  counts,
   currentAdminId,
-}: {
-  users: AdminUserRow[];
-  plans: SubscriptionPlan[];
-  currentAdminId: string;
-}) {
+}: AdminUsersPage & { currentAdminId: string }) {
   const router = useRouter();
-  const [query, setQuery] = useState('');
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(q);
+  const [debouncedQuery] = useDebouncedValue(query, 300);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const lastPushedQuery = useRef(q);
 
-  const activeUsers = useMemo(
-    () => users.filter((u) => !u.deleted_at),
-    [users]
-  );
-  const trashUsers = useMemo(
-    () => users.filter((u) => Boolean(u.deleted_at)),
-    [users]
-  );
+  function buildHref(next: { tab?: string; q?: string; page?: number }) {
+    const params = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(next)) {
+      if (!value || value === 1) params.delete(key);
+      else params.set(key, String(value));
+    }
+    const qs = params.toString();
+    return qs ? `${pathname}?${qs}` : pathname;
+  }
 
-  const filteredByRole = useMemo(() => {
-    const match = (list: AdminUserRow[]) =>
-      list.filter((u) =>
-        matchesAdminUserSearch(query, u.full_name, u.phone, u.email)
-      );
-    return {
-      OWNER: match(activeUsers.filter((u) => u.role === 'OWNER')),
-      SALE: match(activeUsers.filter((u) => u.role === 'SALE')),
-      GUEST: match(activeUsers.filter((u) => u.role === 'GUEST')),
-      ADMIN: match(activeUsers.filter((u) => u.role === 'ADMIN')),
-      TRASH: match(trashUsers),
-    } as const;
-  }, [activeUsers, trashUsers, query]);
+  useEffect(() => {
+    if (debouncedQuery === lastPushedQuery.current) return;
+    lastPushedQuery.current = debouncedQuery;
+    router.push(buildHref({ q: debouncedQuery, page: 1 }));
+    // buildHref reads router-derived values that change together with the query.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedQuery]);
 
   async function onAction(
     action: 'remove_subscription' | 'soft_delete_user' | 'restore_user',
@@ -242,7 +252,8 @@ export function AdminUsersPanel({
     }
   }
 
-  const q = query.trim();
+  const activeTab = ROLE_TABS.find((t) => t.value === tab) ?? ROLE_TABS[0];
+  const mode = tab === 'TRASH' ? 'trash' : 'active';
 
   return (
     <Stack gap="md">
@@ -254,56 +265,72 @@ export function AdminUsersPanel({
         maw={420}
       />
 
-      <Tabs defaultValue="OWNER" color="vbnbGreen">
+      <Tabs
+        value={tab}
+        onChange={(value) =>
+          router.push(buildHref({ tab: value || 'OWNER', page: 1 }))
+        }
+        color="vbnbGreen"
+      >
         <Tabs.List mb="md">
-          {ROLE_TABS.map((tab) => (
-            <Tabs.Tab key={tab.value} value={tab.value}>
-              {tab.label} ({filteredByRole[tab.value].length})
+          {ROLE_TABS.map((roleTab) => (
+            <Tabs.Tab key={roleTab.value} value={roleTab.value}>
+              {roleTab.label} ({counts[roleTab.value]})
             </Tabs.Tab>
           ))}
         </Tabs.List>
 
-        {ROLE_TABS.map((tab) => {
-          const list = filteredByRole[tab.value];
-          const mode = tab.value === 'TRASH' ? 'trash' : 'active';
-          const emptyTitle = q
-            ? `Không tìm thấy “${q}”`
-            : tab.value === 'TRASH'
-              ? 'Trash trống'
-              : `Chưa có ${tab.label}`;
-
-          return (
-            <Tabs.Panel key={tab.value} value={tab.value}>
-              {!list.length ? (
-                <EmptyState
-                  title={emptyTitle}
-                  description={
-                    q
-                      ? 'Thử từ khóa khác hoặc đổi tab role / Trash.'
-                      : tab.value === 'TRASH'
-                        ? 'User soft-delete sẽ hiện ở đây để khôi phục.'
-                        : 'User thuộc role này sẽ hiện tại đây.'
-                  }
+        <Tabs.Panel value={tab}>
+          {!users.length ? (
+            <EmptyState
+              title={
+                q
+                  ? `Không tìm thấy “${q}”`
+                  : tab === 'TRASH'
+                    ? 'Trash trống'
+                    : `Chưa có ${activeTab.label}`
+              }
+              description={
+                q
+                  ? 'Thử từ khóa khác hoặc đổi tab role / Trash.'
+                  : tab === 'TRASH'
+                    ? 'User soft-delete sẽ hiện ở đây để khôi phục.'
+                    : 'User thuộc role này sẽ hiện tại đây.'
+              }
+            />
+          ) : (
+            <Stack gap="sm">
+              {users.map((u) => (
+                <UserCard
+                  key={u.id}
+                  user={u}
+                  plans={plans}
+                  mode={mode}
+                  busyId={busyId}
+                  currentAdminId={currentAdminId}
+                  onAction={onAction}
                 />
-              ) : (
-                <Stack gap="sm">
-                  {list.map((u) => (
-                    <UserCard
-                      key={u.id}
-                      user={u}
-                      plans={plans}
-                      mode={mode}
-                      busyId={busyId}
-                      currentAdminId={currentAdminId}
-                      onAction={onAction}
-                    />
-                  ))}
-                </Stack>
-              )}
-            </Tabs.Panel>
-          );
-        })}
+              ))}
+            </Stack>
+          )}
+        </Tabs.Panel>
       </Tabs>
+
+      {totalPages > 1 ? (
+        <Group justify="center" mt="md" gap="md" wrap="wrap">
+          <Text size="sm" c="dimmed">
+            {total} user
+          </Text>
+          <Pagination
+            value={page}
+            onChange={(next) => router.push(buildHref({ page: next }))}
+            total={totalPages}
+            color="vbnbGreen"
+            siblings={1}
+            boundaries={1}
+          />
+        </Group>
+      ) : null}
     </Stack>
   );
 }

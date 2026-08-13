@@ -20,40 +20,34 @@ export async function GET(request: Request) {
   }
 
   const admin = createServiceClient();
-  const today = new Date().toISOString().slice(0, 10);
 
-  const { data: expired } = await admin
-    .from('subscriptions')
-    .select('id, profile_id, profiles!inner(role)')
-    .eq('status', 'ACTIVE')
-    .lt('period_end', today);
+  const { data, error } = await admin
+    .rpc('expire_due_subscriptions')
+    .maybeSingle<{
+      expired_subscriptions: number;
+      suspended_assets: number;
+    }>();
 
-  let suspendedAssets = 0;
-  for (const sub of expired || []) {
-    await admin
-      .from('subscriptions')
-      .update({ status: 'EXPIRED' })
-      .eq('id', sub.id);
+  if (error) {
+    return NextResponse.json(fail('EXPIRE_FAILED', error.message), {
+      status: 500,
+    });
+  }
 
-    const role = (sub.profiles as { role?: string } | { role?: string }[]) &&
-      !Array.isArray(sub.profiles)
-      ? (sub.profiles as { role: string }).role
-      : Array.isArray(sub.profiles)
-        ? sub.profiles[0]?.role
-        : undefined;
-
-    if (role === 'OWNER') {
-      const { data } = await admin
-        .from('assets')
-        .update({ status: 'SUSPENDED' })
-        .eq('owner_id', sub.profile_id)
-        .eq('status', 'ACTIVE')
-        .select('id');
-      suspendedAssets += data?.length || 0;
-    }
+  // Rides along on the daily schedule rather than owning one: the purge is
+  // batched, so falling a run behind only delays it.
+  const { data: purged, error: purgeError } = await admin.rpc(
+    'purge_sepay_webhook_events'
+  );
+  if (purgeError) {
+    console.error('[cron] webhook purge failed', purgeError.message);
   }
 
   return NextResponse.json(
-    ok({ expired: expired?.length || 0, suspendedAssets })
+    ok({
+      expired: Number(data?.expired_subscriptions || 0),
+      suspendedAssets: Number(data?.suspended_assets || 0),
+      purgedWebhookEvents: Number(purged || 0),
+    })
   );
 }

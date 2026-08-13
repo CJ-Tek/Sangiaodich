@@ -7,6 +7,9 @@ const ROLE_PREFIX: Record<string, string> = {
   '/sale': 'SALE',
 };
 
+/** Opt-in: this used to write a line per request, including static assets. */
+const PERF_LOG_ENABLED = process.env.MIDDLEWARE_PERF_LOG === '1';
+
 function logMiddlewarePerf(input: {
   path: string;
   outcome: 'pass' | 'redirect_login' | 'redirect_root' | 'redirect_trashed';
@@ -14,6 +17,7 @@ function logMiddlewarePerf(input: {
   profileMs: number;
   totalMs: number;
 }) {
+  if (!PERF_LOG_ENABLED) return;
   console.info(
     `[perf] ${JSON.stringify({
       scope: 'middleware',
@@ -47,7 +51,8 @@ function redirectWithSession(
 export async function middleware(request: NextRequest) {
   const startedAt = Date.now();
   const sessionStartedAt = Date.now();
-  const { supabase, userId, supabaseResponse } = await updateSession(request);
+  const { supabase, userId, role, supabaseResponse } =
+    await updateSession(request);
   const sessionMs = Date.now() - sessionStartedAt;
   const path = request.nextUrl.pathname;
 
@@ -79,10 +84,26 @@ export async function middleware(request: NextRequest) {
     });
   }
 
+  // The role gate reads the JWT, so a wrong-role request never touches the
+  // database.
+  if (role !== ROLE_PREFIX[protectedPrefix]) {
+    logMiddlewarePerf({
+      path,
+      outcome: 'redirect_root',
+      sessionMs,
+      profileMs: 0,
+      totalMs: Date.now() - startedAt,
+    });
+    return redirectWithSession(request, supabaseResponse, '/');
+  }
+
+  // Soft delete leaves the auth session valid, and several admin pages have no
+  // requireRole of their own, so this stays the only gate that revokes a
+  // trashed account immediately. It is a primary-key lookup.
   const profileStartedAt = Date.now();
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, deleted_at')
+    .select('deleted_at')
     .eq('id', userId)
     .maybeSingle();
   const profileMs = Date.now() - profileStartedAt;
@@ -100,8 +121,7 @@ export async function middleware(request: NextRequest) {
     });
   }
 
-  const required = ROLE_PREFIX[protectedPrefix];
-  if (!profile || profile.role !== required) {
+  if (!profile) {
     logMiddlewarePerf({
       path,
       outcome: 'redirect_root',

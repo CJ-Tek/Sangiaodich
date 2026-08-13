@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 import { getSessionProfile } from '@/lib/auth/session';
 import { PageHeader } from '@/components/ui/PageHeader';
 import {
@@ -15,7 +16,8 @@ export default async function OwnerSettlementsPage() {
   const { data: assets } = await admin
     .from('assets')
     .select('id')
-    .eq('owner_id', profile!.id);
+    .eq('owner_id', profile!.id)
+    .limit(LIST_VIEW_LIMIT);
 
   const assetIds = (assets || []).map((a) => a.id);
 
@@ -31,6 +33,7 @@ export default async function OwnerSettlementsPage() {
         .in('asset_id', assetIds)
         .in('status', [...SETTLED])
         .order('confirmed_at', { ascending: false })
+        .limit(LIST_VIEW_LIMIT)
     : { data: [] as never[] };
 
   const saleIds = [
@@ -47,7 +50,8 @@ export default async function OwnerSettlementsPage() {
       .from('profiles')
       .select('id, full_name, avatar_url, phone')
       .in('id', saleIds)
-      .eq('role', 'SALE');
+      .eq('role', 'SALE')
+      .limit(saleIds.length);
 
     for (const s of sales || []) {
       saleNameById.set(s.id, {

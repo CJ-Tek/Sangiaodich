@@ -33,11 +33,18 @@ export type ExploreAssetsPage = {
   totalPages: number;
 };
 
+/**
+ * A page number straight from the query string becomes an OFFSET, and Postgres
+ * walks every skipped row. The ceiling caps that walk; anything past the real
+ * end is answered by the last-page retry in `fetchExplorePage` instead.
+ */
+export const MAX_EXPLORE_PAGE = 1_000;
+
 export function parseExplorePage(raw?: string | string[]): number {
   const value = Array.isArray(raw) ? raw[0] : raw;
   const n = Number(value);
   if (!Number.isFinite(n) || n < 1) return 1;
-  return Math.min(Math.floor(n), 10_000);
+  return Math.min(Math.floor(n), MAX_EXPLORE_PAGE);
 }
 
 function toPageResult(
@@ -64,6 +71,8 @@ async function fetchExplorePage(input: {
   pageSize: number;
   /** Service role for the unfiltered cached path; cookie client otherwise. */
   useServiceRole?: boolean;
+  /** Guards the last-page retry against recursing on an estimated total. */
+  retried?: boolean;
 }): Promise<ExploreAssetsPage> {
   const pageSize = Math.min(Math.max(input.pageSize, 1), 48);
   const page = Math.max(input.page, 1);
@@ -78,7 +87,10 @@ async function fetchExplorePage(input: {
 
   let query = client
     .from('assets')
-    .select(ASSET_COLUMNS, { count: 'exact' })
+    // `exact` runs a COUNT(*) over every matching row on each page load, and
+    // the filtered path is not cached. `estimated` stays exact while the result
+    // set is small and falls back to the planner once it is not.
+    .select(ASSET_COLUMNS, { count: 'estimated' })
     .eq('status', 'ACTIVE')
     .order('created_at', { ascending: false })
     .order('sort_order', { ascending: true, foreignTable: 'asset_images' })
@@ -100,12 +112,13 @@ async function fetchExplorePage(input: {
   const assets = (result.data || []) as ExploreAssetRow[];
 
   // Out-of-range page (e.g. stale bookmark): return last page instead of empty.
-  if (page > 1 && assets.length === 0 && total > 0) {
+  if (!input.retried && page > 1 && assets.length === 0 && total > 0) {
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     return fetchExplorePage({
       ...input,
       page: totalPages,
       pageSize,
+      retried: true,
     });
   }
 
