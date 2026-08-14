@@ -2,9 +2,11 @@ import { NextResponse } from 'next/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { createServiceClient } from '@/lib/supabase/server';
 import {
+  DRAFT_LIMIT_MESSAGE,
   filterValidAssetTags,
   isPropertyType,
   MAX_ASSET_IMAGES,
+  MAX_OWNER_DRAFT_ASSETS,
   MIN_ASSET_IMAGES_FOR_REVIEW,
   MIN_ASSET_TAGS,
 } from '@/config/asset-tags';
@@ -78,6 +80,25 @@ export async function POST(request: Request) {
   }
 
   const admin = createServiceClient();
+
+  if (!submit) {
+    const { count, error: countError } = await admin
+      .from('assets')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', profile.id)
+      .eq('status', 'DRAFT');
+    if (countError) {
+      return NextResponse.json(fail('CREATE_FAILED', countError.message), {
+        status: 500,
+      });
+    }
+    if ((count ?? 0) >= MAX_OWNER_DRAFT_ASSETS) {
+      return NextResponse.json(fail('DRAFT_LIMIT', DRAFT_LIMIT_MESSAGE), {
+        status: 400,
+      });
+    }
+  }
+
   const slugBase = slugify(title) || 'asset';
   const slug = `${slugBase}-${Date.now().toString(36)}`;
 
@@ -101,6 +122,11 @@ export async function POST(request: Request) {
     .single();
 
   if (error || !asset) {
+    if (error?.message?.includes('DRAFT_LIMIT')) {
+      return NextResponse.json(fail('DRAFT_LIMIT', DRAFT_LIMIT_MESSAGE), {
+        status: 400,
+      });
+    }
     return NextResponse.json(fail('CREATE_FAILED', error?.message || 'Failed'), {
       status: 500,
     });

@@ -13,6 +13,7 @@ import {
 import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { VietQrBankSelect } from '@/components/ui/VietQrBankSelect';
 import type { PlatformPaymentInfo } from '@/lib/platform/payment-info';
 
 export function FeeSettingsForm({ payment }: { payment: PlatformPaymentInfo }) {
@@ -97,6 +98,15 @@ export function FeeSettingsForm({ payment }: { payment: PlatformPaymentInfo }) {
         onChange={(e) => setBankName(e.currentTarget.value)}
         placeholder="Vietcombank"
       />
+      <VietQrBankSelect
+        label="Mã ngân hàng VietQR"
+        description="Chọn ngân hàng để tạo QR động. Nếu trống sẽ lấy tên Ngân hàng ở trên. Gõ tên hoặc mã để tìm."
+        value={vietqrBank}
+        onChange={(bank) => {
+          setVietqrBank(bank?.bankShortName ?? '');
+          if (bank) setBankName(bank.bankShortName);
+        }}
+      />
       <TextInput
         label="Chủ tài khoản"
         value={accountName}
@@ -108,13 +118,6 @@ export function FeeSettingsForm({ payment }: { payment: PlatformPaymentInfo }) {
         value={accountNumber}
         onChange={(e) => setAccountNumber(e.currentTarget.value)}
         placeholder="0123456789"
-      />
-      <TextInput
-        label="Mã ngân hàng VietQR"
-        description="Dùng tạo QR động (VD: Vietcombank, BIDV, MBBank). Nếu trống sẽ lấy tên Ngân hàng ở trên."
-        value={vietqrBank}
-        onChange={(e) => setVietqrBank(e.currentTarget.value)}
-        placeholder="Vietcombank"
       />
 
       <div>

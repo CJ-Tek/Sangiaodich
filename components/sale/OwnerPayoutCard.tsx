@@ -275,8 +275,7 @@ export function OwnerPayoutCard({
                 thousandSeparator="."
                 decimalSeparator=","
               />
-              <Group gap="xs">
-                <Button
+              <Button
                   size="xs"
                   color="vbnbGreen"
                   loading={loading}
@@ -287,18 +286,8 @@ export function OwnerPayoutCard({
                   }
                   onClick={() => markPaid(amount)}
                 >
-                  Lưu số đã CK
+                  Xác nhận CK
                 </Button>
-                <Button
-                  size="xs"
-                  variant="default"
-                  loading={loading}
-                  disabled={ownerEarn <= 0 || ownerPaid >= ownerEarn}
-                  onClick={() => markPaid(ownerEarn)}
-                >
-                  Đánh dấu đủ
-                </Button>
-              </Group>
             </Stack>
           </>
         )}

@@ -254,15 +254,6 @@ export function SaleBookingsList({
                 </Text>
               ) : (
                 <Stack gap="md">
-                  <BookingActions
-                    bookingId={b.id}
-                    status={b.status}
-                    listPrice={b.list}
-                    suggestedFloor={b.floor}
-                    checkIn={b.check_in}
-                    amountCollected={b.amountCollected}
-                    salePayoutReady={b.salePayoutReady}
-                  />
                   {[
                     'PENDING',
                     'AWAITING_OWNER',
@@ -286,6 +277,17 @@ export function SaleBookingsList({
                       payout={b.payout}
                     />
                   ) : null}
+                  <BookingActions
+                    bookingId={b.id}
+                    status={b.status}
+                    listPrice={b.list}
+                    suggestedFloor={b.floor}
+                    checkIn={b.check_in}
+                    amountCollected={b.amountCollected}
+                    ownerEarn={b.ownerEarn}
+                    ownerPaid={b.ownerPaid}
+                    salePayoutReady={b.salePayoutReady}
+                  />
                 </Stack>
               )}
             </Paper>

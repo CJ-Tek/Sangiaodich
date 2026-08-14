@@ -224,7 +224,7 @@ export default async function SaleBookingsPage({
     <>
       <PageHeader
         title="Bookings"
-        description="Thu cọc Guest → CK Owner (có thể một phần) → Gửi Owner. Owner confirm mới khóa lịch."
+        description="Thu cọc Guest → Xác nhận CK Owner (50% hoặc đủ) → Gửi Owner. Owner confirm mới khóa lịch."
       />
       <Stack gap="md" mb="lg">
         <BookingStatusFilter value={filter} />

@@ -25,6 +25,7 @@ export default async function AdminAssetDetailPage({
       'id, title, description, location, slug, status, capacity, bedrooms, bathrooms, property_type, tags, profiles!assets_owner_id_fkey(full_name), asset_images(url, sort_order)'
     )
     .eq('id', id)
+    .neq('status', 'DRAFT')
     .maybeSingle();
 
   if (!asset) notFound();

@@ -10,7 +10,7 @@ import {
   type GuestTier,
   type SaleTier,
 } from '@/lib/engines/membership';
-import { previewPricing, minDepositToConfirm } from '@/lib/engines/pricing';
+import { previewPricing, minOwnerDepositToConfirm } from '@/lib/engines/pricing';
 import { computeCancelRefund } from '@/lib/engines/cancellation';
 import { profileHasActiveSubscription } from '@/lib/engines/subscription-access';
 import { isPastDateOnly } from '@/lib/dates';
@@ -194,12 +194,17 @@ export async function submitToOwner(input: {
   });
 
   const listPrice = Number(booking.list_price);
-  const minDeposit = minDepositToConfirm(listPrice);
-  if (input.amountCollected < minDeposit) {
+  const ownerEarn = pricing.effectiveCost;
+  const minOwnerPayout = minOwnerDepositToConfirm(ownerEarn);
+  const ownerPaid = Number(booking.owner_paid_amount || 0);
+  if (ownerEarn <= 0) {
+    return { error: 'NO_OWNER_EARN' as const };
+  }
+  if (ownerPaid < minOwnerPayout) {
     return {
-      error: 'BELOW_DEPOSIT' as const,
-      minDeposit,
-      listPrice,
+      error: 'BELOW_OWNER_PAYOUT' as const,
+      minOwnerPayout,
+      ownerEarn,
     };
   }
 

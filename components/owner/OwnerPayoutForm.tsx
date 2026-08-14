@@ -15,6 +15,7 @@ import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { colors, radius } from '@/config/design-tokens';
+import { VietQrBankSelect } from '@/components/ui/VietQrBankSelect';
 import type { OwnerPayoutInfo } from '@/lib/owner/payout-info';
 
 export function OwnerPayoutForm({
@@ -114,6 +115,13 @@ export function OwnerPayoutForm({
           onChange={(e) => setBankName(e.currentTarget.value)}
           placeholder="Vietcombank"
         />
+        <VietQrBankSelect
+          value={vietqrBank}
+          onChange={(bank) => {
+            setVietqrBank(bank?.bankShortName ?? '');
+            if (bank) setBankName(bank.bankShortName);
+          }}
+        />
         <TextInput
           label="Chủ tài khoản"
           value={accountName}
@@ -125,13 +133,6 @@ export function OwnerPayoutForm({
           value={accountNumber}
           onChange={(e) => setAccountNumber(e.currentTarget.value)}
           placeholder="0123456789"
-        />
-        <TextInput
-          label="Mã NH VietQR"
-          description="Nên điền (VD: Vietcombank, BIDV, MBBank) để tạo QR động kèm số tiền + nội dung."
-          value={vietqrBank}
-          onChange={(e) => setVietqrBank(e.currentTarget.value)}
-          placeholder="Vietcombank"
         />
 
         <div>

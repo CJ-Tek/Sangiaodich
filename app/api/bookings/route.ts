@@ -90,11 +90,13 @@ export async function PATCH(request: Request) {
     });
     if ('error' in result && result.error) {
       const message =
-        result.error === 'BELOW_DEPOSIT' && 'minDeposit' in result
-          ? `Cần thu tối thiểu 50% giá bán (${Number(result.minDeposit).toLocaleString('vi-VN')}) để gửi Owner`
-          : result.error === 'OVERLAP'
-            ? 'Ngày đã bị Sale khác chốt (CONFIRMED) — không gửi được'
-            : String(result.error);
+        result.error === 'NO_OWNER_EARN'
+          ? 'Chưa có giá gốc — không gửi Owner được'
+          : result.error === 'BELOW_OWNER_PAYOUT' && 'minOwnerPayout' in result
+            ? `Cần xác nhận CK Owner tối thiểu 50% giá gốc (${Number(result.minOwnerPayout).toLocaleString('vi-VN')}) trước khi gửi`
+            : result.error === 'OVERLAP'
+              ? 'Ngày đã bị Sale khác chốt (CONFIRMED) — không gửi được'
+              : String(result.error);
       return NextResponse.json(fail(String(result.error), message), {
         status: 400,
       });

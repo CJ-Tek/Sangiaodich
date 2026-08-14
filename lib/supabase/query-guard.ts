@@ -28,9 +28,20 @@ export function warnIfTruncated<T>(
  * controls yet. It is deliberately far below the row cap so the boundary is a
  * decision in the code rather than a silent cut by PostgREST.
  *
- * TODO: these views need real pagination; the cap only bounds the damage.
+ * TODO: remaining LIST_VIEW_LIMIT views (bookings, pending) still need paging.
  */
 export const LIST_VIEW_LIMIT = 200;
+
+/** Card lists: owner Properties and admin Asset approval. */
+export const DASHBOARD_ASSET_PAGE_SIZE = 10;
+export const MAX_DASHBOARD_PAGE = 1_000;
+
+export function parseDashboardPage(raw?: string | string[]): number {
+  const value = Array.isArray(raw) ? raw[0] : raw;
+  const n = Number(value);
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.min(Math.floor(n), MAX_DASHBOARD_PAGE);
+}
 
 const DEFAULT_PAGE_SIZE = 500;
 

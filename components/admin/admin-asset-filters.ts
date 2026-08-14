@@ -21,6 +21,15 @@ export const ADMIN_ASSET_FILTER_DB: Record<
   suspend: 'SUSPENDED',
 };
 
+/** Drafts stay on the owner until Submit for review. */
+export const ADMIN_VISIBLE_ASSET_STATUSES: AssetStatus[] = [
+  'PENDING_REVIEW',
+  'ACTIVE',
+  'REJECTED',
+  'SUSPENDED',
+  'INACTIVE',
+];
+
 export function parseAdminAssetFilter(
   raw?: string | null
 ): AdminAssetFilterStatus {

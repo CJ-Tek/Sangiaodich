@@ -109,8 +109,8 @@ export function minDepositToConfirm(listSelling: number): number {
 }
 
 /**
- * Suggested Sale→Owner first transfer (50% of owner earn / cost).
- * Soft guide for QR — Owner Confirm is attestation after STK check, not hard-gated on this.
+ * Minimum Sale→Owner transfer before Sale can submit to Owner (50% of owner earn).
+ * Full payout also qualifies.
  */
 export function minOwnerDepositToConfirm(ownerEarn: number): number {
   return Math.ceil(Number(ownerEarn || 0) * 0.5);

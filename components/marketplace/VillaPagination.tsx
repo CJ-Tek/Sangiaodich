@@ -11,10 +11,12 @@ export function VillaPagination({
   page,
   totalPages,
   total,
+  itemLabel = 'villa',
 }: {
   page: number;
   totalPages: number;
   total?: number;
+  itemLabel?: string;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -34,7 +36,7 @@ export function VillaPagination({
     <Group justify="center" mt="xl" gap="md" wrap="wrap">
       {typeof total === 'number' ? (
         <Text size="sm" c="dimmed">
-          {total} villa
+          {total} {itemLabel}
         </Text>
       ) : null}
       <Pagination

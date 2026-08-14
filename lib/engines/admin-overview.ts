@@ -31,7 +31,10 @@ export async function loadAdminOverviewStats(): Promise<AdminOverviewStats> {
 
   const [assets, pending, firmBookings, completedBookings, leads, counts] =
     await Promise.all([
-      admin.from('assets').select('*', { count: 'exact', head: true }),
+      admin
+        .from('assets')
+        .select('*', { count: 'exact', head: true })
+        .neq('status', 'DRAFT'),
       admin
         .from('assets')
         .select('*', { count: 'exact', head: true })

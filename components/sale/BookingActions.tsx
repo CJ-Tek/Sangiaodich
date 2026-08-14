@@ -14,7 +14,7 @@ import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { ExportGuestInvoiceButton } from '@/components/sale/ExportGuestInvoiceButton';
-import { minDepositToConfirm } from '@/lib/engines/pricing';
+import { minOwnerDepositToConfirm } from '@/lib/engines/pricing';
 import { computeCancelRefund } from '@/lib/engines/cancellation';
 import { FIRM_POLICY_SUMMARY } from '@/config/cancellation-policy';
 
@@ -29,6 +29,8 @@ export function BookingActions({
   status,
   listPrice,
   amountCollected,
+  ownerEarn,
+  ownerPaid,
   checkIn,
   salePayoutReady,
 }: {
@@ -37,16 +39,23 @@ export function BookingActions({
   listPrice: number;
   suggestedFloor?: number;
   amountCollected?: number | null;
+  ownerEarn: number;
+  ownerPaid: number;
   checkIn: string;
   salePayoutReady?: boolean;
 }) {
   const router = useRouter();
-  const minDeposit = minDepositToConfirm(listPrice);
+  const minOwnerPayout = minOwnerDepositToConfirm(ownerEarn);
   const [loading, setLoading] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [goodwill, setGoodwill] = useState(false);
 
-  const canConfirm = Number(amountCollected || 0) >= minDeposit;
+  const canSubmit =
+    ownerEarn > 0 && Number(ownerPaid || 0) >= minOwnerPayout;
+  const submitBlockedReason =
+    ownerEarn <= 0
+      ? 'Chưa có giá gốc — không gửi Owner được'
+      : `Cần xác nhận CK Owner tối thiểu ${minOwnerPayout.toLocaleString('vi-VN')} (50% giá gốc)`;
 
   const collected = Number(amountCollected || 0);
   const refundPreview = useMemo(
@@ -65,10 +74,10 @@ export function BookingActions({
     amountCollectedValue?: number,
     extras?: { goodwillFullRefund?: boolean }
   ) {
-    if (action === 'submit_to_owner' && !canConfirm) {
+    if (action === 'submit_to_owner' && !canSubmit) {
       notifications.show({
         color: 'red',
-        message: `Cần thu tối thiểu ${minDeposit.toLocaleString('vi-VN')} (50% giá bán)`,
+        message: submitBlockedReason,
       });
       return;
     }
@@ -292,15 +301,19 @@ export function BookingActions({
     <>
       {cancelModal}
       <Group gap="xs" wrap="wrap">
-        <Button
-          size="xs"
-          color="vbnbGreen"
-          loading={loading}
-          disabled={!canConfirm}
-          onClick={() => patch('submit_to_owner')}
-        >
-          Gửi Owner xác nhận
-        </Button>
+        <Tooltip label={submitBlockedReason} disabled={canSubmit}>
+          <span>
+            <Button
+              size="xs"
+              color="vbnbGreen"
+              loading={loading}
+              disabled={!canSubmit}
+              onClick={() => patch('submit_to_owner')}
+            >
+              Gửi Owner xác nhận
+            </Button>
+          </span>
+        </Tooltip>
         <ExportGuestInvoiceButton
           bookingId={bookingId}
           salePayoutReady={Boolean(salePayoutReady)}

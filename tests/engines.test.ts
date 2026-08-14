@@ -77,7 +77,7 @@ describe('pricing', () => {
     expect(minDepositToConfirm(10_700_001)).toBe(5_350_001);
   });
 
-  it('suggests 50% owner earn as Sale→Owner first transfer', () => {
+  it('requires 50% owner earn as Sale→Owner transfer before submit', () => {
     expect(minOwnerDepositToConfirm(3_200_000)).toBe(1_600_000);
     expect(minOwnerDepositToConfirm(3_200_001)).toBe(1_600_001);
   });

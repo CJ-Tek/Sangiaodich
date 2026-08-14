@@ -142,3 +142,6 @@ export function propertyTypeLabel(type: PropertyType): string {
 
 export const MAX_ASSET_IMAGES = 12;
 export const MIN_ASSET_IMAGES_FOR_REVIEW = 1;
+/** Keep in sync with enforce_owner_draft_asset_limit() in migrations. */
+export const MAX_OWNER_DRAFT_ASSETS = 15;
+export const DRAFT_LIMIT_MESSAGE = `Tối đa ${MAX_OWNER_DRAFT_ASSETS} asset nháp. Hãy nộp duyệt hoặc xóa nháp cũ.`;

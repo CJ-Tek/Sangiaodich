@@ -2,6 +2,7 @@
 
 import {
   ActionIcon,
+  Alert,
   Badge,
   Box,
   Button,
@@ -24,7 +25,9 @@ import { useRef, useState } from 'react';
 import {
   ASSET_TAG_GROUPS,
   ASSET_TAGS,
+  DRAFT_LIMIT_MESSAGE,
   MAX_ASSET_IMAGES,
+  MAX_OWNER_DRAFT_ASSETS,
   MIN_ASSET_IMAGES_FOR_REVIEW,
   MIN_ASSET_TAGS,
   PROPERTY_TYPES,
@@ -75,11 +78,13 @@ export function AssetForm({
   assetId,
   initial,
   status,
+  draftCount = 0,
 }: {
   mode: 'create' | 'edit';
   assetId?: string;
   initial?: Partial<AssetFormValues>;
   status?: string;
+  draftCount?: number;
 }) {
   const router = useRouter();
   const isEdit = mode === 'edit';
@@ -98,6 +103,7 @@ export function AssetForm({
 
   const canSubmitReview =
     !isEdit || status === 'DRAFT' || status === 'REJECTED';
+  const draftLimitReached = !isEdit && draftCount >= MAX_OWNER_DRAFT_ASSETS;
 
   function toggleTag(id: string) {
     setForm((prev) => {
@@ -171,6 +177,13 @@ export function AssetForm({
   }
 
   async function submit(submitForReview: boolean) {
+    if (!isEdit && !submitForReview && draftCount >= MAX_OWNER_DRAFT_ASSETS) {
+      notifications.show({
+        color: 'orange',
+        message: DRAFT_LIMIT_MESSAGE,
+      });
+      return;
+    }
     if (submitForReview) {
       if (form.images.length < MIN_ASSET_IMAGES_FOR_REVIEW) {
         notifications.show({
@@ -458,16 +471,28 @@ export function AssetForm({
         <NumberInput
           label="Cost weekday"
           min={0}
+          thousandSeparator="."
+          decimalSeparator=","
+          decimalScale={0}
           value={form.costWeekday}
           onChange={(v) => setForm({ ...form, costWeekday: Number(v) || 0 })}
         />
         <NumberInput
           label="Cost weekend"
           min={0}
+          thousandSeparator="."
+          decimalSeparator=","
+          decimalScale={0}
           value={form.costWeekend}
           onChange={(v) => setForm({ ...form, costWeekend: Number(v) || 0 })}
         />
       </SimpleGrid>
+
+      {draftLimitReached ? (
+        <Alert color="yellow" title="Đã đủ 15 nháp">
+          {DRAFT_LIMIT_MESSAGE}
+        </Alert>
+      ) : null}
 
       {canSubmitReview ? (
         <>
@@ -481,6 +506,7 @@ export function AssetForm({
           <Button
             variant="light"
             loading={loading}
+            disabled={draftLimitReached}
             onClick={() => submit(false)}
           >
             {isEdit ? 'Lưu (giữ nháp)' : 'Lưu nháp'}
@@ -505,11 +531,13 @@ export function NewAssetForm({
   assetId,
   initial,
   status,
+  draftCount,
 }: {
   mode?: 'create' | 'edit';
   assetId?: string;
   initial?: Partial<AssetFormValues>;
   status?: string;
+  draftCount?: number;
 }) {
   return (
     <AssetForm
@@ -517,6 +545,7 @@ export function NewAssetForm({
       assetId={assetId}
       initial={initial}
       status={status}
+      draftCount={draftCount}
     />
   );
 }
