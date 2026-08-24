@@ -1,0 +1,40 @@
+---
+description: Re-index GitNexus after every commit so impact/query/context match HEAD
+alwaysApply: true
+---
+
+# GitNexus index after commit
+
+The graph is a snapshot. `impact`, `query`, `context`, and `api_impact`
+only see the last `analyze`. Commits and files after that snapshot are
+invisible until re-index.
+
+## After `git commit` or `git merge`
+
+Run from the repo root as soon as the commit succeeds (do not skip):
+
+```bash
+node .gitnexus/run.cjs analyze --index-only
+```
+
+If `.gitnexus/run.cjs` is missing:
+
+```bash
+npx gitnexus analyze --index-only
+```
+
+Then read `gitnexus://repo/Sangiaodich/context` and confirm it is not
+behind HEAD. Only then run `detect_changes` if the commit protocol
+requires it.
+
+Do **not** run `analyze` inside a git hook with a short timeout — it can
+corrupt the KuzuDB index. The agent runs it in the terminal after the
+commit. `--index-only` is the default after commit; full `analyze` (no
+flag) only when the generated GitNexus blocks in AGENTS.md / CLAUDE.md
+must be regenerated.
+
+## Before trusting the graph
+
+If context reports stale, or `.gitnexus/meta.json` `lastCommit` ≠ HEAD,
+re-index before `impact` / `query` / `context`. A missing symbol in a
+stale index means "not indexed yet", not "unused".

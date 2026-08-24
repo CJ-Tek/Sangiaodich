@@ -26,6 +26,12 @@ tools will confidently report no impact for symbols they have never seen.
 
 Check before trusting them, and re-run `node .gitnexus/run.cjs analyze` when stale.
 
+After every `git commit` or `git merge`, re-index immediately with
+`node .gitnexus/run.cjs analyze --index-only` (fallback: `npx gitnexus analyze --index-only`).
+Confirm `gitnexus://repo/Sangiaodich/context` is not behind HEAD before using the graph.
+Do not put `analyze` in a git hook — a timeout can corrupt the KuzuDB index.
+The Cursor rule `.cursor/rules/gitnexus-reindex.mdc` enforces this for agent commits.
+
 ## Environments
 
 This project is **already deployed**. The local Supabase stack and the hosted Supabase
@@ -33,7 +39,7 @@ project both exist — never conflate them.
 
 | | Local | Production |
 |---|---|---|
-| Database | Supabase CLI via `npm run local`, ports 58321+ (`supabase/config.toml`) | Hosted Supabase project |
+| Database | Supabase CLI via `npm run local`, ports 54321+ (`supabase/config.toml`) | Hosted Supabase project |
 | App | http://localhost:3000 | Vercel project `sangiaodich` |
 | Env vars | `.env.local`, generated (see below) | Vercel → Settings → Environment Variables |
 
