@@ -33,6 +33,23 @@ import {
 } from '@/lib/engines/sale-customer-stats';
 import { tierProgressPercent } from '@/lib/engines/guest-overview';
 import { remainingToPay } from '@/lib/engines/guest-bookings';
+import { exploreListHref } from '@/lib/engines/explore-assets';
+import {
+  costColumnsForExplore,
+  hasExploreQueryFilters,
+  isSearchWeekend,
+  parseBudgetVnd,
+  parseExploreAdvancedParams,
+  parseGuestsParam,
+  parseStayRange,
+} from '@/lib/engines/explore-filters';
+import {
+  guestRemaining,
+  isGuestDepositCase,
+  isGuestPaidInFull,
+  remainderPayee,
+  saleOwnerPayoutSatisfied,
+} from '@/lib/engines/guest-balance';
 import { normalizePhone } from '@/lib/auth/otp';
 import {
   parseChannel,
@@ -361,6 +378,64 @@ describe('sale customer stats', () => {
     expect(remainingToPay(10_000_000, 4_000_000)).toBe(6_000_000);
     expect(remainingToPay(10_000_000, 12_000_000)).toBe(0);
     expect(remainingToPay(0, 0)).toBe(0);
+    expect(remainingToPay(10_000_000, 5_000_000, 5_000_000)).toBe(0);
+  });
+
+  it('guest remaining and paid-in-full Case A vs B', () => {
+    expect(isGuestDepositCase(10_000_000, 5_000_000)).toBe(true);
+    expect(isGuestDepositCase(10_000_000, 10_000_000)).toBe(false);
+    expect(guestRemaining(10_000_000, 5_000_000, 0)).toBe(5_000_000);
+    expect(isGuestPaidInFull(10_000_000, 5_000_000, 0)).toBe(false);
+    expect(isGuestPaidInFull(10_000_000, 5_000_000, 5_000_000)).toBe(true);
+    expect(isGuestPaidInFull(10_000_000, 10_000_000, 0)).toBe(true);
+    expect(
+      remainderPayee({
+        status: 'CONFIRMED',
+        listPrice: 10_000_000,
+        amountCollected: 5_000_000,
+      })
+    ).toBe('OWNER');
+    expect(
+      remainderPayee({
+        status: 'PENDING',
+        listPrice: 10_000_000,
+        amountCollected: 5_000_000,
+      })
+    ).toBe('SALE');
+    expect(
+      remainderPayee({
+        status: 'CONFIRMED',
+        listPrice: 10_000_000,
+        amountCollected: 10_000_000,
+      })
+    ).toBeNull();
+  });
+
+  it('Case A Sale is done after 50% cost; Case B needs full cost', () => {
+    expect(
+      saleOwnerPayoutSatisfied({
+        listPrice: 10_000_000,
+        amountCollected: 5_000_000,
+        ownerEarn: 7_000_000,
+        ownerPaid: 3_500_000,
+      })
+    ).toBe(true);
+    expect(
+      saleOwnerPayoutSatisfied({
+        listPrice: 10_000_000,
+        amountCollected: 10_000_000,
+        ownerEarn: 7_000_000,
+        ownerPaid: 3_500_000,
+      })
+    ).toBe(false);
+    expect(
+      saleOwnerPayoutSatisfied({
+        listPrice: 10_000_000,
+        amountCollected: 10_000_000,
+        ownerEarn: 7_000_000,
+        ownerPaid: 7_000_000,
+      })
+    ).toBe(true);
   });
 
   it('marks max tier when no next', () => {
@@ -487,6 +562,19 @@ describe('guest invoice amounts', () => {
     });
     expect(a.canDeposit).toBe(false);
     expect(a.remainingFull).toBe(1_350_000);
+  });
+
+  it('owner remainder is unpaid list after sale receipts', () => {
+    expect(guestRemaining(2_700_000, 1_350_000, 0)).toBe(1_350_000);
+    expect(
+      guestInvoiceQrAmount(
+        'full',
+        guestInvoiceAmounts({
+          listPrice: 2_700_000,
+          amountCollected: 1_350_000,
+        })
+      )
+    ).toBe(1_350_000);
   });
 });
 
@@ -628,5 +716,93 @@ describe('admin user management helpers', () => {
       expect((e as AdminUserError).code).toBe('HARD_DELETE_DISABLED');
       expect((e as AdminUserError).message).toBe(hardDeleteBlockedMessage());
     }
+  });
+});
+
+describe('explore filters', () => {
+  it('parses budget and guests, ignoring junk', () => {
+    expect(parseBudgetVnd('6000000')).toBe(6_000_000);
+    expect(parseBudgetVnd(['5000000', '1'])).toBe(5_000_000);
+    expect(parseBudgetVnd('0')).toBeUndefined();
+    expect(parseBudgetVnd('-1')).toBeUndefined();
+    expect(parseBudgetVnd('abc')).toBeUndefined();
+    expect(parseGuestsParam('6')).toBe(6);
+    expect(parseGuestsParam('99')).toBe(50);
+  });
+
+  it('requires a real stay range', () => {
+    expect(parseStayRange('2026-08-21', '2026-08-23')).toEqual({
+      checkIn: '2026-08-21',
+      checkOut: '2026-08-23',
+    });
+    expect(parseStayRange('2026-08-23', '2026-08-21')).toBeUndefined();
+    expect(parseStayRange('2026-02-31', '2026-03-02')).toBeUndefined();
+    expect(parseStayRange('2026-08-21', undefined)).toBeUndefined();
+  });
+
+  it('uses Vietnam calendar day for search-time weekend', () => {
+    // Friday 23:59 VN
+    expect(isSearchWeekend(new Date('2026-08-21T16:59:00.000Z'))).toBe(false);
+    // Saturday 00:00 VN
+    expect(isSearchWeekend(new Date('2026-08-21T17:00:00.000Z'))).toBe(true);
+  });
+
+  it('picks cost columns from stay nights, else search day', () => {
+    expect(
+      costColumnsForExplore({
+        checkIn: '2026-08-21',
+        checkOut: '2026-08-23',
+      })
+    ).toEqual({ weekday: true, weekend: true });
+    expect(
+      costColumnsForExplore({
+        checkIn: '2026-08-22',
+        checkOut: '2026-08-23',
+      })
+    ).toEqual({ weekday: false, weekend: true });
+    expect(
+      costColumnsForExplore({
+        checkIn: '2026-08-24',
+        checkOut: '2026-08-25',
+      })
+    ).toEqual({ weekday: true, weekend: false });
+    expect(
+      costColumnsForExplore({ now: new Date('2026-08-21T17:00:00.000Z') })
+    ).toEqual({ weekday: false, weekend: true });
+  });
+
+  it('treats budgetMax as the only listing filter among budget fields', () => {
+    expect(hasExploreQueryFilters({ budgetMax: 6_000_000 })).toBe(true);
+    expect(hasExploreQueryFilters({ guests: 4 })).toBe(true);
+    expect(hasExploreQueryFilters({})).toBe(false);
+    const parsed = parseExploreAdvancedParams({
+      budgetMin: '5000000',
+      budgetMax: '6000000',
+      guests: '4',
+      checkIn: '2026-08-21',
+      checkOut: '2026-08-23',
+    });
+    expect(parsed.budgetMin).toBe(5_000_000);
+    expect(parsed.budgetMax).toBe(6_000_000);
+    expect(parsed.guests).toBe(4);
+    expect(parsed.checkIn).toBe('2026-08-21');
+  });
+
+  it('keeps advanced params on list URLs without forcing page=1', () => {
+    expect(
+      exploreListHref('/me/explore', {
+        q: 'vung tau',
+        budgetMin: 5_000_000,
+        budgetMax: 6_000_000,
+        guests: 6,
+        checkIn: '2026-08-22',
+        checkOut: '2026-08-24',
+      })
+    ).toBe(
+      '/me/explore?q=vung+tau&budgetMin=5000000&budgetMax=6000000&guests=6&checkIn=2026-08-22&checkOut=2026-08-24'
+    );
+    expect(exploreListHref('/sale/marketplace', { q: 'id', page: 1 })).toBe(
+      '/sale/marketplace?q=id'
+    );
   });
 });

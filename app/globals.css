@@ -181,3 +181,20 @@ a {
     border-left: 1px solid var(--vbnb-border);
   }
 }
+
+.vbnb-villa-search-advanced {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--vbnb-border);
+}
+
+@media (min-width: 768px) {
+  .vbnb-villa-search-advanced {
+    grid-template-columns: 1.3fr 1.3fr 0.8fr;
+    gap: 16px;
+    align-items: start;
+  }
+}

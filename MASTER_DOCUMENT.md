@@ -62,7 +62,7 @@ saleMargin    = amountCollected − effectiveCost
 
 - Production runs on **hosted Supabase + Vercel** (project `sangiaodich`); see `AGENTS.md` for
   the environment table and deploy flow. Migrations never run as part of a Vercel build.
-- Local Supabase ports: **58321+** (see `supabase/config.toml`)
+- Local Supabase ports: **54321+** (see `supabase/config.toml`)
 - Seed users documented in README
 - Cron expires ACTIVE subscriptions past `period_end` and suspends owner ACTIVE assets
 

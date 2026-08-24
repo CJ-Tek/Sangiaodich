@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import {
   cancelBooking,
-  checkInBooking,
-  checkOutBooking,
   createBooking,
   recordBookingPayment,
   recordOwnerPayout,
@@ -94,30 +92,12 @@ export async function PATCH(request: Request) {
           ? 'Chưa có giá gốc — không gửi Owner được'
           : result.error === 'BELOW_OWNER_PAYOUT' && 'minOwnerPayout' in result
             ? `Cần xác nhận CK Owner tối thiểu 50% giá gốc (${Number(result.minOwnerPayout).toLocaleString('vi-VN')}) trước khi gửi`
-            : result.error === 'OVERLAP'
+            : result.error === 'BELOW_DEPOSIT' && 'minDeposit' in result
+              ? `Cần thu cọc Guest tối thiểu 50% giá bán (${Number(result.minDeposit).toLocaleString('vi-VN')}) trước khi gửi`
+              : result.error === 'OVERLAP'
               ? 'Ngày đã bị Sale khác chốt (CONFIRMED) — không gửi được'
               : String(result.error);
       return NextResponse.json(fail(String(result.error), message), {
-        status: 400,
-      });
-    }
-    return NextResponse.json(ok({ booking: result.booking }));
-  }
-
-  if (action === 'check_in') {
-    const result = await checkInBooking(bookingId, profile.id);
-    if ('error' in result && result.error) {
-      return NextResponse.json(fail(String(result.error), String(result.error)), {
-        status: 400,
-      });
-    }
-    return NextResponse.json(ok({ booking: result.booking }));
-  }
-
-  if (action === 'check_out') {
-    const result = await checkOutBooking(bookingId, profile.id);
-    if ('error' in result && result.error) {
-      return NextResponse.json(fail(String(result.error), String(result.error)), {
         status: 400,
       });
     }
@@ -150,7 +130,9 @@ export async function PATCH(request: Request) {
           ? 'Số đã thu mới không được nhỏ hơn số đã ghi'
           : result.error === 'ABOVE_LIST'
             ? 'Không thu vượt giá bán'
-            : String(result.error);
+            : result.error === 'LOCKED_AFTER_CONFIRM'
+              ? 'Sau khi Owner chốt, phần còn lại khách CK chủ nhà lúc check-in'
+              : String(result.error);
       return NextResponse.json(fail(String(result.error), message), {
         status: 400,
       });

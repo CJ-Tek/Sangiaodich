@@ -10,7 +10,7 @@ Spec: [VBNB_MASTER_PROMPT.md](./VBNB_MASTER_PROMPT.md) · UI: [VBNB_UI_UX_PROMPT
 
 - Node 20+
 - Docker Desktop (for Supabase local)
-- Ports **58321–58329** free (configured in `supabase/config.toml` to avoid Windows excluded ranges / other Supabase projects)
+- Ports **54321–54329** free (configured in `supabase/config.toml`; stay below Windows WinNAT excluded ranges)
 
 ## Quick start (Windows)
 
@@ -30,7 +30,7 @@ npm run local:reset   # kèm db reset + seed
 ```
 
 App: http://localhost:3000  
-Studio / API: xem output script (ports **58321+** trong `supabase/config.toml`)
+Studio / API: xem output script (ports **54321+** trong `supabase/config.toml`)
 
 Reset DB + seed thủ công:
 

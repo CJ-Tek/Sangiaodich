@@ -18,7 +18,7 @@ export default async function GuestPayPage({
   const { data: invoice } = await admin
     .from('guest_invoices')
     .select(
-      `token, expires_at, booking_id,
+      `token, expires_at, booking_id, payee,
        payout_bank_name_snapshot, payout_account_name_snapshot,
        payout_account_number_snapshot, payout_vietqr_bank_snapshot,
        payout_qr_image_url_snapshot`
@@ -32,7 +32,7 @@ export default async function GuestPayPage({
     .from('bookings')
     .select(
       `id, status, check_in, check_out, list_price, amount_collected,
-       sale_id, asset_id`
+       guest_paid_owner_amount, sale_id, asset_id`
     )
     .eq('id', invoice.booking_id)
     .maybeSingle();
@@ -68,6 +68,8 @@ export default async function GuestPayPage({
           checkOut={booking.check_out}
           listPrice={Number(booking.list_price || 0)}
           amountCollected={Number(booking.amount_collected || 0)}
+          guestPaidOwner={Number(booking.guest_paid_owner_amount || 0)}
+          payee={invoice.payee === 'OWNER' ? 'OWNER' : 'SALE'}
           saleName={sale?.full_name || 'Sale'}
           salePhone={sale?.phone || ''}
           expiresAt={invoice.expires_at}

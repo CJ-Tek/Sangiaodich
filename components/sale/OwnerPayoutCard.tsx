@@ -16,6 +16,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { colors, radius } from '@/config/design-tokens';
 import { BookingTransferMemo } from '@/components/sale/BookingTransferMemo';
 import { ownerTransferMemo } from '@/lib/engines/booking-search';
+import { saleOwnerPayoutSatisfied } from '@/lib/engines/guest-balance';
 import { minOwnerDepositToConfirm } from '@/lib/engines/pricing';
 import {
   hasOwnerPayoutInfo,
@@ -49,6 +50,8 @@ export function OwnerPayoutCard({
   bookingId,
   ownerEarn,
   ownerPaid,
+  listPrice = 0,
+  amountCollected = 0,
   payout,
   transferHint,
 }: {
@@ -57,12 +60,20 @@ export function OwnerPayoutCard({
   ownerPhone: string;
   ownerEarn: number;
   ownerPaid: number;
+  listPrice?: number;
+  amountCollected?: number;
   payout: OwnerPayoutInfo;
   transferHint?: string;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const remaining = Math.max(0, ownerEarn - ownerPaid);
+  const dutyDone = saleOwnerPayoutSatisfied({
+    listPrice,
+    amountCollected,
+    ownerEarn,
+    ownerPaid,
+  });
   const halfCost = minOwnerDepositToConfirm(ownerEarn);
   const depositChunk = Math.min(
     Math.max(0, halfCost - ownerPaid),
@@ -154,11 +165,13 @@ export function OwnerPayoutCard({
           Chủ nhà / CK Owner
         </Text>
 
-        {remaining <= 0 ? (
+        {dutyDone ? (
           <>
             <BookingTransferMemo bookingId={bookingId} transferHint={hint} />
             <Text size="sm" fw={600} c="vbnbGreen.6">
-              Bạn đã chuyển đủ tiền
+              {remaining > 0
+                ? 'Đã CK đủ 50% giá gốc. Phần còn lại khách chuyển chủ nhà lúc check-in.'
+                : 'Bạn đã chuyển đủ tiền'}
             </Text>
           </>
         ) : (

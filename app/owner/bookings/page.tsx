@@ -6,6 +6,7 @@ import {
   OwnerSettlementsList,
   type OwnerSettlementRow,
 } from '@/components/owner/OwnerSettlementsList';
+import { mapOwnerPayoutInfo } from '@/lib/owner/payout-info';
 
 const SETTLED = ['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT'] as const;
 
@@ -13,28 +14,23 @@ export default async function OwnerSettlementsPage() {
   const profile = await getSessionProfile();
   const admin = await createClient();
 
-  const { data: assets } = await admin
-    .from('assets')
-    .select('id')
-    .eq('owner_id', profile!.id)
+  const { data: bookings, error: bookingsError } = await admin
+    .from('bookings')
+    .select(
+      `id, status, check_in, check_out, confirmed_at, sale_id,
+       list_price, amount_collected, guest_paid_owner_amount,
+       effective_cost_snapshot, owner_earn_snapshot,
+       sale_tier_label_snapshot, owner_paid_amount,
+       owner_paid_at, assets!inner(title, location, owner_id)`
+    )
+    .eq('assets.owner_id', profile!.id)
+    .in('status', [...SETTLED])
+    .order('confirmed_at', { ascending: false })
     .limit(LIST_VIEW_LIMIT);
 
-  const assetIds = (assets || []).map((a) => a.id);
-
-  const { data: bookings } = assetIds.length
-    ? await admin
-        .from('bookings')
-        .select(
-          `id, status, check_in, check_out, confirmed_at, sale_id,
-           effective_cost_snapshot, owner_earn_snapshot,
-           sale_tier_label_snapshot, owner_paid_amount,
-           owner_paid_at, assets(title, location)`
-        )
-        .in('asset_id', assetIds)
-        .in('status', [...SETTLED])
-        .order('confirmed_at', { ascending: false })
-        .limit(LIST_VIEW_LIMIT)
-    : { data: [] as never[] };
+  if (bookingsError) {
+    throw new Error(`Settlements query failed: ${bookingsError.message}`);
+  }
 
   const saleIds = [
     ...new Set((bookings || []).map((b) => b.sale_id).filter(Boolean)),
@@ -46,12 +42,16 @@ export default async function OwnerSettlementsPage() {
   >();
 
   if (saleIds.length) {
-    const { data: sales } = await admin
+    const { data: sales, error: salesError } = await admin
       .from('profiles')
       .select('id, full_name, avatar_url, phone')
       .in('id', saleIds)
       .eq('role', 'SALE')
       .limit(saleIds.length);
+
+    if (salesError) {
+      throw new Error(`Settlements sales query failed: ${salesError.message}`);
+    }
 
     for (const s of sales || []) {
       saleNameById.set(s.id, {
@@ -62,11 +62,26 @@ export default async function OwnerSettlementsPage() {
     }
   }
 
+  const { data: ownerProfile, error: payoutError } = await admin
+    .from('profiles')
+    .select(
+      'payout_bank_name, payout_account_name, payout_account_number, payout_vietqr_bank, payout_qr_image_url, payout_note'
+    )
+    .eq('id', profile!.id)
+    .maybeSingle();
+
+  if (payoutError) {
+    throw new Error(`Settlements payout query failed: ${payoutError.message}`);
+  }
+
+  const payout = mapOwnerPayoutInfo(ownerProfile);
+
   const rows: OwnerSettlementRow[] = (bookings || []).map((b) => {
-    const asset = b.assets as unknown as {
-      title: string;
-      location?: string;
-    };
+    const assetRaw = b.assets as unknown as
+      | { title: string; location?: string }
+      | { title: string; location?: string }[]
+      | null;
+    const asset = Array.isArray(assetRaw) ? assetRaw[0] : assetRaw;
     const sale = saleNameById.get(b.sale_id);
     return {
       id: b.id,
@@ -84,6 +99,9 @@ export default async function OwnerSettlementsPage() {
       ),
       ownerPaid: Number(b.owner_paid_amount || 0),
       ownerPaidAt: b.owner_paid_at || null,
+      listPrice: Number(b.list_price || 0),
+      amountCollected: Number(b.amount_collected || 0),
+      guestPaidOwner: Number(b.guest_paid_owner_amount || 0),
     };
   });
 
@@ -91,9 +109,9 @@ export default async function OwnerSettlementsPage() {
     <>
       <PageHeader
         title="Settlements"
-        description="Theo dõi Sale đã CK phần Owner earn — tìm bằng mã CK VBNB… hoặc lọc Chưa / Một phần / Đủ."
+        description="Check-in/out khi khách đến. Case A: khách CK nốt cho bạn. Case B: Sale CK đủ cost."
       />
-      <OwnerSettlementsList rows={rows} />
+      <OwnerSettlementsList rows={rows} payout={payout} />
     </>
   );
 }

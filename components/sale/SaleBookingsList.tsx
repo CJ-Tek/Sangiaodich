@@ -257,9 +257,6 @@ export function SaleBookingsList({
                   {[
                     'PENDING',
                     'AWAITING_OWNER',
-                    'CONFIRMED',
-                    'CHECKED_IN',
-                    'CHECKED_OUT',
                   ].includes(b.status) ? (
                     <GuestCollectedUpdate
                       bookingId={b.id}
@@ -274,6 +271,8 @@ export function SaleBookingsList({
                       ownerPhone={b.ownerPhone}
                       ownerEarn={b.ownerEarn}
                       ownerPaid={b.ownerPaid}
+                      listPrice={b.list}
+                      amountCollected={Number(b.amountCollected || 0)}
                       payout={b.payout}
                     />
                   ) : null}

@@ -22,7 +22,15 @@ import {
   matchesOwnerSettlementSearch,
   ownerTransferMemo,
 } from '@/lib/engines/booking-search';
-import { ownerPayoutStatus } from '@/lib/owner/payout-info';
+import {
+  ownerPayoutStatus,
+  type OwnerPayoutInfo,
+} from '@/lib/owner/payout-info';
+import {
+  saleOwnerPayoutSatisfied,
+  isGuestDepositCase,
+} from '@/lib/engines/guest-balance';
+import { OwnerStayActions } from '@/components/owner/OwnerStayActions';
 
 export type OwnerSettlementRow = {
   id: string;
@@ -38,6 +46,9 @@ export type OwnerSettlementRow = {
   ownerEarn: number;
   ownerPaid: number;
   ownerPaidAt?: string | null;
+  listPrice: number;
+  amountCollected: number;
+  guestPaidOwner: number;
 };
 
 type PayoutFilter = 'all' | 'none' | 'partial' | 'full';
@@ -46,13 +57,36 @@ function formatVnd(n: number) {
   return n.toLocaleString('vi-VN');
 }
 
+function saleDutyStatus(r: OwnerSettlementRow): Exclude<PayoutFilter, 'all'> {
+  if (
+    saleOwnerPayoutSatisfied({
+      listPrice: r.listPrice,
+      amountCollected: r.amountCollected,
+      ownerEarn: r.ownerEarn,
+      ownerPaid: r.ownerPaid,
+    })
+  ) {
+    return 'full';
+  }
+  return ownerPayoutStatus({
+    ownerEarn: r.ownerEarn,
+    ownerPaid: r.ownerPaid,
+  });
+}
+
 const PAYOUT_BADGE = {
   none: { label: 'Chưa CK', color: 'red' as const },
   partial: { label: 'CK một phần', color: 'yellow' as const },
   full: { label: 'Đã đủ CK', color: 'vbnbGreen' as const },
 };
 
-export function OwnerSettlementsList({ rows }: { rows: OwnerSettlementRow[] }) {
+export function OwnerSettlementsList({
+  rows,
+  payout,
+}: {
+  rows: OwnerSettlementRow[];
+  payout: OwnerPayoutInfo;
+}) {
   const [query, setQuery] = useState('');
   const [payoutFilter, setPayoutFilter] = useState<PayoutFilter>('all');
 
@@ -69,20 +103,14 @@ export function OwnerSettlementsList({ rows }: { rows: OwnerSettlementRow[] }) {
         return false;
       }
       if (payoutFilter === 'all') return true;
-      return (
-        ownerPayoutStatus({
-          ownerEarn: r.ownerEarn,
-          ownerPaid: r.ownerPaid,
-        }) === payoutFilter
-      );
+      return saleDutyStatus(r) === payoutFilter;
     });
   }, [rows, query, payoutFilter]);
 
   const counts = useMemo(() => {
     const c = { all: rows.length, none: 0, partial: 0, full: 0 };
     for (const r of rows) {
-      c[ownerPayoutStatus({ ownerEarn: r.ownerEarn, ownerPaid: r.ownerPaid })] +=
-        1;
+      c[saleDutyStatus(r)] += 1;
     }
     return c;
   }, [rows]);
@@ -122,7 +150,7 @@ export function OwnerSettlementsList({ rows }: { rows: OwnerSettlementRow[] }) {
               ? 'Thử mã CK (VBNB…), tên sale, SĐT (0 hoặc 84), hoặc tên villa.'
               : payoutFilter !== 'all'
                 ? 'Không có booking trong nhóm CK này.'
-                : 'Khi sale confirm booking trên villa của bạn, giao dịch sẽ hiện tại đây.'
+                : 'Khi bạn xác nhận booking trên Chờ xác nhận, giao dịch sẽ hiện tại đây.'
           }
           actionLabel={q || payoutFilter !== 'all' ? undefined : 'Xem assets'}
           href={q || payoutFilter !== 'all' ? undefined : '/owner/assets'}
@@ -130,12 +158,16 @@ export function OwnerSettlementsList({ rows }: { rows: OwnerSettlementRow[] }) {
       ) : (
         <Stack gap="sm">
           {filtered.map((b) => {
-            const payoutStatus = ownerPayoutStatus({
+            const payoutStatus = saleDutyStatus(b);
+            const payoutMeta = PAYOUT_BADGE[payoutStatus];
+            const remaining = Math.max(0, b.ownerEarn - b.ownerPaid);
+            const caseA = isGuestDepositCase(b.listPrice, b.amountCollected);
+            const saleDone = saleOwnerPayoutSatisfied({
+              listPrice: b.listPrice,
+              amountCollected: b.amountCollected,
               ownerEarn: b.ownerEarn,
               ownerPaid: b.ownerPaid,
             });
-            const payoutMeta = PAYOUT_BADGE[payoutStatus];
-            const remaining = Math.max(0, b.ownerEarn - b.ownerPaid);
             const memo = ownerTransferMemo(b.id);
 
             return (
@@ -225,14 +257,16 @@ export function OwnerSettlementsList({ rows }: { rows: OwnerSettlementRow[] }) {
                   </div>
                   <div>
                     <Text size="xs" c="dimmed">
-                      Còn thiếu
+                      {caseA && saleDone ? 'Sale (50% cost)' : 'Còn thiếu'}
                     </Text>
                     <Text
                       size="sm"
                       fw={500}
-                      c={remaining > 0 ? 'red' : 'vbnbGreen.6'}
+                      c={saleDone ? 'vbnbGreen.6' : remaining > 0 ? 'red' : 'vbnbGreen.6'}
                     >
-                      {formatVnd(remaining)}
+                      {caseA && saleDone
+                        ? 'Đã xong — khách CK nốt lúc CI'
+                        : formatVnd(remaining)}
                     </Text>
                   </div>
                 </SimpleGrid>
@@ -242,6 +276,16 @@ export function OwnerSettlementsList({ rows }: { rows: OwnerSettlementRow[] }) {
                     {new Date(b.ownerPaidAt).toLocaleString('vi-VN')}
                   </Text>
                 ) : null}
+                <Stack gap="sm" mt="md">
+                <OwnerStayActions
+                  bookingId={b.id}
+                  status={b.status}
+                  listPrice={b.listPrice}
+                  amountCollected={b.amountCollected}
+                  guestPaidOwner={b.guestPaidOwner}
+                  payout={payout}
+                />
+                </Stack>
               </Paper>
             );
           })}

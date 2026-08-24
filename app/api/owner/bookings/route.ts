@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import {
+  checkInBooking,
+  checkOutBooking,
   ownerConfirmBooking,
   ownerRejectBooking,
 } from '@/lib/engines/booking-service';
@@ -82,6 +84,54 @@ export async function PATCH(request: Request) {
     return NextResponse.json(
       ok({ booking: result.booking, refund: result.refund })
     );
+  }
+
+  if (action === 'check_in') {
+    const result = await checkInBooking({
+      bookingId,
+      ownerId: profile.id,
+      guestPaidOwnerAmount:
+        body.guestPaidOwnerAmount != null
+          ? Number(body.guestPaidOwnerAmount)
+          : undefined,
+    });
+    if ('error' in result && result.error) {
+      const message =
+        result.error === 'GUEST_BALANCE_DUE'
+          ? 'Khách chưa chuyển đủ phần còn lại — không check-in được'
+          : result.error === 'FORBIDDEN'
+            ? 'Không phải asset của bạn'
+            : result.error === 'INVALID_STATUS'
+              ? 'Chỉ check-in booking đã xác nhận'
+              : result.error === 'AMOUNT_REGRESSION'
+                ? 'Số đã nhận từ khách không được nhỏ hơn số đã ghi'
+                : result.error === 'ABOVE_REMAINDER'
+                  ? 'Không ghi nhận vượt phần khách còn nợ'
+                  : String(result.error);
+      return NextResponse.json(fail(String(result.error), message), {
+        status: 400,
+      });
+    }
+    return NextResponse.json(ok({ booking: result.booking }));
+  }
+
+  if (action === 'check_out') {
+    const result = await checkOutBooking({
+      bookingId,
+      ownerId: profile.id,
+    });
+    if ('error' in result && result.error) {
+      const message =
+        result.error === 'FORBIDDEN'
+          ? 'Không phải asset của bạn'
+          : result.error === 'INVALID_STATUS'
+            ? 'Chỉ check-out booking đang check-in'
+            : String(result.error);
+      return NextResponse.json(fail(String(result.error), message), {
+        status: 400,
+      });
+    }
+    return NextResponse.json(ok({ booking: result.booking }));
   }
 
   return NextResponse.json(fail('INVALID_ACTION', 'Unknown action'), {

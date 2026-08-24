@@ -15,6 +15,13 @@ import { bookingStatusColors } from '@/config/booking-status';
 import { colors, radius } from '@/config/design-tokens';
 import { todayDateOnly } from '@/lib/dates';
 
+/** Locked nights on the guest/sale asset calendar — same red as Sale's picker. */
+const BOOKED_TONE = {
+  bg: colors.dangerSoft,
+  text: colors.danger,
+  border: '#E8D0D0',
+} as const;
+
 export function MarketplaceCalendar({
   month,
   confirmedRanges,
@@ -70,7 +77,7 @@ export function MarketplaceCalendar({
         </Group>
         <Group gap="md">
           <Legend color={bookingStatusColors.available} label="Trống" />
-          <Legend color={bookingStatusColors.confirmed} label="Đã book" />
+          <Legend color={BOOKED_TONE} label="Đã book" />
         </Group>
       </Group>
       <SimpleGrid cols={7} spacing={8}>
@@ -83,11 +90,9 @@ export function MarketplaceCalendar({
           const monthKey = start.format('YYYY-MM');
           if (!day) return <Box key={`${monthKey}-e-${idx}`} h={44} />;
           const dateStr = start.date(day).format('YYYY-MM-DD');
-          const past = dateStr < today;
           const busy = isConfirmed(day);
-          const tone = busy
-            ? bookingStatusColors.confirmed
-            : bookingStatusColors.available;
+          const past = !busy && dateStr < today;
+          const tone = busy ? BOOKED_TONE : bookingStatusColors.available;
           return (
             <Box
               key={dateStr}

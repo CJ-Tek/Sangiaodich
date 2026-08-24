@@ -10,7 +10,12 @@ import {
   type GuestTier,
   type SaleTier,
 } from '@/lib/engines/membership';
-import { previewPricing, minOwnerDepositToConfirm } from '@/lib/engines/pricing';
+import {
+  previewPricing,
+  minOwnerDepositToConfirm,
+  minDepositToConfirm,
+} from '@/lib/engines/pricing';
+import { isGuestPaidInFull } from '@/lib/engines/guest-balance';
 import { computeCancelRefund } from '@/lib/engines/cancellation';
 import { profileHasActiveSubscription } from '@/lib/engines/subscription-access';
 import { isPastDateOnly } from '@/lib/dates';
@@ -194,6 +199,16 @@ export async function submitToOwner(input: {
   });
 
   const listPrice = Number(booking.list_price);
+  const collected = Number(input.amountCollected || booking.amount_collected || 0);
+  const minGuestDeposit = minDepositToConfirm(listPrice);
+  if (collected < minGuestDeposit) {
+    return {
+      error: 'BELOW_DEPOSIT' as const,
+      minDeposit: minGuestDeposit,
+      listPrice,
+    };
+  }
+
   const ownerEarn = pricing.effectiveCost;
   const minOwnerPayout = minOwnerDepositToConfirm(ownerEarn);
   const ownerPaid = Number(booking.owner_paid_amount || 0);
@@ -259,7 +274,7 @@ export async function submitToOwner(input: {
     .from('bookings')
     .update({
       status: 'AWAITING_OWNER',
-      amount_collected: input.amountCollected,
+      amount_collected: collected,
       base_cost_snapshot: pricing.baseCost,
       effective_cost_snapshot: pricing.effectiveCost,
       list_price_snapshot: listPrice,
@@ -489,7 +504,7 @@ export async function confirmBooking(input: {
   return submitToOwner(input);
 }
 
-/** Record additional offline payment (Guest) while awaiting or after confirm. */
+/** Record additional offline payment (Guest) before Owner confirms. */
 export async function recordBookingPayment(input: {
   bookingId: string;
   saleId: string;
@@ -506,11 +521,9 @@ export async function recordBookingPayment(input: {
   if (booking.sale_id !== input.saleId) return { error: 'FORBIDDEN' as const };
   if (
     booking.status !== 'PENDING' &&
-    booking.status !== 'AWAITING_OWNER' &&
-    booking.status !== 'CONFIRMED' &&
-    booking.status !== 'CHECKED_IN'
+    booking.status !== 'AWAITING_OWNER'
   ) {
-    return { error: 'INVALID_STATUS' as const };
+    return { error: 'LOCKED_AFTER_CONFIRM' as const };
   }
 
   const listPrice = Number(booking.list_price);
@@ -534,7 +547,7 @@ export async function recordBookingPayment(input: {
       updated_at: new Date().toISOString(),
     })
     .eq('id', booking.id)
-    .in('status', ['PENDING', 'AWAITING_OWNER', 'CONFIRMED', 'CHECKED_IN'])
+    .in('status', ['PENDING', 'AWAITING_OWNER'])
     .select('*')
     .maybeSingle();
 
@@ -658,37 +671,108 @@ export async function recordOwnerPayout(input: {
   return { booking: updated };
 }
 
-export async function checkInBooking(bookingId: string, saleId: string) {
+export async function checkInBooking(input: {
+  bookingId: string;
+  ownerId: string;
+  guestPaidOwnerAmount?: number;
+}) {
   const admin = createServiceClient();
+  const { data: booking } = await admin
+    .from('bookings')
+    .select('*')
+    .eq('id', input.bookingId)
+    .maybeSingle();
+
+  if (!booking) return { error: 'NOT_FOUND' as const };
+
+  const { data: asset } = await admin
+    .from('assets')
+    .select('owner_id')
+    .eq('id', booking.asset_id)
+    .maybeSingle();
+
+  if (!asset || asset.owner_id !== input.ownerId) {
+    return { error: 'FORBIDDEN' as const };
+  }
+  if (booking.status === 'CHECKED_IN') return { booking };
+  if (booking.status !== 'CONFIRMED') {
+    return { error: 'INVALID_STATUS' as const };
+  }
+
+  const listPrice = Number(booking.list_price || 0);
+  const saleCollected = Number(booking.amount_collected || 0);
+  const previousOwner = Number(booking.guest_paid_owner_amount || 0);
+  const nextOwner =
+    input.guestPaidOwnerAmount != null
+      ? Number(input.guestPaidOwnerAmount)
+      : previousOwner;
+
+  if (!Number.isFinite(nextOwner) || nextOwner < previousOwner) {
+    return { error: 'AMOUNT_REGRESSION' as const, previous: previousOwner };
+  }
+  const maxOwner = Math.max(0, listPrice - saleCollected);
+  if (nextOwner > maxOwner) {
+    return { error: 'ABOVE_REMAINDER' as const, maxOwner };
+  }
+  if (!isGuestPaidInFull(listPrice, saleCollected, nextOwner)) {
+    return { error: 'GUEST_BALANCE_DUE' as const };
+  }
+
+  const now = new Date().toISOString();
   const { data, error } = await admin
     .from('bookings')
     .update({
       status: 'CHECKED_IN',
-      checked_in_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      guest_paid_owner_amount: nextOwner,
+      checked_in_at: now,
+      updated_at: now,
     })
-    .eq('id', bookingId)
-    .eq('sale_id', saleId)
+    .eq('id', booking.id)
     .eq('status', 'CONFIRMED')
     .select('*')
     .maybeSingle();
 
   if (error) return { error: error.message };
-  if (!data) return { error: 'NOT_FOUND' as const };
+  if (!data) return { error: 'RACE' as const };
   return { booking: data };
 }
 
-export async function checkOutBooking(bookingId: string, saleId: string) {
+export async function checkOutBooking(input: {
+  bookingId: string;
+  ownerId: string;
+}) {
   const admin = createServiceClient();
+  const { data: booking } = await admin
+    .from('bookings')
+    .select('id, asset_id, status')
+    .eq('id', input.bookingId)
+    .maybeSingle();
+
+  if (!booking) return { error: 'NOT_FOUND' as const };
+
+  const { data: asset } = await admin
+    .from('assets')
+    .select('owner_id')
+    .eq('id', booking.asset_id)
+    .maybeSingle();
+
+  if (!asset || asset.owner_id !== input.ownerId) {
+    return { error: 'FORBIDDEN' as const };
+  }
+  if (booking.status === 'CHECKED_OUT') return { booking };
+  if (booking.status !== 'CHECKED_IN') {
+    return { error: 'INVALID_STATUS' as const };
+  }
+
+  const now = new Date().toISOString();
   const { data, error } = await admin
     .from('bookings')
     .update({
       status: 'CHECKED_OUT',
-      checked_out_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+      checked_out_at: now,
+      updated_at: now,
     })
-    .eq('id', bookingId)
-    .eq('sale_id', saleId)
+    .eq('id', booking.id)
     .eq('status', 'CHECKED_IN')
     .select('*')
     .maybeSingle();

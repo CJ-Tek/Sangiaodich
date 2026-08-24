@@ -36,7 +36,7 @@ const FILTER_META: Record<
   },
   CONFIRMED: {
     emptyTitle: 'Không có booking đã xác nhận',
-    emptyDescription: 'Owner đã chốt — bấm Check-in khi khách đến.',
+    emptyDescription: 'Owner đã chốt — chủ nhà check-in khi khách đến.',
   },
   CHECKED_IN: {
     emptyTitle: 'Không có booking đang check-in',

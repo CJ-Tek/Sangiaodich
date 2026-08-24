@@ -1,5 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
 import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
+import {
+  guestRemaining,
+  remainderPayee,
+  type RemainderPayee,
+} from '@/lib/engines/guest-balance';
 
 export type GuestBookingListItem = {
   id: string;
@@ -10,7 +15,9 @@ export type GuestBookingListItem = {
   assetSlug: string | null;
   listPrice: number;
   amountCollected: number;
+  guestPaidOwner: number;
   remaining: number;
+  remainderPayee: RemainderPayee;
 };
 
 export type GuestBookingTimelineStep = {
@@ -29,9 +36,10 @@ export type GuestBookingDetail = GuestBookingListItem & {
 /** Money the guest still owes on a booking, never negative. */
 export function remainingToPay(
   listPrice: number,
-  amountCollected: number
+  amountCollected: number,
+  guestPaidOwner = 0
 ): number {
-  return Math.max(0, Number(listPrice || 0) - Number(amountCollected || 0));
+  return guestRemaining(listPrice, amountCollected, guestPaidOwner);
 }
 
 type AssetJoin = { title?: string; slug?: string } | null;
@@ -49,7 +57,7 @@ export async function loadGuestBookings(
   const { data } = await db
     .from('bookings')
     .select(
-      'id, status, check_in, check_out, list_price, amount_collected, assets(title, slug)'
+      'id, status, check_in, check_out, list_price, amount_collected, guest_paid_owner_amount, assets(title, slug)'
     )
     .eq('guest_id', guestId)
     .order('created_at', { ascending: false })
@@ -59,16 +67,25 @@ export async function loadGuestBookings(
     const asset = firstJoin(b.assets as unknown as AssetJoin | AssetJoin[]);
     const listPrice = Number(b.list_price || 0);
     const amountCollected = Number(b.amount_collected || 0);
+    const guestPaidOwner = Number(b.guest_paid_owner_amount || 0);
+    const status = b.status as string;
     return {
       id: b.id as string,
-      status: b.status as string,
+      status,
       checkIn: b.check_in as string,
       checkOut: b.check_out as string,
       assetTitle: asset?.title || 'Villa',
       assetSlug: asset?.slug || null,
       listPrice,
       amountCollected,
-      remaining: remainingToPay(listPrice, amountCollected),
+      guestPaidOwner,
+      remaining: remainingToPay(listPrice, amountCollected, guestPaidOwner),
+      remainderPayee: remainderPayee({
+        status,
+        listPrice,
+        amountCollected,
+        guestPaidOwner,
+      }),
     };
   });
 }
@@ -81,7 +98,7 @@ export async function loadGuestBookingDetail(
   const { data: b } = await db
     .from('bookings')
     .select(
-      'id, status, check_in, check_out, list_price, amount_collected, refund_amount, created_at, confirmed_at, checked_in_at, checked_out_at, cancelled_at, sale_id, assets(title, slug)'
+      'id, status, check_in, check_out, list_price, amount_collected, guest_paid_owner_amount, refund_amount, created_at, confirmed_at, checked_in_at, checked_out_at, cancelled_at, sale_id, assets(title, slug)'
     )
     .eq('guest_id', guestId)
     .eq('id', bookingId)
@@ -100,6 +117,8 @@ export async function loadGuestBookingDetail(
   const asset = firstJoin(b.assets as unknown as AssetJoin | AssetJoin[]);
   const listPrice = Number(b.list_price || 0);
   const amountCollected = Number(b.amount_collected || 0);
+  const guestPaidOwner = Number(b.guest_paid_owner_amount || 0);
+  const status = b.status as string;
 
   const timeline: GuestBookingTimelineStep[] = [
     { label: 'Tạo booking', at: (b.created_at as string) || null },
@@ -113,14 +132,21 @@ export async function loadGuestBookingDetail(
 
   return {
     id: b.id as string,
-    status: b.status as string,
+    status,
     checkIn: b.check_in as string,
     checkOut: b.check_out as string,
     assetTitle: asset?.title || 'Villa',
     assetSlug: asset?.slug || null,
     listPrice,
     amountCollected,
-    remaining: remainingToPay(listPrice, amountCollected),
+    guestPaidOwner,
+    remaining: remainingToPay(listPrice, amountCollected, guestPaidOwner),
+    remainderPayee: remainderPayee({
+      status,
+      listPrice,
+      amountCollected,
+      guestPaidOwner,
+    }),
     refundAmount: Number(b.refund_amount || 0),
     createdAt: (b.created_at as string) || null,
     timeline,

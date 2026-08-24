@@ -32,6 +32,33 @@ function Test-Command($Name) {
   return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
 }
 
+function Get-LocalApiPort {
+  $cfg = Join-Path $Root "supabase\config.toml"
+  if (Test-Path $cfg) {
+    $inApi = $false
+    foreach ($line in Get-Content $cfg) {
+      if ($line -match '^\s*\[api\]') { $inApi = $true; continue }
+      if ($inApi -and $line -match '^\s*\[') { break }
+      if ($inApi -and $line -match '^\s*port\s*=\s*(\d+)') { return [int]$Matches[1] }
+    }
+  }
+  return 54321
+}
+
+function Test-TcpOpen([string]$TargetHost, [int]$Port, [int]$TimeoutMs = 2000) {
+  try {
+    $client = [System.Net.Sockets.TcpClient]::new()
+    $iar = $client.BeginConnect($TargetHost, $Port, $null, $null)
+    $ok = $iar.AsyncWaitHandle.WaitOne($TimeoutMs, $false)
+    if (-not $ok) { $client.Close(); return $false }
+    $client.EndConnect($iar) | Out-Null
+    $client.Close()
+    return $true
+  } catch {
+    return $false
+  }
+}
+
 if (-not (Test-Command "node")) { throw "Node.js is required." }
 if (-not (Test-Command "npm")) { throw "npm is required." }
 
@@ -61,6 +88,22 @@ if (-not $SkipSupabase) {
     if ($LASTEXITCODE -ne 0) { throw "supabase start failed." }
   } else {
     Write-Host "[ok] Supabase already running" -ForegroundColor DarkGreen
+  }
+
+  # Docker Desktop on Windows can leave containers "healthy" with a dead host
+  # port proxy (WinNAT excluded ranges). supabase status still exits 0.
+  $apiPort = Get-LocalApiPort
+  if (-not (Test-TcpOpen "127.0.0.1" $apiPort)) {
+    Write-Host "-> API port $apiPort not reachable; recreating local stack..." -ForegroundColor Yellow
+    npx supabase stop
+    if ($LASTEXITCODE -ne 0) { throw "supabase stop failed." }
+    npx supabase start
+    if ($LASTEXITCODE -ne 0) {
+      throw "supabase start failed. If Windows blocked the bind, check: netsh interface ipv4 show excludedportrange protocol=tcp"
+    }
+    if (-not (Test-TcpOpen "127.0.0.1" $apiPort)) {
+      throw "Supabase API still not reachable on 127.0.0.1:$apiPort. Port may be in a Windows excluded range."
+    }
   }
 
   if ($ResetDb) {

@@ -18,6 +18,7 @@ import {
   parseExplorePage,
   toAssetCardData,
 } from '@/lib/engines/explore-assets';
+import { parseExploreAdvancedParams } from '@/lib/engines/explore-filters';
 
 export const revalidate = 60;
 
@@ -28,13 +29,24 @@ export default async function MarketplacePage({
     q?: string;
     tags?: string | string[];
     page?: string | string[];
+    budgetMin?: string | string[];
+    budgetMax?: string | string[];
+    guests?: string | string[];
+    checkIn?: string | string[];
+    checkOut?: string | string[];
   }>;
 }) {
   const startedAt = Date.now();
-  const { q, tags: tagsParam, page: pageParam } = await searchParams;
-  const selectedTags = parseTagSearchParam(tagsParam);
-  const keyword = q?.trim();
-  const page = parseExplorePage(pageParam);
+  const sp = await searchParams;
+  const selectedTags = parseTagSearchParam(sp.tags);
+  const keyword = sp.q?.trim();
+  const page = parseExplorePage(sp.page);
+  const advanced = parseExploreAdvancedParams(sp);
+  const listOpts = {
+    q: keyword,
+    tags: selectedTags,
+    ...advanced,
+  };
   // Verified session, not the cookie hint: a stale cookie would otherwise
   // bounce a visitor to /me/explore and from there to /login.
   const roleStartedAt = Date.now();
@@ -46,6 +58,10 @@ export default async function MarketplacePage({
   const assetsPromise = loadExploreAssets({
     keyword,
     tags: selectedTags,
+    budgetMax: advanced.budgetMax,
+    guests: advanced.guests,
+    checkIn: advanced.checkIn,
+    checkOut: advanced.checkOut,
     page,
   }).then((value) => ({ value, ms: Date.now() - assetsStartedAt }));
 
@@ -62,6 +78,8 @@ export default async function MarketplacePage({
       page: resolvedPage,
       keyword: keyword ? 'yes' : 'no',
       tagsCount: selectedTags.length,
+      budget: advanced.budgetMax ? 'yes' : 'no',
+      guests: advanced.guests ?? 0,
       totalMs: Date.now() - startedAt,
     })}`
   );
@@ -70,8 +88,7 @@ export default async function MarketplacePage({
   if (role === 'GUEST') {
     redirect(
       exploreListHref('/me/explore', {
-        q: keyword,
-        tags: selectedTags,
+        ...listOpts,
         page: resolvedPage,
       })
     );
@@ -80,8 +97,7 @@ export default async function MarketplacePage({
   if (page !== resolvedPage && total > 0) {
     redirect(
       exploreListHref('/marketplace', {
-        q: keyword,
-        tags: selectedTags,
+        ...listOpts,
         page: resolvedPage,
       })
     );
@@ -119,11 +135,16 @@ export default async function MarketplacePage({
           variant="marketplace"
           defaultQ={keyword || ''}
           defaultTags={selectedTags}
+          defaultBudgetMin={advanced.budgetMin}
+          defaultBudgetMax={advanced.budgetMax}
+          defaultGuests={advanced.guests}
+          defaultCheckIn={advanced.checkIn}
+          defaultCheckOut={advanced.checkOut}
         />
         {!assets?.length ? (
           <EmptyState
             title="Không tìm thấy"
-            description="Thử từ khóa khác hoặc bớt thuộc tính."
+            description="Thử từ khóa khác, bớt thuộc tính, hoặc nới ngân sách / số khách."
             actionLabel="Xóa bộ lọc"
             href="/marketplace"
           />

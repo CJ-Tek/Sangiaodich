@@ -76,15 +76,24 @@ export function GuestBookingDetailCard({
             Thanh toán
           </Text>
           <Row label="Giá booking" value={money(booking.listPrice)} />
-          <Row label="Đã thanh toán" value={money(booking.amountCollected)} />
+          <Row label="Đã thanh toán (Sale)" value={money(booking.amountCollected)} />
+          {booking.guestPaidOwner > 0 ? (
+            <Row
+              label="Đã thanh toán (chủ nhà)"
+              value={money(booking.guestPaidOwner)}
+            />
+          ) : null}
           <Divider my={4} />
           <Row label="Còn lại" value={money(booking.remaining)} />
           {booking.refundAmount > 0 ? (
             <Row label="Đã hoàn" value={money(booking.refundAmount)} />
           ) : null}
           <Text size="xs" c="dimmed" mt={4}>
-            Thanh toán offline qua sale phụ trách. Số liệu trên do sale ghi nhận
-            khi nhận tiền.
+            {booking.remainderPayee === 'OWNER'
+              ? 'Phần còn lại chuyển cho chủ nhà lúc nhận phòng. Chủ nhà ghi nhận khi check-in.'
+              : booking.remaining > 0
+                ? 'Thanh toán offline qua sale phụ trách. Số liệu trên do sale ghi nhận khi nhận tiền.'
+                : 'Đã thanh toán đủ giá bán.'}
           </Text>
         </Stack>
       </Card>

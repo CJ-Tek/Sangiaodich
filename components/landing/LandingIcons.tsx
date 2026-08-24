@@ -141,3 +141,21 @@ export function IconArrowRight({ size }: { size?: number }) {
     </Svg>
   );
 }
+
+export function IconChevronDown({ size }: { size?: number }) {
+  return (
+    <Svg size={size}>
+      <path d="M6 9l6 6 6-6" />
+    </Svg>
+  );
+}
+
+export function IconCoins({ size }: { size?: number }) {
+  return (
+    <Svg size={size}>
+      <circle cx="9.5" cy="10" r="5.5" />
+      <path d="M14.2 7.2a5.5 5.5 0 1 1 0 9.6" />
+      <path d="M9.5 7.8v4.4M8 10h3" />
+    </Svg>
+  );
+}

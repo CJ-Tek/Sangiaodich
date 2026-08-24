@@ -9,10 +9,12 @@ export function ExportGuestInvoiceButton({
   bookingId,
   salePayoutReady,
   remaining,
+  settingsHref = '/sale/settings?tab=payout',
 }: {
   bookingId: string;
   salePayoutReady: boolean;
   remaining: number;
+  settingsHref?: string;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -25,7 +27,7 @@ export function ExportGuestInvoiceButton({
         color: 'yellow',
         message: 'Cần cấu hình STK nhận tiền trước khi xuất invoice',
       });
-      router.push('/sale/settings?tab=payout');
+      router.push(settingsHref);
       return;
     }
     setLoading(true);

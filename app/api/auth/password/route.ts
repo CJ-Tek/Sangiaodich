@@ -56,9 +56,18 @@ export async function POST(request: Request) {
   });
 
   if (error) {
+    const raw = error.message || 'Invalid login credentials';
+    const unreachable = /fetch failed|failed to fetch|econnrefused|enotfound/i.test(
+      raw
+    );
     return NextResponse.json(
-      fail('AUTH_FAILED', error.message || 'Invalid login credentials'),
-      { status: 401 }
+      fail(
+        unreachable ? 'AUTH_UNREACHABLE' : 'AUTH_FAILED',
+        unreachable
+          ? 'Không kết nối được máy chủ xác thực. Chạy lại npm run local.'
+          : raw
+      ),
+      { status: unreachable ? 503 : 401 }
     );
   }
 

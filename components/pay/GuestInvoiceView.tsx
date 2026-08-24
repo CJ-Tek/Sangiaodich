@@ -15,6 +15,7 @@ import {
 } from '@mantine/core';
 import { colors, radius } from '@/config/design-tokens';
 import { ownerTransferMemo } from '@/lib/engines/booking-search';
+import { guestRemaining } from '@/lib/engines/guest-balance';
 import {
   calendarUnlockedForInvoice,
   guestInvoiceAmounts,
@@ -39,6 +40,8 @@ export type GuestInvoiceViewProps = {
   checkOut: string;
   listPrice: number;
   amountCollected: number;
+  guestPaidOwner?: number;
+  payee?: 'SALE' | 'OWNER';
   saleName: string;
   salePhone: string;
   expiresAt: string;
@@ -54,10 +57,16 @@ function formatCountdown(ms: number) {
 }
 
 export function GuestInvoiceView(props: GuestInvoiceViewProps) {
+  const payee = props.payee === 'OWNER' ? 'OWNER' : 'SALE';
   const amounts = guestInvoiceAmounts({
     listPrice: props.listPrice,
     amountCollected: props.amountCollected,
   });
+  const ownerRemainder = guestRemaining(
+    props.listPrice,
+    props.amountCollected,
+    props.guestPaidOwner
+  );
   const defaultPreset: GuestInvoicePreset = amounts.canDeposit
     ? 'deposit'
     : 'full';
@@ -72,9 +81,11 @@ export function GuestInvoiceView(props: GuestInvoiceViewProps) {
   const expired = isGuestInvoiceExpired(props.expiresAt, now);
   const leftMs = Math.max(0, new Date(props.expiresAt).getTime() - now);
   const unlocked = calendarUnlockedForInvoice(props.status);
-  const paidInFull = amounts.remainingFull <= 0;
+  const paidInFull =
+    payee === 'OWNER' ? ownerRemainder <= 0 : amounts.remainingFull <= 0;
   const memo = ownerTransferMemo(props.bookingId);
-  const qrAmount = guestInvoiceQrAmount(preset, amounts);
+  const qrAmount =
+    payee === 'OWNER' ? ownerRemainder : guestInvoiceQrAmount(preset, amounts);
 
   const dynamicQr = useMemo(() => {
     if (!canBuildOwnerVietQr(props.payout) || qrAmount <= 0) return null;
@@ -96,8 +107,9 @@ export function GuestInvoiceView(props: GuestInvoiceViewProps) {
           {props.checkIn} → {props.checkOut}
         </Text>
         <Text size="sm" mt={4}>
-          Sale: {props.saleName}
-          {props.salePhone ? ` · ${props.salePhone}` : ''}
+          {payee === 'OWNER'
+            ? 'Chuyển cho chủ nhà lúc nhận phòng'
+            : `Sale: ${props.saleName}${props.salePhone ? ` · ${props.salePhone}` : ''}`}
         </Text>
         <Group gap="xs" mt="sm">
           <Text size="xs" c="dimmed">
@@ -109,24 +121,30 @@ export function GuestInvoiceView(props: GuestInvoiceViewProps) {
 
       {paidInFull ? (
         <Alert color="vbnbGreen" title="Đã ghi nhận đủ">
-          Sale đã xác nhận thu đủ giá bán cho booking này.
+          {payee === 'OWNER'
+            ? 'Chủ nhà đã ghi nhận đủ phần còn lại cho booking này.'
+            : 'Sale đã xác nhận thu đủ giá bán cho booking này.'}
         </Alert>
       ) : (
         <>
           {!expired ? (
             <Alert
-              color={unlocked ? 'yellow' : 'vbnbGreen'}
+              color={unlocked && payee === 'SALE' ? 'yellow' : 'vbnbGreen'}
               title={`Còn ${formatCountdown(leftMs)} để chuyển`}
             >
-              {unlocked
-                ? 'Chuyển nhanh để Sale gửi Owner giữ chỗ. Lịch chưa khóa — chậm có thể bị người khác book.'
-                : 'Phòng đã được xác nhận. Chuyển nốt phần còn lại theo QR bên dưới.'}
+              {payee === 'OWNER'
+                ? 'Chuyển nốt phần còn lại cho chủ nhà theo QR bên dưới.'
+                : unlocked
+                  ? 'Chuyển nhanh để Sale gửi Owner giữ chỗ. Lịch chưa khóa — chậm có thể bị người khác book.'
+                  : 'Phòng đã được xác nhận. Chuyển nốt phần còn lại theo QR bên dưới.'}
             </Alert>
           ) : (
             <Alert color="red" title="Hết thời gian trên link này">
-              {unlocked
-                ? 'Booking này có thể đã bị người khác book. Hãy liên hệ lại Sale hoặc kiểm tra lịch trên trang.'
-                : 'Link đã hết hạn. Liên hệ Sale nếu bạn vừa chuyển khoản.'}
+              {payee === 'OWNER'
+                ? 'Link đã hết hạn. Liên hệ chủ nhà nếu bạn vừa chuyển khoản.'
+                : unlocked
+                  ? 'Booking này có thể đã bị người khác book. Hãy liên hệ lại Sale hoặc kiểm tra lịch trên trang.'
+                  : 'Link đã hết hạn. Liên hệ Sale nếu bạn vừa chuyển khoản.'}
               {props.assetSlug ? (
                 <>
                   {' '}
@@ -147,6 +165,7 @@ export function GuestInvoiceView(props: GuestInvoiceViewProps) {
             }}
           >
             <Stack gap="sm">
+              {payee === 'SALE' ? (
               <SegmentedControl
                 value={preset}
                 onChange={(v) => setPreset(v as GuestInvoicePreset)}
@@ -165,6 +184,11 @@ export function GuestInvoiceView(props: GuestInvoiceViewProps) {
                 color="vbnbGreen"
                 fullWidth
               />
+              ) : (
+                <Text size="sm" ta="center" c="dimmed">
+                  Phần còn lại lúc nhận phòng
+                </Text>
+              )}
 
               {qrUrl && qrAmount > 0 ? (
                 <Image src={qrUrl} alt="QR chuyển khoản" maw={220} mx="auto" radius="md" />
@@ -189,7 +213,8 @@ export function GuestInvoiceView(props: GuestInvoiceViewProps) {
                 {props.payout.accountName ? ` · ${props.payout.accountName}` : ''}
               </Text>
               <Text size="xs" c="dimmed" ta="center">
-                Nội dung CK phải có mã {memo} để Sale đối soát.
+                Nội dung CK phải có mã {memo} để{' '}
+                {payee === 'OWNER' ? 'chủ nhà' : 'Sale'} đối soát.
               </Text>
             </Stack>
           </Paper>

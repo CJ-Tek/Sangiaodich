@@ -60,7 +60,11 @@ export default async function MyBookingsPage() {
                   </Text>
                   <Text size="xs" c="dimmed">
                     {b.remaining > 0
-                      ? `Còn ${b.remaining.toLocaleString('vi-VN')} ₫`
+                      ? `Còn ${b.remaining.toLocaleString('vi-VN')} ₫${
+                          b.remainderPayee === 'OWNER'
+                            ? ' · CK chủ nhà lúc nhận phòng'
+                            : ' · CK Sale'
+                        }`
                       : 'Đã thanh toán đủ'}
                   </Text>
                 </Stack>

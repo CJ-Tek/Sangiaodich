@@ -14,15 +14,11 @@ import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { ExportGuestInvoiceButton } from '@/components/sale/ExportGuestInvoiceButton';
-import { minOwnerDepositToConfirm } from '@/lib/engines/pricing';
+import { minOwnerDepositToConfirm, minDepositToConfirm } from '@/lib/engines/pricing';
 import { computeCancelRefund } from '@/lib/engines/cancellation';
 import { FIRM_POLICY_SUMMARY } from '@/config/cancellation-policy';
 
-type BookingAction =
-  | 'submit_to_owner'
-  | 'cancel'
-  | 'check_in'
-  | 'check_out';
+type BookingAction = 'submit_to_owner' | 'cancel';
 
 export function BookingActions({
   bookingId,
@@ -46,18 +42,23 @@ export function BookingActions({
 }) {
   const router = useRouter();
   const minOwnerPayout = minOwnerDepositToConfirm(ownerEarn);
+  const minGuestDeposit = minDepositToConfirm(listPrice);
+  const collected = Number(amountCollected || 0);
   const [loading, setLoading] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [goodwill, setGoodwill] = useState(false);
 
   const canSubmit =
-    ownerEarn > 0 && Number(ownerPaid || 0) >= minOwnerPayout;
+    ownerEarn > 0 &&
+    Number(ownerPaid || 0) >= minOwnerPayout &&
+    collected >= minGuestDeposit;
   const submitBlockedReason =
     ownerEarn <= 0
       ? 'Chưa có giá gốc — không gửi Owner được'
-      : `Cần xác nhận CK Owner tối thiểu ${minOwnerPayout.toLocaleString('vi-VN')} (50% giá gốc)`;
+      : collected < minGuestDeposit
+        ? `Cần thu cọc Guest tối thiểu ${minGuestDeposit.toLocaleString('vi-VN')} (50% giá bán)`
+        : `Cần xác nhận CK Owner tối thiểu ${minOwnerPayout.toLocaleString('vi-VN')} (50% giá gốc)`;
 
-  const collected = Number(amountCollected || 0);
   const refundPreview = useMemo(
     () =>
       computeCancelRefund({
@@ -108,8 +109,6 @@ export function BookingActions({
         const messages: Record<BookingAction, string> = {
           submit_to_owner: 'Đã gửi Owner — chờ xác nhận (chưa khóa lịch)',
           cancel: 'Đã hủy booking',
-          check_in: 'Đã check-in',
-          check_out: 'Đã check-out',
         };
         notifications.show({
           color: 'vbnbGreen',
@@ -257,31 +256,6 @@ export function BookingActions({
         {cancelModal}
         <Stack gap="sm">
           <Group gap="xs" wrap="wrap">
-            <ExportGuestInvoiceButton
-              bookingId={bookingId}
-              salePayoutReady={Boolean(salePayoutReady)}
-              remaining={Math.max(0, listPrice - collected)}
-            />
-            {status === 'CONFIRMED' ? (
-              <Button
-                size="xs"
-                color="vbnbGreen"
-                loading={loading}
-                onClick={() => patch('check_in')}
-              >
-                Check-in
-              </Button>
-            ) : null}
-            {status === 'CHECKED_IN' ? (
-              <Button
-                size="xs"
-                color="vbnbGreen"
-                loading={loading}
-                onClick={() => patch('check_out')}
-              >
-                Check-out
-              </Button>
-            ) : null}
             <Button
               size="xs"
               color="red"

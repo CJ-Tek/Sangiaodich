@@ -6,14 +6,19 @@ import { fail, ok } from '@/lib/types';
 
 export async function POST(request: Request) {
   const profile = await getSessionProfile();
-  if (!profile || profile.role !== 'SALE') {
-    return NextResponse.json(fail('UNAUTHORIZED', 'Sale only'), { status: 401 });
+  if (!profile || (profile.role !== 'SALE' && profile.role !== 'OWNER')) {
+    return NextResponse.json(fail('UNAUTHORIZED', 'Sale or Owner only'), {
+      status: 401,
+    });
   }
   try {
     await assertActiveSubscription(profile.id);
   } catch {
     return NextResponse.json(
-      fail('SUBSCRIPTION_INACTIVE', 'Subscription hết hạn — gia hạn để tiếp tục'),
+      fail(
+        'SUBSCRIPTION_INACTIVE',
+        'Subscription hết hạn — gia hạn để tiếp tục'
+      ),
       { status: 403 }
     );
   }
@@ -24,9 +29,11 @@ export async function POST(request: Request) {
     return NextResponse.json(fail('INVALID', 'Thiếu bookingId'), { status: 400 });
   }
 
+  const payee = profile.role === 'OWNER' ? 'OWNER' : 'SALE';
   const result = await issueGuestInvoice({
     bookingId,
-    saleId: profile.id,
+    issuedBy: profile.id,
+    payee,
   });
 
   if ('error' in result) {
@@ -39,7 +46,10 @@ export async function POST(request: Request) {
         status: 400,
         message: 'Chưa cấu hình STK — vào Profile để điền tài khoản nhận tiền',
       },
-      INSERT_FAILED: { status: 500, message: result.message || 'Không tạo được invoice' },
+      INSERT_FAILED: {
+        status: 500,
+        message: result.message || 'Không tạo được invoice',
+      },
     };
     const errorCode = result.error;
     const meta =
