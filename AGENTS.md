@@ -32,6 +32,12 @@ Confirm `gitnexus://repo/Sangiaodich/context` is not behind HEAD before using th
 Do not put `analyze` in a git hook — a timeout can corrupt the KuzuDB index.
 The Cursor rule `.cursor/rules/gitnexus-reindex.mdc` enforces this for agent commits.
 
+Do not mix GitNexus signals: **stale index** (fix with `analyze --index-only`) is not
+`impact` **CRITICAL** (blast radius on a money/auth hub — production is not down; re-index
+will not clear it) and is not `query` **FTS partial** (ranking incomplete on this Windows
+index; `embeddings: 0`, VECTOR unavailable — use `context({name})` or files, not top hits).
+When writing a status note, name which of the three it is.
+
 ## Environments
 
 This project is **already deployed**. The local Supabase stack and the hosted Supabase

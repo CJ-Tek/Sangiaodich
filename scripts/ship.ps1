@@ -66,6 +66,20 @@ function Test-Cmd([string]$Name) {
   return [bool](Get-Command $Name -ErrorAction SilentlyContinue)
 }
 
+function Update-GitNexusIndex {
+  Write-Host ''
+  Write-Host '-> GitNexus analyze --index-only (graph must match HEAD)' -ForegroundColor Cyan
+  $runner = Join-Path $Root '.gitnexus\run.cjs'
+  if (Test-Path -LiteralPath $runner) {
+    node $runner analyze --index-only
+  } else {
+    npx gitnexus analyze --index-only
+  }
+  if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) {
+    Write-Host "[warn] GitNexus analyze exited $LASTEXITCODE. Graph may lag HEAD." -ForegroundColor Yellow
+  }
+}
+
 foreach ($cmd in @('git', 'node', 'npm', 'npx')) {
   if (-not (Test-Cmd $cmd)) { throw "$cmd is required." }
 }
@@ -266,6 +280,8 @@ if ($aheadAfterRaw -match '^\d+$') { $aheadAfter = [int]$aheadAfterRaw }
 if (-not $committed -and $aheadAfter -eq 0) {
   throw 'Nothing committed and nothing ahead of origin - aborting push.'
 }
+
+Update-GitNexusIndex
 
 if ($migPaths.Count -gt 0) {
   Write-Host ''

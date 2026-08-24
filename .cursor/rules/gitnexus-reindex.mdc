@@ -1,40 +1,47 @@
 ---
-description: Re-index GitNexus after every commit so impact/query/context match HEAD
+description: Re-index GitNexus after commit; do not conflate stale vs CRITICAL vs FTS
 alwaysApply: true
 ---
 
-# GitNexus index after commit
+# GitNexus: freshness and how to read the tools
 
 The graph is a snapshot. `impact`, `query`, `context`, and `api_impact`
-only see the last `analyze`. Commits and files after that snapshot are
-invisible until re-index.
+only see the last `analyze`.
 
 ## After `git commit` or `git merge`
 
-Run from the repo root as soon as the commit succeeds (do not skip):
+From the repo root (do not skip):
 
 ```bash
 node .gitnexus/run.cjs analyze --index-only
 ```
 
-If `.gitnexus/run.cjs` is missing:
+Fallback: `npx gitnexus analyze --index-only`. Then read
+`gitnexus://repo/Sangiaodich/context` and confirm it is not behind HEAD.
 
-```bash
-npx gitnexus analyze --index-only
-```
+Do **not** run `analyze` in a short-timeout git hook (KuzuDB corruption).
+`--index-only` after commit; full `analyze` only to regenerate AGENTS.md /
+CLAUDE.md GitNexus blocks.
 
-Then read `gitnexus://repo/Sangiaodich/context` and confirm it is not
-behind HEAD. Only then run `detect_changes` if the commit protocol
-requires it.
+## Three signals — never mix them
 
-Do **not** run `analyze` inside a git hook with a short timeout — it can
-corrupt the KuzuDB index. The agent runs it in the terminal after the
-commit. `--index-only` is the default after commit; full `analyze` (no
-flag) only when the generated GitNexus blocks in AGENTS.md / CLAUDE.md
-must be regenerated.
+| Signal | Means | Do |
+|---|---|---|
+| Index **behind HEAD** | Graph is old | `analyze --index-only` |
+| `impact` **CRITICAL** | Hub on money/auth, or large blast radius | Warn before **editing** that symbol. Production is not down. Re-index will **not** clear it. |
+| `query` **FTS warning / `partial: true`** | Search ranking is incomplete | Do not trust top hits. This Windows index has `embeddings: 0` and VECTOR unavailable. Use `context({name})` if the symbol is known, or read files. |
 
-## Before trusting the graph
+Status notes must name which of the three it is.
 
-If context reports stale, or `.gitnexus/meta.json` `lastCommit` ≠ HEAD,
-re-index before `impact` / `query` / `context`. A missing symbol in a
-stale index means "not indexed yet", not "unused".
+## `impact` CRITICAL
+
+Example: `resolveSaleMembership` stays CRITICAL because Sale booking
+pricing still calls it (guest pay, sale margin, owner confirm). That is
+expected. Leave the function alone unless the task is membership/pricing.
+Do not tell the user the app is in a critical outage.
+
+## `query` vs known symbols
+
+`query` is BM25 process search, not grep. If you already have a symbol
+name, call `context({name})` — do not `query` a vague phrase. A missing
+symbol in a **stale** index means "not indexed yet", not "unused".
