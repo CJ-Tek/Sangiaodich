@@ -31,6 +31,13 @@ import {
   isGuestDepositCase,
 } from '@/lib/engines/guest-balance';
 import { OwnerStayActions } from '@/components/owner/OwnerStayActions';
+import { OwnerSaleRatingForm } from '@/components/owner/OwnerSaleRatingForm';
+import { SalePublicRatingCard } from '@/components/owner/SalePublicRatingCard';
+import type {
+  SaleRatingAggregate,
+  SaleRatingComment,
+  SaleRatingRecord,
+} from '@/lib/engines/sale-ratings';
 
 export type OwnerSettlementRow = {
   id: string;
@@ -49,6 +56,10 @@ export type OwnerSettlementRow = {
   listPrice: number;
   amountCollected: number;
   guestPaidOwner: number;
+  rating: SaleRatingRecord | null;
+  saleId: string;
+  ratingAggregate: SaleRatingAggregate | null;
+  ratingComments: SaleRatingComment[];
 };
 
 type PayoutFilter = 'all' | 'none' | 'partial' | 'full';
@@ -220,11 +231,17 @@ export function OwnerSettlementsList({
                         {(b.saleName || '?').slice(0, 1).toUpperCase()}
                       </Avatar>
                       <div>
-                        <Text size="sm" fw={500}>
-                          {b.saleName || 'Sale không xác định'}
-                        </Text>
+                        <Group gap="xs" wrap="wrap" align="center">
+                          <Text size="sm" fw={500}>
+                            {b.saleName || 'Sale không xác định'}
+                          </Text>
+                          <SalePublicRatingCard
+                            aggregate={b.ratingAggregate}
+                            comments={b.ratingComments}
+                          />
+                        </Group>
                         <Text size="xs" c="dimmed">
-                          Tier {b.tierLabel}
+                          {b.tierLabel}
                           {b.salePhone ? ` · ${b.salePhone}` : ''}
                         </Text>
                       </div>
@@ -285,6 +302,12 @@ export function OwnerSettlementsList({
                   guestPaidOwner={b.guestPaidOwner}
                   payout={payout}
                 />
+                {b.status === 'CHECKED_OUT' ? (
+                  <OwnerSaleRatingForm
+                    bookingId={b.id}
+                    rating={b.rating}
+                  />
+                ) : null}
                 </Stack>
               </Paper>
             );

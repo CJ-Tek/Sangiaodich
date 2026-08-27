@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 import { Suspense } from 'react';
 import { getSessionProfile } from '@/lib/auth/session';
 import { saleHasActiveSub } from '@/lib/engines/booking-service';
-import { resolveSaleCostDiscountPercent } from '@/lib/engines/sale-pricing';
 import { quoteAssetCosts } from '@/lib/engines/pricing';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { AssetCard } from '@/components/marketplace/AssetCard';
@@ -12,7 +11,7 @@ import { Alert, SimpleGrid, TextInput, Button, Group, Box } from '@mantine/core'
 import { colors, radius } from '@/config/design-tokens';
 import { exploreListHref } from '@/lib/engines/explore-assets';
 import {
-  loadSaleMarketplaceAssets,
+  loadSaleMarketplaceQuotedAssets,
   parseExplorePage,
 } from '@/lib/engines/sale-marketplace-assets';
 
@@ -37,12 +36,13 @@ export default async function SaleMarketplacePage({
     );
   }
 
-  const [discountPercent, list] = await Promise.all([
-    resolveSaleCostDiscountPercent(profile!.id),
-    loadSaleMarketplaceAssets({ q, page }),
-  ]);
+  const list = await loadSaleMarketplaceQuotedAssets({
+    saleId: profile!.id,
+    q,
+    page,
+  });
 
-  const { assets, total, page: resolvedPage, totalPages } = list;
+  const { assets, total, page: resolvedPage, totalPages, discounts } = list;
 
   if (page !== resolvedPage && total > 0) {
     redirect(
@@ -100,7 +100,11 @@ export default async function SaleMarketplacePage({
               };
               const baseWd = Number(costs?.cost_weekday || 0);
               const baseWe = Number(costs?.cost_weekend || 0);
-              const quoted = quoteAssetCosts(baseWd, baseWe, discountPercent);
+              const quoted = quoteAssetCosts(
+                baseWd,
+                baseWe,
+                discounts.get(a.id) ?? 0
+              );
               return (
                 <AssetCard
                   key={a.id}

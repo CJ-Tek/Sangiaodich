@@ -21,7 +21,7 @@ const features = [
   },
   {
     title: 'Tăng hạng thành viên & thu nhập',
-    body: 'Volume càng cao, chiết khấu càng tốt — rõ ràng, không mập mờ.',
+    body: 'Owner set mốc lần và % trên từng căn. Check-out càng nhiều trên căn đó, cost càng thấp nếu Owner đã mở chiết khấu.',
     Icon: IconTrend,
   },
 ];

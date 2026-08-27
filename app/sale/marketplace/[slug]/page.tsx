@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server';
 import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 import { todayDateOnly } from '@/lib/dates';
+import { activeStayRanges } from '@/lib/engines/inventory';
 import { getSessionProfile } from '@/lib/auth/session';
 import { saleHasActiveSub } from '@/lib/engines/booking-service';
-import { resolveSaleCostDiscountPercent } from '@/lib/engines/sale-pricing';
+import { resolveSaleAssetDiscount } from '@/lib/engines/sale-pricing';
 import { loadSaleGuestSuggestions } from '@/lib/engines/sale-guest-search';
 import { CreateBookingForm } from '@/components/sale/CreateBookingForm';
 import { MarketplaceCalendar } from '@/components/marketplace/MarketplaceCalendar';
@@ -27,7 +28,6 @@ export default async function SaleAssetDetailPage({
     return <Alert color="red">Subscription inactive</Alert>;
   }
 
-  const discountPercent = await resolveSaleCostDiscountPercent(profile!.id);
   const admin = await createClient();
   const { data: asset } = await admin
     .from('assets')
@@ -39,7 +39,11 @@ export default async function SaleAssetDetailPage({
     .maybeSingle();
   if (!asset) notFound();
 
-  const guestSuggestions = await loadSaleGuestSuggestions(profile!.id);
+  const [discount, guestSuggestions] = await Promise.all([
+    resolveSaleAssetDiscount(profile!.id, asset.id),
+    loadSaleGuestSuggestions(profile!.id),
+  ]);
+  const discountPercent = discount.discountPercent;
 
   const costs = asset.asset_costs as unknown as {
     cost_weekday: number;
@@ -53,8 +57,8 @@ export default async function SaleAssetDetailPage({
     p_asset_id: asset.id,
   });
 
-  // Soft-hold nights are only drawn on the calendar ahead of today, so past
-  // stays never need to travel.
+  // Soft-hold and confirmed free/busy only include stays whose check_out is
+  // today or later — past occupancy never needs to travel.
   const { data: awaitingRows } = await admin
     .from('bookings')
     .select('check_in, check_out')
@@ -69,12 +73,12 @@ export default async function SaleAssetDetailPage({
     sort_order: number;
   }[];
   const tags = Array.isArray(asset.tags) ? (asset.tags as string[]) : [];
-  const confirmedRanges = (
-    (ranges || []) as { check_in: string; check_out: string }[]
-  ).map((r) => ({
-    checkIn: r.check_in,
-    checkOut: r.check_out,
-  }));
+  const confirmedRanges = activeStayRanges(
+    ((ranges || []) as { check_in: string; check_out: string }[]).map((r) => ({
+      checkIn: r.check_in,
+      checkOut: r.check_out,
+    }))
+  );
 
   return (
     <Stack gap={32} pb="xl">

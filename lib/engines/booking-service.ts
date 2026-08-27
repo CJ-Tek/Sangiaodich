@@ -4,11 +4,8 @@ import { hasConfirmedConflict, INVENTORY_LOCK_STATUSES } from '@/lib/engines/inv
 import {
   applyGuestConfirmProgress,
   applyGuestProgress,
-  applySaleConfirmVolume,
   recomputeGuestFromCollectedAmounts,
-  resolveSaleVolumeTier,
   type GuestTier,
-  type SaleTier,
 } from '@/lib/engines/membership';
 import {
   previewPricing,
@@ -20,8 +17,7 @@ import { computeCancelRefund } from '@/lib/engines/cancellation';
 import { profileHasActiveSubscription } from '@/lib/engines/subscription-access';
 import { isPastDateOnly } from '@/lib/dates';
 import {
-  resolveSaleCostDiscountPercent,
-  resolveSaleMembership,
+  resolveSaleAssetDiscount,
 } from '@/lib/engines/sale-pricing';
 
 /**
@@ -70,14 +66,17 @@ export async function createBooking(input: {
     .maybeSingle();
   if (!costs) return { error: 'NO_COSTS' as const };
 
-  const saleDiscount = await resolveSaleCostDiscountPercent(input.saleId);
+  const saleDiscount = await resolveSaleAssetDiscount(
+    input.saleId,
+    input.assetId
+  );
   const pricing = previewPricing({
     checkIn: input.checkIn,
     checkOut: input.checkOut,
     costWeekday: Number(costs.cost_weekday),
     costWeekend: Number(costs.cost_weekend),
     listSelling: input.listPrice,
-    saleCostDiscountPercent: saleDiscount,
+    saleCostDiscountPercent: saleDiscount.discountPercent,
   });
 
   if (input.listPrice < pricing.effectiveCost) {
@@ -148,6 +147,8 @@ export async function createBooking(input: {
       effective_cost_snapshot: pricing.effectiveCost,
       list_price_snapshot: input.listPrice,
       sale_discount_percent_snapshot: pricing.saleDiscountPercent,
+      sale_tier_id_snapshot: null,
+      sale_tier_label_snapshot: saleDiscount.tierLabel,
       status: 'PENDING',
     })
     .select('*')
@@ -159,7 +160,7 @@ export async function createBooking(input: {
 
 /**
  * Sale submits PENDING → AWAITING_OWNER (does NOT lock inventory).
- * Owner must confirm to lock dates + apply membership.
+ * Owner must confirm to lock dates + apply guest membership.
  */
 export async function submitToOwner(input: {
   bookingId: string;
@@ -187,7 +188,10 @@ export async function submitToOwner(input: {
     .eq('asset_id', booking.asset_id)
     .single();
 
-  const saleMembership = await resolveSaleMembership(booking.sale_id);
+  const saleMembership = await resolveSaleAssetDiscount(
+    booking.sale_id,
+    booking.asset_id
+  );
 
   const pricing = previewPricing({
     checkIn: booking.check_in,
@@ -283,7 +287,7 @@ export async function submitToOwner(input: {
       guest_discount_percent_snapshot: 0,
       owner_earn_snapshot: pricing.effectiveCost,
       sale_margin_snapshot: agreedMargin,
-      sale_tier_id_snapshot: saleMembership.tierId,
+      sale_tier_id_snapshot: null,
       sale_tier_label_snapshot: saleMembership.tierLabel,
       owner_payout_bank_name_snapshot: payoutBank,
       owner_payout_account_name_snapshot: payoutAccountName,
@@ -351,9 +355,6 @@ export async function ownerConfirmBooking(input: {
     return { error: 'OVERLAP' as const };
   }
 
-  const saleMembership = await resolveSaleMembership(booking.sale_id);
-  const saleTiers: SaleTier[] = saleMembership.tiers;
-  const baseCost = Number(booking.base_cost_snapshot || 0);
   const amountCollected = Number(booking.amount_collected || 0);
 
   const { data: guestState } = await admin
@@ -395,19 +396,6 @@ export async function ownerConfirmBooking(input: {
     return { error: updateError.message };
   }
   if (!updated) return { error: 'RACE' as const };
-
-  const saleNext = applySaleConfirmVolume({
-    lifetimeCostVolume: saleMembership.lifetimeCostVolume,
-    addBaseCost: baseCost,
-    tiers: saleTiers,
-  });
-
-  await admin.from('sale_membership_states').upsert({
-    sale_id: booking.sale_id,
-    lifetime_cost_volume: saleNext.lifetimeCostVolume,
-    current_tier_id: saleNext.tier.id,
-    updated_at: now,
-  });
 
   const currentGuestTier =
     guestTiers.find((t) => t.id === guestState?.current_tier_id) ||
@@ -834,7 +822,6 @@ export async function cancelBooking(
   if (!data) return { error: 'NOT_FOUND' as const };
 
   if (hadMembershipCredit) {
-    await recomputeSaleMembershipState(existing.sale_id);
     await recomputeGuestMembershipState(existing.guest_id);
   }
 
@@ -846,33 +833,6 @@ const MEMBERSHIP_CREDIT_STATUSES = [
   'CHECKED_IN',
   'CHECKED_OUT',
 ] as const;
-
-async function recomputeSaleMembershipState(saleId: string) {
-  const admin = createServiceClient();
-  const [{ data: volume }, { data: saleTiersRaw }] = await Promise.all([
-    admin.rpc('sale_membership_volume', { p_sale_id: saleId }),
-    admin
-      .from('sale_membership_tiers')
-      .select('id, sort, min_lifetime_cost_volume, cost_discount_percent')
-      .order('sort'),
-  ]);
-
-  const tiers: SaleTier[] = (saleTiersRaw || []).map((t) => ({
-    id: t.id,
-    sort: t.sort,
-    minLifetimeCostVolume: Number(t.min_lifetime_cost_volume),
-    costDiscountPercent: Number(t.cost_discount_percent),
-  }));
-
-  const next = resolveSaleVolumeTier(Number(volume ?? 0), tiers);
-
-  await admin.from('sale_membership_states').upsert({
-    sale_id: saleId,
-    lifetime_cost_volume: next.lifetimeCostVolume,
-    current_tier_id: next.tier?.id ?? null,
-    updated_at: new Date().toISOString(),
-  });
-}
 
 /**
  * Guest tiers cannot be summed: ranking up zeroes progress, so the ladder has

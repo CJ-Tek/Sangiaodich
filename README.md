@@ -78,7 +78,8 @@ keys, so it is not a place to keep production values — those belong in the Ver
 - Guest marketplace: **zero price**; calendar shows **CONFIRMED only**.
 - Inventory lock: **CONFIRMED only** (DB exclusion constraint). PENDING does not block.
 - Sale needs ACTIVE subscription to see cost / leads / create bookings.
-- Confirm booking: `amountCollected >= effectiveCost`, snapshots + membership in one flow.
+- Confirm booking: `amountCollected >= effectiveCost`, snapshots + Guest membership in one flow. Sale cost % is snapshotted per asset from that Sale’s CHECKED_OUT count against the Owner’s ladder for that villa (empty ladder = 0%).
+- Owner may rate Sale after check-out (optional, 7-day edit).
 - Lead: guest creates one row; every ACTIVE sale reads it from `lead_requests`, scoped to their own membership period. `sale_lead_reads` holds one watermark row per sale for the unread badge.
 
 ## Load-test notes (no 100k API claim)

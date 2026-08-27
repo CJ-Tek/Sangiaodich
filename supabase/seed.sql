@@ -142,10 +142,14 @@ values
   ('33333333-3333-3333-3333-333333333333', current_date - 5, current_date + 25, 200000, 'ACTIVE', '11111111-1111-1111-1111-111111111111', now()),
   ('33333333-3333-3333-3333-333333333334', current_date - 40, current_date - 10, 200000, 'EXPIRED', '11111111-1111-1111-1111-111111111111', now() - interval '40 days');
 
-insert into public.sale_membership_tiers (id, sort, min_lifetime_cost_volume, cost_discount_percent, label) values
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa0', 0, 0, 0, 'Tier 0'),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', 1, 50000000, 5, 'Tier 1'),
-  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', 2, 150000000, 10, 'Tier 2')
+-- Legacy platform ladder (no longer used for Sale cost pricing; Owner sets
+-- per-asset rules in asset_sale_discount_rules). Kept for sale_membership_states FK.
+insert into public.sale_membership_tiers (
+  id, sort, min_lifetime_cost_volume, min_checked_out_count, cost_discount_percent, label
+) values
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa0', 0, 0, 0, 0, '0%'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa1', 1, 0, 20, 3, 'Trên 20 lần'),
+  ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaa2', 2, 0, 50, 5, 'Trên 50 lần')
 on conflict do nothing;
 
 insert into public.guest_membership_tiers (id, sort, min_books, min_gmv, label) values

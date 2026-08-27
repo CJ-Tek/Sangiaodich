@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { hasConfirmedConflict, isNightBlocked } from '@/lib/engines/inventory';
+import {
+  activeStayRanges,
+  hasConfirmedConflict,
+  isActiveStayRange,
+  isNightBlocked,
+} from '@/lib/engines/inventory';
 
 describe('concurrent confirm semantics', () => {
   it('second confirm overlapping confirmed range is rejected by inventory check', () => {
@@ -20,5 +25,36 @@ describe('concurrent confirm semantics', () => {
     expect(isNightBlocked('2026-10-01', ranges)).toBe(true);
     expect(isNightBlocked('2026-10-04', ranges)).toBe(true);
     expect(isNightBlocked('2026-10-05', ranges)).toBe(false);
+  });
+});
+
+describe('active stay ranges for free/busy calendars', () => {
+  const today = '2026-08-28';
+
+  it('keeps stays that check out today or later', () => {
+    expect(
+      isActiveStayRange({ checkIn: '2026-08-28', checkOut: '2026-08-30' }, today)
+    ).toBe(true);
+    expect(
+      isActiveStayRange({ checkIn: '2026-08-20', checkOut: '2026-08-28' }, today)
+    ).toBe(true);
+  });
+
+  it('drops stays whose last night is already in the past', () => {
+    expect(
+      isActiveStayRange({ checkIn: '2026-08-25', checkOut: '2026-08-26' }, today)
+    ).toBe(false);
+  });
+
+  it('filters a mixed list down to stays that still occupy today or later', () => {
+    expect(
+      activeStayRanges(
+        [
+          { checkIn: '2026-08-25', checkOut: '2026-08-26' },
+          { checkIn: '2026-08-28', checkOut: '2026-08-30' },
+        ],
+        today
+      )
+    ).toEqual([{ checkIn: '2026-08-28', checkOut: '2026-08-30' }]);
   });
 });

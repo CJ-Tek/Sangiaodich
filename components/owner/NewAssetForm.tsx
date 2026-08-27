@@ -34,6 +34,8 @@ import {
   type PropertyType,
 } from '@/config/asset-tags';
 import { colors, radius } from '@/config/design-tokens';
+import { OwnerAssetDiscountRulesEditor } from '@/components/owner/OwnerAssetDiscountRulesEditor';
+import type { AssetDiscountRuleForm } from '@/components/owner/OwnerAssetDiscountRulesEditor';
 
 export type AssetFormValues = {
   title: string;
@@ -47,6 +49,7 @@ export type AssetFormValues = {
   costWeekday: number;
   costWeekend: number;
   images: string[];
+  discountRules: AssetDiscountRuleForm[];
 };
 
 const CREATE_DEFAULTS: AssetFormValues = {
@@ -61,6 +64,7 @@ const CREATE_DEFAULTS: AssetFormValues = {
   costWeekday: 2000000,
   costWeekend: 2800000,
   images: [],
+  discountRules: [],
 };
 
 function mergeValues(initial?: Partial<AssetFormValues>): AssetFormValues {
@@ -215,6 +219,7 @@ export function AssetForm({
         costWeekday: form.costWeekday,
         costWeekend: form.costWeekend,
         images: form.images,
+        discountRules: form.discountRules,
         submit: submitForReview,
         ...(isEdit ? { assetId } : {}),
       };
@@ -487,6 +492,11 @@ export function AssetForm({
           onChange={(v) => setForm({ ...form, costWeekend: Number(v) || 0 })}
         />
       </SimpleGrid>
+
+      <OwnerAssetDiscountRulesEditor
+        rules={form.discountRules}
+        onChange={(discountRules) => setForm({ ...form, discountRules })}
+      />
 
       {draftLimitReached ? (
         <Alert color="yellow" title="Đã đủ 15 nháp">

@@ -20,10 +20,18 @@ import { planDurationLabel, planDiscount } from '@/lib/engines/subscription-plan
 import {
   applyGuestConfirmProgress,
   applyGuestProgress,
-  applySaleConfirmVolume,
+  pickSaleDiscountFromCount,
+  pickSaleTierFromCount,
+  parseOwnerDiscountRules,
   recomputeGuestFromCollectedAmounts,
-  recomputeSaleFromBaseCosts,
+  saleDiscountSnapshotLabel,
 } from '@/lib/engines/membership';
+import {
+  clampRatingScore,
+  ratingOverall,
+  canEditSaleRating,
+  saleRatingGate,
+} from '@/lib/engines/sale-rating-math';
 import { quoteAssetCosts } from '@/lib/engines/pricing';
 import {
   bookingNetPaid,
@@ -222,18 +230,49 @@ describe('plan discount badge', () => {
 });
 
 describe('membership', () => {
-  it('upgrades sale tier by lifetime volume', () => {
-    const tiers = [
-      { id: '0', sort: 0, minLifetimeCostVolume: 0, costDiscountPercent: 0 },
-      { id: '1', sort: 1, minLifetimeCostVolume: 100, costDiscountPercent: 5 },
+  const saleTiers = [
+    { id: '0', sort: 0, minCheckedOutCount: 0, costDiscountPercent: 0 },
+    { id: '1', sort: 1, minCheckedOutCount: 20, costDiscountPercent: 3 },
+    { id: '2', sort: 2, minCheckedOutCount: 50, costDiscountPercent: 5 },
+  ];
+
+  it('keeps 0% at the threshold and unlocks on the next booking', () => {
+    expect(pickSaleDiscountFromCount(20, saleTiers)).toBe(0);
+    expect(pickSaleDiscountFromCount(21, saleTiers)).toBe(3);
+    expect(pickSaleTierFromCount(21, saleTiers)?.id).toBe('1');
+    expect(saleDiscountSnapshotLabel(3)).toBe('−3% căn này');
+  });
+
+  it('unlocks 5% only when checkout count is strictly greater than 50', () => {
+    expect(pickSaleDiscountFromCount(50, saleTiers)).toBe(3);
+    expect(pickSaleDiscountFromCount(51, saleTiers)).toBe(5);
+  });
+
+  it('treats an empty Owner ladder as 0% until a threshold is passed', () => {
+    expect(pickSaleDiscountFromCount(99, [])).toBe(0);
+    const only = [
+      { id: 'a', sort: 0, minCheckedOutCount: 20, costDiscountPercent: 3 },
     ];
-    const r = applySaleConfirmVolume({
-      lifetimeCostVolume: 50,
-      addBaseCost: 60,
-      tiers,
+    expect(pickSaleDiscountFromCount(20, only)).toBe(0);
+    expect(pickSaleDiscountFromCount(21, only)).toBe(3);
+  });
+
+  it('parses Owner discount rows and drops 0%', () => {
+    expect(parseOwnerDiscountRules(null)).toEqual({ rules: [] });
+    expect(
+      parseOwnerDiscountRules([
+        { minCheckedOutCount: 20, costDiscountPercent: 3 },
+        { minCheckedOutCount: 50, costDiscountPercent: 0 },
+      ])
+    ).toEqual({
+      rules: [{ minCheckedOutCount: 20, costDiscountPercent: 3 }],
     });
-    expect(r.tier.id).toBe('1');
-    expect(r.lifetimeCostVolume).toBe(110);
+    expect(
+      parseOwnerDiscountRules([
+        { minCheckedOutCount: 20, costDiscountPercent: 3 },
+        { minCheckedOutCount: 20, costDiscountPercent: 5 },
+      ])
+    ).toEqual({ error: 'DUPLICATE_DISCOUNT_THRESHOLD' });
   });
 
   it('resets guest progress after rank-up', () => {
@@ -275,20 +314,6 @@ describe('membership', () => {
     expect(r.progressBooks).toBe(1);
     expect(r.progressGmv).toBe(110);
     expect(r.rankedUp).toBe(false);
-  });
-
-  it('demotes sale tier when recomputing after lost volume', () => {
-    const tiers = [
-      { id: '0', sort: 0, minLifetimeCostVolume: 0, costDiscountPercent: 0 },
-      { id: '1', sort: 1, minLifetimeCostVolume: 100, costDiscountPercent: 5 },
-    ];
-    const up = recomputeSaleFromBaseCosts([60, 50], tiers);
-    expect(up.tier?.id).toBe('1');
-    expect(up.lifetimeCostVolume).toBe(110);
-
-    const down = recomputeSaleFromBaseCosts([60], tiers);
-    expect(down.tier?.id).toBe('0');
-    expect(down.lifetimeCostVolume).toBe(60);
   });
 
   it('demotes guest tier when replaying without cancelled booking', () => {
@@ -471,6 +496,58 @@ describe('sale customer stats', () => {
     expect(
       matchesCustomerSearch('84365210936', 'Phuong', '+84365210936')
     ).toBe(true);
+  });
+});
+
+describe('sale ratings', () => {
+  it('clamps scores to 1–10', () => {
+    expect(clampRatingScore(0)).toBeNull();
+    expect(clampRatingScore(11)).toBeNull();
+    expect(clampRatingScore(1)).toBe(1);
+    expect(clampRatingScore(10)).toBe(10);
+    expect(clampRatingScore(7.4)).toBe(7);
+  });
+
+  it('overall is the mean of three scores', () => {
+    expect(ratingOverall(8, 6, 10)).toBe(8);
+    expect(ratingOverall(10, 10, 9)).toBe(9.7);
+  });
+
+  it('forbids rating before checkout and locks after the first submit', () => {
+    expect(
+      saleRatingGate({
+        bookingStatus: 'CHECKED_IN',
+        assetOwnerId: 'owner-1',
+        actorOwnerId: 'owner-1',
+      })
+    ).toBe('NOT_CHECKED_OUT');
+    expect(
+      saleRatingGate({
+        bookingStatus: 'CHECKED_OUT',
+        assetOwnerId: 'owner-1',
+        actorOwnerId: 'owner-2',
+      })
+    ).toBe('FORBIDDEN');
+    expect(
+      saleRatingGate({
+        bookingStatus: 'CHECKED_OUT',
+        assetOwnerId: 'owner-1',
+        actorOwnerId: 'owner-1',
+      })
+    ).toBeNull();
+
+    expect(canEditSaleRating(new Date().toISOString())).toBe(false);
+    expect(
+      saleRatingGate({
+        bookingStatus: 'CHECKED_OUT',
+        assetOwnerId: 'owner-1',
+        actorOwnerId: 'owner-1',
+        existing: {
+          ownerId: 'owner-1',
+          createdAt: new Date().toISOString(),
+        },
+      })
+    ).toBe('LOCKED');
   });
 });
 

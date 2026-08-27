@@ -10,7 +10,36 @@ import {
   MIN_ASSET_IMAGES_FOR_REVIEW,
   MIN_ASSET_TAGS,
 } from '@/config/asset-tags';
+import { parseOwnerDiscountRules } from '@/lib/engines/membership';
+import { replaceAssetDiscountRules } from '@/lib/engines/sale-pricing';
 import { fail, ok } from '@/lib/types';
+
+function discountRuleErrorMessage(code: string): string {
+  switch (code) {
+    case 'INVALID_DISCOUNT_PERCENT':
+      return '% chiết khấu phải từ 0 đến 100';
+    case 'INVALID_DISCOUNT_THRESHOLD':
+      return 'Mốc lần không hợp lệ';
+    case 'DUPLICATE_DISCOUNT_THRESHOLD':
+      return 'Trùng mốc lần';
+    case 'TOO_MANY_DISCOUNT_RULES':
+      return 'Quá nhiều mốc chiết khấu';
+    case 'INVALID_DISCOUNT_RULES':
+      return 'Danh sách chiết khấu không hợp lệ';
+    default:
+      return code;
+  }
+}
+
+async function saveDiscountRules(
+  assetId: string,
+  raw: unknown
+): Promise<string | null> {
+  const parsed = parseOwnerDiscountRules(raw ?? []);
+  if ('error' in parsed) return discountRuleErrorMessage(parsed.error);
+  const saved = await replaceAssetDiscountRules(assetId, parsed.rules);
+  return saved.error ?? null;
+}
 
 function slugify(input: string) {
   return input
@@ -146,6 +175,11 @@ export async function POST(request: Request) {
         sort_order: i,
       }))
     );
+  }
+
+  const discountError = await saveDiscountRules(asset.id, body.discountRules);
+  if (discountError) {
+    return NextResponse.json(fail('INVALID', discountError), { status: 400 });
   }
 
   return NextResponse.json(ok({ asset }));
@@ -286,6 +320,13 @@ export async function PATCH(request: Request) {
           sort_order: i,
         }))
       );
+    }
+  }
+
+  if (body.discountRules !== undefined) {
+    const discountError = await saveDiscountRules(assetId, body.discountRules);
+    if (discountError) {
+      return NextResponse.json(fail('INVALID', discountError), { status: 400 });
     }
   }
 

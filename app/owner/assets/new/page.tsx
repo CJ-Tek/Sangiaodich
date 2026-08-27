@@ -18,7 +18,7 @@ export default async function NewOwnerAssetPage() {
     <>
       <PageHeader
         title="New asset"
-        description="Villa hoặc Căn hộ · set cost WD/WE — không set giá bán."
+        description="Villa hoặc Căn hộ · set cost WD/WE và chiết khấu Sale theo căn — không set giá bán."
       />
       <Paper
         p="lg"

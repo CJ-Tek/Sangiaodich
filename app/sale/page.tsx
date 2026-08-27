@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { saleHasActiveSub } from '@/lib/engines/booking-service';
 import { countUnreadLeads, UNREAD_LEAD_CAP } from '@/lib/engines/sale-leads';
-import { resolveSaleCostDiscountPercent } from '@/lib/engines/sale-pricing';
+import { resolveSaleAssetDiscounts } from '@/lib/engines/sale-pricing';
 import { quoteAssetCosts } from '@/lib/engines/pricing';
 import { parseYearMonth, todayDateOnly } from '@/lib/dates';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -90,19 +90,23 @@ export default async function SaleHomePage({
   const actualRevenue = sumMargin(periodCheckedOut);
   const periodSuccessful = periodCheckedOut?.length || 0;
 
-  const [discountPercent, { data: assets }] = active
-    ? await Promise.all([
-        resolveSaleCostDiscountPercent(profile!.id),
-        admin
-          .from('assets')
-          .select(
-            'id, slug, title, location, capacity, bedrooms, bathrooms, property_type, asset_images(url, sort_order), asset_costs(cost_weekday, cost_weekend)'
-          )
-          .eq('status', 'ACTIVE')
-          .order('created_at', { ascending: false })
-          .limit(3),
-      ])
-    : ([0, { data: [] as never[] }] as const);
+  const { data: assets } = active
+    ? await admin
+        .from('assets')
+        .select(
+          'id, slug, title, location, capacity, bedrooms, bathrooms, property_type, asset_images(url, sort_order), asset_costs(cost_weekday, cost_weekend)'
+        )
+        .eq('status', 'ACTIVE')
+        .order('created_at', { ascending: false })
+        .limit(3)
+    : { data: [] as never[] };
+
+  const discountByAsset = active
+    ? await resolveSaleAssetDiscounts(
+        profile!.id,
+        (assets || []).map((a) => a.id)
+      )
+    : new Map<string, number>();
 
   const periodLabel = `Tháng ${period.month}/${period.year}`;
 
@@ -218,7 +222,11 @@ export default async function SaleHomePage({
               };
               const baseWd = Number(costs?.cost_weekday || 0);
               const baseWe = Number(costs?.cost_weekend || 0);
-              const quoted = quoteAssetCosts(baseWd, baseWe, discountPercent);
+              const quoted = quoteAssetCosts(
+                baseWd,
+                baseWe,
+                discountByAsset.get(a.id) ?? 0
+              );
               return (
                 <AssetCard
                   key={a.id}

@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { resolveSaleAssetDiscounts } from '@/lib/engines/sale-pricing';
 import { escapeIlikePattern } from '@/lib/phone/vn-search';
 import {
   EXPLORE_PAGE_SIZE,
@@ -126,4 +127,23 @@ export async function loadSaleMarketplaceAssets(input: {
   }
 
   return toPageResult(assets, total, page, pageSize);
+}
+
+export type SaleMarketplaceQuotedPage = SaleMarketplacePage & {
+  discounts: Map<string, number>;
+};
+
+/** List page plus one batch checkout-count lookup — no per-card RPC. */
+export async function loadSaleMarketplaceQuotedAssets(input: {
+  saleId: string;
+  q?: string;
+  page?: number;
+  pageSize?: number;
+}): Promise<SaleMarketplaceQuotedPage> {
+  const list = await loadSaleMarketplaceAssets(input);
+  const discounts = await resolveSaleAssetDiscounts(
+    input.saleId,
+    list.assets.map((a) => a.id)
+  );
+  return { ...list, discounts };
 }

@@ -1,27 +1,31 @@
 #Requires -Version 5.1
 <#
 .SYNOPSIS
-  Ship recent local changes: commit -> db:push (if migrations) -> git push (= Vercel deploy).
+  Ship local changes: commit -> db:push (if migrations) -> git push (= Vercel deploy).
 
 .DESCRIPTION
-  Fast  = last 6h,  tsc + test
-  Solid = last 24h, db:reset (local) + tsc + build + test
+  Fast  = last 6h,           tsc + test
+  Solid = last 24h,          db:reset (local) + tsc + build + test
+  All   = every dirty file,  tsc + test (same checks as Fast; no time cutoff)
 
-  Only stages files that are dirty AND modified within the time window.
-  Older dirty files are left unstaged and reported.
+    Fast/Solid only stage files that are dirty AND modified within the time
+    window. Older dirty files are left unstaged and reported.
+    All stages every dirty path from git status.
 
-  NEVER runs vercel --prod. NEVER runs db:reset against hosted Supabase.
-  DROP/truncate in a migration is a warning, not a stop: db:push still runs
-  (new code needs the new schema), then git push.
+    NEVER runs vercel --prod. NEVER runs db:reset against hosted Supabase.
+    DROP/truncate in a migration is a warning, not a stop: db:push still runs
+    (new code needs the new schema), then git push.
 
 .USAGE
   npm run ship:fast
   npm run ship:solid
+  npm run ship:all
   .\scripts\ship.ps1 -Mode Fast -DryRun
+  .\scripts\ship.ps1 -Mode All -DryRun
   .\scripts\ship.ps1 -Mode Solid -Message "Scale RPCs and guest search"
 #>
 param(
-  [ValidateSet('Fast', 'Solid')]
+  [ValidateSet('Fast', 'Solid', 'All')]
   [string]$Mode = 'Fast',
 
   [int]$Hours = 0,
@@ -41,16 +45,24 @@ if (-not (Test-Path (Join-Path $Root 'package.json'))) {
 }
 Set-Location $Root
 
-if ($Hours -le 0) {
+$allDirty = $Mode -eq 'All'
+if (-not $allDirty -and $Hours -le 0) {
   $Hours = if ($Mode -eq 'Fast') { 6 } else { 24 }
 }
 
-$Cutoff = (Get-Date).AddHours(-$Hours)
+$Cutoff = $null
+if (-not $allDirty) {
+  $Cutoff = (Get-Date).AddHours(-$Hours)
+}
 
 Write-Host ''
 Write-Host "=== VBNB ship ($Mode) ===" -ForegroundColor Green
 Write-Host "Root:   $Root"
-Write-Host "Window: last $Hours h (since $($Cutoff.ToString('s')))"
+if ($allDirty) {
+  Write-Host 'Window: all dirty files (no time cutoff)'
+} else {
+  Write-Host "Window: last $Hours h (since $($Cutoff.ToString('s')))"
+}
 Write-Host 'Deploy: git push -> Vercel (never vercel --prod)'
 if ($DryRun) {
   Write-Host 'DRY RUN - no commit / db:push / push' -ForegroundColor Yellow
@@ -115,9 +127,10 @@ foreach ($line in $porcelain) {
   $full = Join-Path $Root $path
   $isDelete = ($code -match 'D') -or (-not (Test-Path -LiteralPath $full))
 
-  if ($isDelete) {
-    # Deletes have no usable mtime - include them so renames/removals
-    # from the same work session are not left behind.
+  if ($allDirty -or $isDelete) {
+    # All: every dirty path. Fast/Solid: deletes have no usable mtime —
+    # include them so renames/removals from the same work session are
+    # not left behind.
     if (-not $inWindow.Contains($path)) { [void]$inWindow.Add($path) }
     continue
   }
@@ -136,7 +149,11 @@ foreach ($line in $porcelain) {
 }
 
 Write-Host ''
-Write-Host "In window ($($inWindow.Count)):" -ForegroundColor Cyan
+if ($allDirty) {
+  Write-Host "Dirty files ($($inWindow.Count)):" -ForegroundColor Cyan
+} else {
+  Write-Host "In window ($($inWindow.Count)):" -ForegroundColor Cyan
+}
 if ($inWindow.Count -eq 0) {
   Write-Host '  (none)'
 } else {
@@ -149,7 +166,11 @@ if ($outWindow.Count -gt 0) {
 }
 
 if ($inWindow.Count -eq 0 -and $ahead -eq 0) {
-  Write-Host "[ok] No files in the $Hours h window. Nothing to commit/push." -ForegroundColor DarkGreen
+  if ($allDirty) {
+    Write-Host '[ok] No dirty files. Nothing to commit/push.' -ForegroundColor DarkGreen
+  } else {
+    Write-Host "[ok] No files in the $Hours h window. Nothing to commit/push." -ForegroundColor DarkGreen
+  }
   exit 0
 }
 
@@ -174,7 +195,11 @@ foreach ($m in $migPaths) {
 
 if ($migPaths.Count -gt 0) {
   Write-Host ''
-  Write-Host 'Migrations in window:' -ForegroundColor Cyan
+  if ($allDirty) {
+    Write-Host 'Migrations:' -ForegroundColor Cyan
+  } else {
+    Write-Host 'Migrations in window:' -ForegroundColor Cyan
+  }
   $migPaths | ForEach-Object { Write-Host "  * $_" }
   if ($caution.Count -gt 0) {
     Write-Host 'Caution (drop policy / recreate - review RLS semantics):' -ForegroundColor Yellow
@@ -212,7 +237,8 @@ if (-not $SkipTests) {
       Assert-ExitOk 'test'
     }
   } else {
-    Write-Host '-> Fast checks: tsc + test (no db:reset / no build)' -ForegroundColor Cyan
+    $checkLabel = if ($allDirty) { 'All' } else { 'Fast' }
+    Write-Host "-> $checkLabel checks: tsc + test (no db:reset / no build)" -ForegroundColor Cyan
     if (-not $DryRun) {
       npx tsc --noEmit
       Assert-ExitOk 'tsc'
@@ -225,7 +251,11 @@ if (-not $SkipTests) {
 }
 
 if (-not $Message) {
-  $Message = 'Ship {0} window ({1}h): {2} paths' -f $Mode, $Hours, $inWindow.Count
+  if ($allDirty) {
+    $Message = 'Ship All: {0} paths' -f $inWindow.Count
+  } else {
+    $Message = 'Ship {0} window ({1}h): {2} paths' -f $Mode, $Hours, $inWindow.Count
+  }
   if ($migPaths.Count -gt 0) {
     $Message += ' (+{0} migrations)' -f $migPaths.Count
   }
@@ -236,7 +266,8 @@ Write-Host "Commit message: $Message" -ForegroundColor Cyan
 
 if ($DryRun) {
   Write-Host ''
-  Write-Host '[dry-run] Would: git add (in-window) -> commit -> ' -NoNewline
+  $addLabel = if ($allDirty) { 'all dirty' } else { 'in-window' }
+  Write-Host "[dry-run] Would: git add ($addLabel) -> commit -> " -NoNewline
   if ($migPaths.Count -gt 0) {
     Write-Host 'db:push -> git push'
   } else {

@@ -8,13 +8,18 @@ import { OwnerPayoutForm } from '@/components/owner/OwnerPayoutForm';
 import { SaleSettingsTabs } from '@/components/sale/SaleSettingsTabs';
 import { parseSaleSettingTab } from '@/components/sale/sale-setting-tabs';
 import { SaleMembershipPanel } from '@/components/sale/SaleMembershipPanel';
+import { SaleRatingsPanel } from '@/components/sale/SaleRatingsPanel';
 import { SaleSubscriptionPanel } from '@/components/sale/SaleSubscriptionPanel';
 import { signIdDocUrl } from '@/lib/profile/id-docs';
 import {
   hasOwnerPayoutInfo,
   mapOwnerPayoutInfo,
 } from '@/lib/owner/payout-info';
-import { resolveSaleMembership } from '@/lib/engines/sale-pricing';
+import { resolveSaleDiscountProgress } from '@/lib/engines/sale-pricing';
+import {
+  loadSaleRatingAggregates,
+  loadSaleRatingComments,
+} from '@/lib/engines/sale-ratings';
 import {
   getPendingIntentForProfile,
   listActivePlansForRole,
@@ -32,7 +37,15 @@ export default async function SaleSettingsPage({
   const profile = await getSessionProfile();
   const admin = await createClient();
 
-  const [{ data: row }, membership, { data: sub }, plans, pending] =
+  const [
+    { data: row },
+    progress,
+    ratingMap,
+    ratingComments,
+    { data: sub },
+    plans,
+    pending,
+  ] =
     await Promise.all([
       admin
         .from('profiles')
@@ -41,7 +54,9 @@ export default async function SaleSettingsPage({
         )
         .eq('id', profile!.id)
         .single(),
-      resolveSaleMembership(profile!.id),
+      resolveSaleDiscountProgress(profile!.id),
+      loadSaleRatingAggregates([profile!.id]),
+      loadSaleRatingComments({ saleIds: [profile!.id], limit: 30 }),
       admin
         .from('subscriptions')
         .select('*')
@@ -106,7 +121,15 @@ export default async function SaleSettingsPage({
               <OwnerPayoutForm initial={payout} audience="sale" />
             </Stack>
           }
-          membership={<SaleMembershipPanel membership={membership} />}
+          membership={
+            <Stack gap="md">
+              <SaleMembershipPanel progress={progress} />
+              <SaleRatingsPanel
+                aggregate={ratingMap.get(profile!.id) ?? null}
+                comments={ratingComments}
+              />
+            </Stack>
+          }
           subscription={
             <SaleSubscriptionPanel
               status={sub?.status ?? null}

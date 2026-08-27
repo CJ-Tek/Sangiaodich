@@ -12,7 +12,7 @@ import {
 } from '@/components/sale/SaleBookingsList';
 import { Stack } from '@mantine/core';
 import { previewPricing } from '@/lib/engines/pricing';
-import { resolveSaleCostDiscountPercent } from '@/lib/engines/sale-pricing';
+import { resolveSaleAssetDiscounts } from '@/lib/engines/sale-pricing';
 import {
   hasOwnerPayoutInfo,
   mapOwnerPayoutInfo,
@@ -86,7 +86,6 @@ export default async function SaleBookingsPage({
   const { status: statusParam } = await searchParams;
   const filter = parseStatus(statusParam);
   const profile = await getSessionProfile();
-  const discountPercent = await resolveSaleCostDiscountPercent(profile!.id);
   const admin = await createClient();
   const { data: salePayoutRow } = await admin
     .from('profiles')
@@ -99,7 +98,7 @@ export default async function SaleBookingsPage({
   let bookingsQuery = admin
     .from('bookings')
     .select(
-      `id, status, check_in, check_out, list_price, amount_collected,
+      `id, status, check_in, check_out, list_price, amount_collected, asset_id,
        effective_cost_snapshot, owner_earn_snapshot, owner_paid_amount,
        owner_payout_bank_name_snapshot, owner_payout_account_name_snapshot,
        owner_payout_account_number_snapshot,
@@ -122,6 +121,11 @@ export default async function SaleBookingsPage({
   const { data: bookings } = await bookingsQuery
     .order('created_at', { ascending: false })
     .limit(LIST_VIEW_LIMIT);
+
+  const discountByAsset = await resolveSaleAssetDiscounts(
+    profile!.id,
+    (bookings || []).map((b) => b.asset_id).filter(Boolean)
+  );
 
   const empty = FILTER_META[filter];
 
@@ -154,7 +158,7 @@ export default async function SaleBookingsPage({
         costWeekday: Number(costs.cost_weekday),
         costWeekend: Number(costs.cost_weekend),
         listSelling: Number(b.list_price),
-        saleCostDiscountPercent: discountPercent,
+        saleCostDiscountPercent: discountByAsset.get(b.asset_id) ?? 0,
       }).effectiveCost;
     }
     if (!Number.isFinite(floor)) floor = 0;

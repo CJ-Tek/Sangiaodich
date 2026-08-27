@@ -1,3 +1,5 @@
+import { todayDateOnly } from '@/lib/dates';
+
 export type DateRange = { checkIn: string; checkOut: string };
 
 /** Statuses that occupy inventory (post-confirm stay lifecycle). */
@@ -31,4 +33,23 @@ export function isNightBlocked(
   ranges: DateRange[]
 ): boolean {
   return ranges.some((r) => dateOnly >= r.checkIn && dateOnly < r.checkOut);
+}
+
+/**
+ * Stay still belongs on free/busy calendars: checkout is today or later
+ * (same cutoff as Sale's AWAITING_OWNER query). Inventory overlap still
+ * includes fully-past CHECKED_OUT rows; only the public calendar drops them.
+ */
+export function isActiveStayRange(
+  range: DateRange,
+  today: string = todayDateOnly()
+): boolean {
+  return range.checkOut >= today;
+}
+
+export function activeStayRanges(
+  ranges: DateRange[],
+  today: string = todayDateOnly()
+): DateRange[] {
+  return ranges.filter((r) => isActiveStayRange(r, today));
 }

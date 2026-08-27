@@ -230,27 +230,6 @@ export async function PATCH(request: Request) {
     }
   }
 
-  if (action === 'upsert_sale_tier') {
-    const id = String(body.id || '').trim();
-    const row: Record<string, unknown> = {
-      sort: Number(body.sort),
-      min_lifetime_cost_volume: Number(body.minLifetimeCostVolume),
-      cost_discount_percent: Number(body.costDiscountPercent),
-      label: String(body.label || ''),
-    };
-    if (id) row.id = id;
-    const { data, error } = await db
-      .from('sale_membership_tiers')
-      .upsert(row)
-      .select('*')
-      .single();
-    if (error) {
-      return NextResponse.json(fail('UPDATE_FAILED', error.message), { status: 500 });
-    }
-    await writeAudit(adminProfile.id, 'upsert_sale_tier', row);
-    return NextResponse.json(ok({ tier: data }));
-  }
-
   if (action === 'upsert_guest_tier') {
     const id = String(body.id || '').trim();
     const row: Record<string, unknown> = {

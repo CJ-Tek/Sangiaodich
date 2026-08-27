@@ -7,6 +7,11 @@ import {
   type OwnerSettlementRow,
 } from '@/components/owner/OwnerSettlementsList';
 import { mapOwnerPayoutInfo } from '@/lib/owner/payout-info';
+import {
+  loadRatingsByBookingIds,
+  loadSaleRatingAggregates,
+  loadSaleRatingComments,
+} from '@/lib/engines/sale-ratings';
 
 const SETTLED = ['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT'] as const;
 
@@ -76,6 +81,16 @@ export default async function OwnerSettlementsPage() {
 
   const payout = mapOwnerPayoutInfo(ownerProfile);
 
+  const [ratingByBooking, aggregates, comments] = await Promise.all([
+    loadRatingsByBookingIds(
+      (bookings || [])
+        .filter((b) => b.status === 'CHECKED_OUT')
+        .map((b) => b.id)
+    ),
+    loadSaleRatingAggregates(saleIds),
+    loadSaleRatingComments({ saleIds, limit: 30 }),
+  ]);
+
   const rows: OwnerSettlementRow[] = (bookings || []).map((b) => {
     const assetRaw = b.assets as unknown as
       | { title: string; location?: string }
@@ -102,6 +117,10 @@ export default async function OwnerSettlementsPage() {
       listPrice: Number(b.list_price || 0),
       amountCollected: Number(b.amount_collected || 0),
       guestPaidOwner: Number(b.guest_paid_owner_amount || 0),
+      rating: ratingByBooking.get(b.id) ?? null,
+      saleId: b.sale_id,
+      ratingAggregate: aggregates.get(b.sale_id) ?? null,
+      ratingComments: comments.filter((c) => c.saleId === b.sale_id),
     };
   });
 

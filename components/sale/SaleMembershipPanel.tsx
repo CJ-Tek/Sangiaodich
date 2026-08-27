@@ -1,20 +1,13 @@
-import { Paper, Text, Stack, Title } from '@mantine/core';
+import { Paper, Stack, Text, Title } from '@mantine/core';
 import { colors, radius } from '@/config/design-tokens';
-import type { ResolvedSaleMembership } from '@/lib/engines/sale-pricing';
+import type { ResolvedSaleDiscountProgress } from '@/lib/engines/sale-pricing';
+import { SaleDiscountAssetList } from '@/components/sale/SaleDiscountAssetList';
 
 export function SaleMembershipPanel({
-  membership,
+  progress,
 }: {
-  membership: ResolvedSaleMembership;
+  progress: ResolvedSaleDiscountProgress;
 }) {
-  const volume = membership.lifetimeCostVolume;
-  const current = membership.tiers.find((t) => t.id === membership.tierId);
-  const sorted = [...membership.tiers].sort((a, b) => a.sort - b.sort);
-  const next = sorted.find((t) => t.sort === (current?.sort ?? 0) + 1);
-  const toNext = next
-    ? Math.max(0, next.minLifetimeCostVolume - volume)
-    : null;
-
   return (
     <Stack gap="md">
       <Paper
@@ -23,27 +16,10 @@ export function SaleMembershipPanel({
         style={{ border: `1px solid ${colors.border}` }}
       >
         <Text size="sm" c="dimmed">
-          Hạng hiện tại
+          Chiết khấu do Owner set trên từng căn. Căn không có mốc = 0%. Booking
+          mới lấy % hiện tại theo số lần check-out của bạn trên căn đó; booking
+          đã chốt giữ snapshot.
         </Text>
-        <Title order={3} fw={600} mt={4}>
-          {membership.tierLabel || 'Tier 0'}
-        </Title>
-        <Text size="sm" mt={8} fw={500} c="vbnbGreen.6">
-          −{membership.discountPercent}% trên base cost
-        </Text>
-        <Text size="sm" c="dimmed" mt={6}>
-          Lifetime cost volume: {volume.toLocaleString('vi-VN')}đ
-        </Text>
-        {next ? (
-          <Text size="sm" c="dimmed" mt={4}>
-            Còn {toNext?.toLocaleString('vi-VN')}đ để lên {next.label} (−
-            {next.costDiscountPercent}%)
-          </Text>
-        ) : (
-          <Text size="sm" c="dimmed" mt={4}>
-            Đã ở hạng cao nhất hiện có.
-          </Text>
-        )}
       </Paper>
 
       <Paper
@@ -51,28 +27,17 @@ export function SaleMembershipPanel({
         radius={radius.lg}
         style={{ border: `1px solid ${colors.border}` }}
       >
-        <Text size="sm" c="dimmed" mb="md">
-          Bảng tier (platform)
-        </Text>
-        <Stack gap="sm">
-          {sorted.map((t) => (
-            <div key={t.id}>
-              <Text fw={600} size="sm">
-                {t.label}
-                {membership.tierId === t.id ? ' · đang áp dụng' : ''}
-              </Text>
-              <Text size="xs" c="dimmed">
-                Từ {t.minLifetimeCostVolume.toLocaleString('vi-VN')}đ volume · −
-                {t.costDiscountPercent}% cost
-              </Text>
-            </div>
-          ))}
-          {sorted.length === 0 ? (
-            <Text size="sm" c="dimmed">
-              Chưa có tier — Admin cấu hình trong Settings.
-            </Text>
-          ) : null}
-        </Stack>
+        <Title order={5} fw={600} mb="md">
+          Theo từng căn
+        </Title>
+        {!progress.assets.length ? (
+          <Text size="sm" c="dimmed">
+            Chưa có check-out trên căn nào — chiết khấu 0% khi Owner chưa set
+            mốc.
+          </Text>
+        ) : (
+          <SaleDiscountAssetList assets={progress.assets} />
+        )}
       </Paper>
     </Stack>
   );

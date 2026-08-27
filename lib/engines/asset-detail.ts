@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { activeStayRanges } from '@/lib/engines/inventory';
 
 export type AssetDetailRecord = {
   id: string;
@@ -51,8 +52,11 @@ export async function loadAssetDetail(
     propertyType: asset.property_type,
     tags: Array.isArray(asset.tags) ? (asset.tags as string[]) : [],
     images: (asset.asset_images || []) as { url: string; sort_order: number }[],
-    confirmedRanges: (
-      (ranges || []) as { check_in: string; check_out: string }[]
-    ).map((r) => ({ checkIn: r.check_in, checkOut: r.check_out })),
+    confirmedRanges: activeStayRanges(
+      ((ranges || []) as { check_in: string; check_out: string }[]).map((r) => ({
+        checkIn: r.check_in,
+        checkOut: r.check_out,
+      }))
+    ),
   };
 }

@@ -18,7 +18,8 @@
     "db:push": "npx supabase db push",
     "db:status": "npx supabase migration list --linked",
     "ship:fast": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/ship.ps1 -Mode Fast",
-    "ship:solid": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/ship.ps1 -Mode Solid"
+    "ship:solid": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/ship.ps1 -Mode Solid",
+    "ship:all": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/ship.ps1 -Mode All"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",

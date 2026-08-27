@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { AssetForm } from '@/components/owner/NewAssetForm';
 import { isPropertyType } from '@/config/asset-tags';
 import { colors, radius } from '@/config/design-tokens';
+import { loadAssetDiscountRules } from '@/lib/engines/sale-pricing';
 
 function asCostRow(
   value: unknown
@@ -41,12 +42,13 @@ export default async function EditOwnerAssetPage({
   const images = (
     (asset.asset_images || []) as { url: string; sort_order: number }[]
   ).sort((a, b) => a.sort_order - b.sort_order);
+  const discountTiers = await loadAssetDiscountRules(asset.id);
 
   return (
     <>
       <PageHeader
         title={`Edit: ${asset.title}`}
-        description="Cập nhật thông tin + cost WD/WE."
+        description="Cập nhật thông tin, cost WD/WE và chiết khấu Sale theo căn."
       />
       <Paper
         p="lg"
@@ -73,6 +75,10 @@ export default async function EditOwnerAssetPage({
             costWeekday: Number(costs?.cost_weekday || 0),
             costWeekend: Number(costs?.cost_weekend || 0),
             images: images.map((i) => i.url),
+            discountRules: discountTiers.map((t) => ({
+              minCheckedOutCount: t.minCheckedOutCount,
+              costDiscountPercent: t.costDiscountPercent,
+            })),
           }}
         />
       </Paper>

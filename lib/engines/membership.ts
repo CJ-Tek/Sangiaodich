@@ -1,7 +1,7 @@
 export type SaleTier = {
   id: string;
   sort: number;
-  minLifetimeCostVolume: number;
+  minCheckedOutCount: number;
   costDiscountPercent: number;
 };
 
@@ -12,28 +12,78 @@ export type GuestTier = {
   minGmv: number;
 };
 
-export function pickSaleTier(
-  lifetimeCostVolume: number,
+export const MAX_ASSET_DISCOUNT_RULES = 10;
+
+export type OwnerDiscountRuleInput = {
+  minCheckedOutCount: number;
+  costDiscountPercent: number;
+};
+
+/**
+ * Owner form/API: drop blank 0% rows, reject bad numbers, cap length.
+ * Percent 0–100 is a math bound (cost cannot go negative), not an Admin ceiling.
+ */
+export function parseOwnerDiscountRules(
+  raw: unknown
+): { rules: OwnerDiscountRuleInput[] } | { error: string } {
+  if (raw == null) return { rules: [] };
+  if (!Array.isArray(raw)) return { error: 'INVALID_DISCOUNT_RULES' };
+
+  const rules: OwnerDiscountRuleInput[] = [];
+  const seen = new Set<number>();
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const row = item as Record<string, unknown>;
+    const min = Math.round(Number(row.minCheckedOutCount ?? row.min_checked_out_count));
+    const pct = Number(row.costDiscountPercent ?? row.cost_discount_percent);
+    if (!Number.isFinite(min) || min < 0) return { error: 'INVALID_DISCOUNT_THRESHOLD' };
+    if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+      return { error: 'INVALID_DISCOUNT_PERCENT' };
+    }
+    if (pct === 0) continue;
+    if (seen.has(min)) return { error: 'DUPLICATE_DISCOUNT_THRESHOLD' };
+    seen.add(min);
+    rules.push({ minCheckedOutCount: min, costDiscountPercent: pct });
+    if (rules.length > MAX_ASSET_DISCOUNT_RULES) {
+      return { error: 'TOO_MANY_DISCOUNT_RULES' };
+    }
+  }
+  rules.sort((a, b) => a.minCheckedOutCount - b.minCheckedOutCount);
+  return { rules };
+}
+
+/**
+ * Highest matching rule: discount applies when checkout count is *strictly
+ * greater* than the threshold (21 unlocks “trên 20”). No match → 0%.
+ */
+export function pickSaleTierFromCount(
+  checkoutCount: number,
   tiers: SaleTier[]
-): SaleTier {
-  const sorted = [...tiers].sort((a, b) => a.sort - b.sort);
-  let current = sorted[0];
+): SaleTier | null {
+  if (!tiers.length) return null;
+  const sorted = [...tiers].sort(
+    (a, b) =>
+      a.minCheckedOutCount - b.minCheckedOutCount || a.sort - b.sort
+  );
+  const count = Math.max(0, Number(checkoutCount) || 0);
+  let current: SaleTier | null = null;
   for (const tier of sorted) {
-    if (lifetimeCostVolume >= tier.minLifetimeCostVolume) current = tier;
+    if (count > tier.minCheckedOutCount) current = tier;
   }
   return current;
 }
 
-export function applySaleConfirmVolume(input: {
-  lifetimeCostVolume: number;
-  addBaseCost: number;
-  tiers: SaleTier[];
-}): { lifetimeCostVolume: number; tier: SaleTier } {
-  const lifetimeCostVolume = input.lifetimeCostVolume + input.addBaseCost;
-  return {
-    lifetimeCostVolume,
-    tier: pickSaleTier(lifetimeCostVolume, input.tiers),
-  };
+export function pickSaleDiscountFromCount(
+  checkoutCount: number,
+  tiers: SaleTier[]
+): number {
+  return pickSaleTierFromCount(checkoutCount, tiers)?.costDiscountPercent ?? 0;
+}
+
+export function saleDiscountSnapshotLabel(percent: number): string {
+  const p = Number(percent) || 0;
+  if (p <= 0) return '0%';
+  return `−${p}% căn này`;
 }
 
 export type GuestProgressState = {
@@ -113,29 +163,6 @@ export function applyGuestConfirmProgress(input: {
     addGmv: input.addAmountCollected,
     tiers: input.tiers,
   });
-}
-
-/** Place an already-summed sale volume on the tier ladder. */
-export function resolveSaleVolumeTier(
-  lifetimeCostVolume: number,
-  tiers: SaleTier[]
-): { lifetimeCostVolume: number; tier: SaleTier | null } {
-  const clamped = Math.max(0, Number(lifetimeCostVolume) || 0);
-  if (!tiers.length) {
-    return { lifetimeCostVolume: clamped, tier: null };
-  }
-  return { lifetimeCostVolume: clamped, tier: pickSaleTier(clamped, tiers) };
-}
-
-/** Rebuild sale volume + tier from remaining confirmed booking base costs. */
-export function recomputeSaleFromBaseCosts(
-  baseCosts: number[],
-  tiers: SaleTier[]
-): { lifetimeCostVolume: number; tier: SaleTier | null } {
-  return resolveSaleVolumeTier(
-    baseCosts.reduce((sum, cost) => sum + Number(cost || 0), 0),
-    tiers
-  );
 }
 
 /**

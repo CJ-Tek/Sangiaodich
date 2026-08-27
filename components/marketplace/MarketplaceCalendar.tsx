@@ -14,6 +14,7 @@ import dayjs from 'dayjs';
 import { bookingStatusColors } from '@/config/booking-status';
 import { colors, radius } from '@/config/design-tokens';
 import { todayDateOnly } from '@/lib/dates';
+import { activeStayRanges } from '@/lib/engines/inventory';
 
 /** Locked nights on the guest/sale asset calendar — same red as Sale's picker. */
 const BOOKED_TONE = {
@@ -34,6 +35,7 @@ export function MarketplaceCalendar({
   );
   const start = viewMonth;
   const today = todayDateOnly();
+  const visibleRanges = activeStayRanges(confirmedRanges, today);
   const minMonth = dayjs(month).startOf('month');
   const canGoPrev = start.isAfter(minMonth, 'month');
   const daysInMonth = start.daysInMonth();
@@ -45,7 +47,7 @@ export function MarketplaceCalendar({
 
   function isConfirmed(day: number) {
     const date = start.date(day).format('YYYY-MM-DD');
-    return confirmedRanges.some((r) => date >= r.checkIn && date < r.checkOut);
+    return visibleRanges.some((r) => date >= r.checkIn && date < r.checkOut);
   }
 
   return (
@@ -91,7 +93,7 @@ export function MarketplaceCalendar({
           if (!day) return <Box key={`${monthKey}-e-${idx}`} h={44} />;
           const dateStr = start.date(day).format('YYYY-MM-DD');
           const busy = isConfirmed(day);
-          const past = !busy && dateStr < today;
+          const past = dateStr < today;
           const tone = busy ? BOOKED_TONE : bookingStatusColors.available;
           return (
             <Box

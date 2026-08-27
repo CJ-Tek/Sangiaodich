@@ -21,6 +21,11 @@ import { rangesOverlap } from '@/lib/engines/inventory';
 import { ownerTransferMemo } from '@/lib/engines/booking-search';
 import { minOwnerDepositToConfirm } from '@/lib/engines/pricing';
 import { ownerPayoutStatus } from '@/lib/owner/payout-info';
+import { SalePublicRatingCard } from '@/components/owner/SalePublicRatingCard';
+import {
+  loadSaleRatingAggregates,
+  loadSaleRatingComments,
+} from '@/lib/engines/sale-ratings';
 
 function formatVnd(n: number) {
   return n.toLocaleString('vi-VN');
@@ -79,6 +84,11 @@ export default async function OwnerPendingBookingsPage() {
   }
 
   const rows = bookings || [];
+
+  const [aggregates, comments] = await Promise.all([
+    loadSaleRatingAggregates(saleIds),
+    loadSaleRatingComments({ saleIds, limit: 30 }),
+  ]);
 
   /** Per booking: other awaiting ids on same asset with overlapping nights */
   const overlapIdsByBooking = new Map<string, string[]>();
@@ -159,13 +169,21 @@ export default async function OwnerPendingBookingsPage() {
                         {(sale?.full_name || '?').slice(0, 1).toUpperCase()}
                       </Avatar>
                       <div>
-                        <Text size="sm" fw={500}>
-                          {sale?.full_name || 'Sale'}
-                        </Text>
+                        <Group gap="xs" wrap="wrap" align="center">
+                          <Text size="sm" fw={500}>
+                            {sale?.full_name || 'Sale'}
+                          </Text>
+                          <SalePublicRatingCard
+                            aggregate={aggregates.get(b.sale_id) ?? null}
+                            comments={comments.filter(
+                              (c) => c.saleId === b.sale_id
+                            )}
+                          />
+                        </Group>
                         <Text size="xs" c="dimmed">
                           {sale?.phone || '—'}
                           {b.sale_tier_label_snapshot
-                            ? ` · Tier ${b.sale_tier_label_snapshot}`
+                            ? ` · ${b.sale_tier_label_snapshot}`
                             : ''}
                         </Text>
                       </div>

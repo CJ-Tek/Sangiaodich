@@ -20,10 +20,12 @@ function statusTone(status: string) {
 export function OwnerAssetReviewControls({
   assetId,
   status: initialStatus,
+  extraActions,
   children,
 }: {
   assetId: string;
   status: string;
+  extraActions?: ReactNode;
   children: ReactNode;
 }) {
   const router = useRouter();
@@ -73,6 +75,7 @@ export function OwnerAssetReviewControls({
           >
             {status}
           </Badge>
+          {extraActions}
           <LinkButton
             href={`/owner/assets/${assetId}/edit`}
             variant="default"

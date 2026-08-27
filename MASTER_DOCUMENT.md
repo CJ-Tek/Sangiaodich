@@ -9,7 +9,7 @@
 3. Sale (monthly subscription ACTIVE) sees all ACTIVE assets + cost, sets own selling price, creates bookings for guests
 4. Guest browses catalog + **confirmed-only** calendar (no prices), copies link or requests sale contact
 5. Payment is **offline**; sale records `amountCollected` on confirm
-6. Admin configures subscription fees and platform membership tiers (sale + guest)
+6. Admin configures subscription fees, Guest membership, and Sale per-asset checkout discounts
 
 ## Locked technical decisions (MVP)
 
@@ -25,7 +25,7 @@
 
 ## Roles
 
-- **ADMIN** — review assets, fees, mark paid, membership tiers, users, audit
+- **ADMIN** — review assets, fees, mark paid, Guest tiers + Sale checkout discounts, users, audit
 - **OWNER** — assets/costs/P&L/subscription status
 - **SALE** — marketplace+cost, leads, bookings
 - **GUEST** — marketplace, copy/share, contact sale, my bookings, membership
@@ -55,7 +55,7 @@ saleMargin    = amountCollected − effectiveCost
 ## Data stores
 
 - Supabase Postgres + Auth + Storage (`asset-images`)
-- Tables: profiles, subscriptions, assets, costs, bookings, leads, membership, audit_logs, …
+- Tables: profiles, subscriptions, assets, costs, bookings, leads, membership, sale_ratings, audit_logs, …
 - RPC `asset_confirmed_ranges(asset_id)` for public free/busy without price leakage
 
 ## Ops

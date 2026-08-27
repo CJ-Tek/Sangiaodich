@@ -169,23 +169,79 @@ describe.skipIf(!canRun)('scale RPCs (integration)', () => {
       const guest = await makeUser('GUEST');
       const asset = await makeAsset(owner, 'ACTIVE');
 
-      await admin.from('bookings').insert([
+      const { error: insertError } = await admin.from('bookings').insert([
         booking({ asset, sale, guest, day: 1, status: 'CONFIRMED' }),
         booking({ asset, sale, guest, day: 5, status: 'CHECKED_OUT' }),
         // Cancelled stays earn no credit on either side.
         booking({ asset, sale, guest, day: 9, status: 'CANCELLED' }),
       ]);
+      expect(insertError).toBeNull();
 
-      const { data: volume } = await admin.rpc('sale_membership_volume', {
-        p_sale_id: sale,
-      });
-      expect(Number(volume)).toBe(2_000_000);
+      const { data: count, error: countError } = await admin.rpc(
+        'sale_asset_checkout_count',
+        {
+          p_sale_id: sale,
+          p_asset_id: asset,
+        }
+      );
+      expect(countError).toBeNull();
+      // CONFIRMED does not count; only CHECKED_OUT.
+      expect(Number(count)).toBe(1);
+
+      const { data: batch, error: batchError } = await admin.rpc(
+        'sale_asset_checkout_counts',
+        {
+          p_sale_id: sale,
+          p_asset_ids: [asset],
+        }
+      );
+      expect(batchError).toBeNull();
+      expect(
+        Number((batch?.[0] as { checkout_count: number })?.checkout_count)
+      ).toBe(1);
 
       const { data: earnings } = await admin
         .rpc('owner_earnings_summary', { p_owner_id: owner })
         .maybeSingle<{ confirmed_bookings: number; owner_earn_total: number }>();
       expect(Number(earnings?.confirmed_bookings)).toBe(2);
       expect(Number(earnings?.owner_earn_total)).toBe(1_600_000);
+    });
+  });
+
+  describe('asset_confirmed_ranges', () => {
+    it('omits stays that already checked out before today', async () => {
+      const owner = await makeUser('OWNER');
+      const sale = await makeUser('SALE');
+      const guest = await makeUser('GUEST');
+      const asset = await makeAsset(owner, 'ACTIVE');
+      const today = todayDateOnly();
+
+      const { error: insertError } = await admin.from('bookings').insert([
+        {
+          ...booking({ asset, sale, guest, day: 0, status: 'CHECKED_OUT' }),
+          check_in: shiftAppDays(today, -5),
+          check_out: shiftAppDays(today, -3),
+        },
+        {
+          ...booking({ asset, sale, guest, day: 0, status: 'CONFIRMED' }),
+          check_in: shiftAppDays(today, 2),
+          check_out: shiftAppDays(today, 4),
+        },
+      ]);
+      expect(insertError).toBeNull();
+
+      const { data, error } = await admin.rpc('asset_confirmed_ranges', {
+        p_asset_id: asset,
+      });
+      expect(error).toBeNull();
+
+      const rows = (data || []) as { check_in: string; check_out: string }[];
+      expect(rows).toEqual([
+        {
+          check_in: shiftAppDays(today, 2),
+          check_out: shiftAppDays(today, 4),
+        },
+      ]);
     });
   });
 
@@ -217,6 +273,12 @@ function nextTag(): string {
 function shiftDays(days: number): string {
   const date = new Date();
   date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function shiftAppDays(dateOnly: string, days: number): string {
+  const [year, month, day] = dateOnly.split('-').map(Number);
+  const date = new Date(Date.UTC(year, month - 1, day + days));
   return date.toISOString().slice(0, 10);
 }
 
