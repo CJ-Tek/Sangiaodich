@@ -29,6 +29,7 @@ export function BookingActions({
   ownerPaid,
   checkIn,
   salePayoutReady,
+  simpleUi = false,
 }: {
   bookingId: string;
   status: string;
@@ -39,6 +40,7 @@ export function BookingActions({
   ownerPaid: number;
   checkIn: string;
   salePayoutReady?: boolean;
+  simpleUi?: boolean;
 }) {
   const router = useRouter();
   const minOwnerPayout = minOwnerDepositToConfirm(ownerEarn);
@@ -48,12 +50,16 @@ export function BookingActions({
   const [cancelOpen, setCancelOpen] = useState(false);
   const [goodwill, setGoodwill] = useState(false);
 
-  const canSubmit =
-    ownerEarn > 0 &&
-    Number(ownerPaid || 0) >= minOwnerPayout &&
-    collected >= minGuestDeposit;
-  const submitBlockedReason =
-    ownerEarn <= 0
+  const canSubmit = simpleUi
+    ? ownerEarn > 0
+    : ownerEarn > 0 &&
+      Number(ownerPaid || 0) >= minOwnerPayout &&
+      collected >= minGuestDeposit;
+  const submitBlockedReason = simpleUi
+    ? ownerEarn <= 0
+      ? 'Chưa có giá gốc — không gửi Owner được'
+      : ''
+    : ownerEarn <= 0
       ? 'Chưa có giá gốc — không gửi Owner được'
       : collected < minGuestDeposit
         ? `Cần thu cọc Guest tối thiểu ${minGuestDeposit.toLocaleString('vi-VN')} (50% giá bán)`

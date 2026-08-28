@@ -26,13 +26,15 @@ export function sumBaseCost(
   checkIn: string,
   checkOut: string,
   costWeekday: number,
-  costWeekend: number
+  costWeekend: number,
+  nightlyOverrides?: Record<string, number>
 ): number {
   return nightCostBreakdown(
     checkIn,
     checkOut,
     costWeekday,
-    costWeekend
+    costWeekend,
+    nightlyOverrides
   ).reduce((sum, night) => sum + night.cost, 0);
 }
 
@@ -43,19 +45,27 @@ export type NightCostRow = {
   cost: number;
 };
 
-/** Per-night cost rows for [checkIn, checkOut). */
+/** Per-night cost rows for [checkIn, checkOut). Overrides replace WD/WE for that date. */
 export function nightCostBreakdown(
   checkIn: string,
   checkOut: string,
   costWeekday: number,
-  costWeekend: number
+  costWeekend: number,
+  nightlyOverrides?: Record<string, number>
 ): NightCostRow[] {
   return eachNight(checkIn, checkOut).map((night) => {
     const weekend = isWeekend(night);
+    const date = night.toISOString().slice(0, 10);
+    const override = nightlyOverrides?.[date];
     return {
-      date: night.toISOString().slice(0, 10),
+      date,
       weekend,
-      cost: weekend ? costWeekend : costWeekday,
+      cost:
+        override != null && Number.isFinite(override)
+          ? Number(override)
+          : weekend
+            ? costWeekend
+            : costWeekday,
     };
   });
 }
@@ -131,12 +141,15 @@ export function previewPricing(input: {
   costWeekend: number;
   listSelling: number;
   saleCostDiscountPercent: number;
+  /** Per-night owner cost overrides (YYYY-MM-DD → cost). */
+  nightlyCosts?: Record<string, number>;
 }): PricingPreview {
   const base = sumBaseCost(
     input.checkIn,
     input.checkOut,
     input.costWeekday,
-    input.costWeekend
+    input.costWeekend,
+    input.nightlyCosts
   );
   const eff = effectiveCost(base, input.saleCostDiscountPercent);
   const pay = guestPay(input.listSelling, eff);

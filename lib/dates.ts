@@ -17,6 +17,28 @@ export function isPastDateOnly(dateOnly: string, today = todayDateOnly()): boole
   return Boolean(dateOnly) && dateOnly < today;
 }
 
+/** Add N days to a YYYY-MM-DD date (UTC date arithmetic). */
+export function dateOnlyAddDays(dateOnly: string, days: number): string {
+  const [y, m, d] = dateOnly.split('-').map(Number);
+  const utc = Date.UTC(y, m - 1, d + days);
+  const dt = new Date(utc);
+  return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, '0')}-${String(dt.getUTCDate()).padStart(2, '0')}`;
+}
+
+/**
+ * Occupied nights in a half-open stay [checkIn, checkOut).
+ * Empty when checkOut is not after checkIn.
+ */
+export function nightsInRange(checkIn: string, checkOut: string): string[] {
+  const count = daysBetweenDateOnly(checkIn, checkOut);
+  if (count <= 0) return [];
+  const nights: string[] = [];
+  for (let i = 0; i < count; i++) {
+    nights.push(dateOnlyAddDays(checkIn, i));
+  }
+  return nights;
+}
+
 /** Whole calendar days from `from` to `to` (YYYY-MM-DD). Negative if `to` is before `from`. */
 export function daysBetweenDateOnly(from: string, to: string): number {
   const [fy, fm, fd] = from.split('-').map(Number);

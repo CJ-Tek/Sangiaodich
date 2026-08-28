@@ -2,7 +2,6 @@
 
 import {
   AppShell,
-  Burger,
   Group,
   NavLink,
   Stack,
@@ -12,52 +11,55 @@ import {
   Divider,
   Box,
 } from '@mantine/core';
-import { useDisclosure, useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery } from '@mantine/hooks';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { colors, radius } from '@/config/design-tokens';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import {
   IconCalendar,
+  IconClipboard,
   IconHome,
-  IconStore,
+  IconInbox,
   IconSettings,
-  IconUsers,
+  IconStore,
+  IconUser,
 } from '@/components/shells/NavIcons';
 import type { UiMode } from '@/lib/engines/ui-mode';
 import { isSimpleUi } from '@/lib/engines/ui-mode';
 import type { ReactNode } from 'react';
 
 const expertDesktop = [
-  { label: 'Home', href: '/sale' },
-  { label: 'Marketplace', href: '/sale/marketplace' },
-  { label: 'Bookings', href: '/sale/bookings' },
-  { label: 'Customers', href: '/sale/customers' },
-  { label: 'Leads', href: '/sale/leads' },
-  { label: 'Setting', href: '/sale/settings' },
+  { label: 'Properties', href: '/owner' },
+  { label: 'Assets', href: '/owner/assets' },
+  { label: 'Chờ xác nhận', href: '/owner/pending' },
+  { label: 'Settlements', href: '/owner/bookings' },
+  { label: 'New asset', href: '/owner/assets/new' },
+  { label: 'Subscription', href: '/owner/subscription' },
+  { label: 'Profile', href: '/owner/profile' },
 ];
 
 const simpleDesktop = [
-  { label: 'Lịch', href: '/sale/calendar' },
-  { label: 'Chỗ đang giữ', href: '/sale/bookings' },
-  { label: 'Hạng', href: '/sale/settings?tab=membership' },
+  { label: 'Lịch', href: '/owner/calendar' },
+  { label: 'Chờ xác nhận', href: '/owner/pending' },
+  { label: 'Phí sàn', href: '/owner/subscription' },
 ];
 
 const expertMobile = [
-  { label: 'Home', href: '/sale', Icon: IconHome },
-  { label: 'Sàn', href: '/sale/marketplace', Icon: IconStore },
-  { label: 'KH', href: '/sale/customers', Icon: IconUsers },
-  { label: 'Bookings', href: '/sale/bookings', Icon: IconCalendar },
-  { label: 'Setting', href: '/sale/settings', Icon: IconSettings },
+  { label: 'Home', href: '/owner', Icon: IconHome },
+  { label: 'Căn', href: '/owner/assets', Icon: IconStore },
+  { label: 'Chờ', href: '/owner/pending', Icon: IconInbox },
+  { label: 'Quyết toán', href: '/owner/bookings', Icon: IconClipboard },
+  { label: 'Tài khoản', href: '/owner/profile', Icon: IconUser },
 ];
 
 const simpleMobile = [
-  { label: 'Lịch', href: '/sale/calendar', Icon: IconCalendar },
-  { label: 'Giữ', href: '/sale/bookings', Icon: IconHome },
-  { label: 'Hạng', href: '/sale/settings?tab=membership', Icon: IconSettings },
+  { label: 'Lịch', href: '/owner/calendar', Icon: IconCalendar },
+  { label: 'Chờ xác nhận', href: '/owner/pending', Icon: IconInbox },
+  { label: 'Phí sàn', href: '/owner/subscription', Icon: IconSettings },
 ];
 
-export function SaleMobileShell({
+export function OwnerMobileShell({
   children,
   uiMode = 'expert',
   headerExtra,
@@ -66,7 +68,6 @@ export function SaleMobileShell({
   uiMode?: UiMode;
   headerExtra?: ReactNode;
 }) {
-  const [opened, { toggle }] = useDisclosure();
   const pathname = usePathname();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const simple = isSimpleUi(uiMode);
@@ -75,7 +76,7 @@ export function SaleMobileShell({
 
   function isActive(href: string) {
     const path = href.split('?')[0];
-    if (path === '/sale') return pathname === '/sale';
+    if (path === '/owner') return pathname === '/owner';
     return pathname === path || pathname.startsWith(`${path}/`);
   }
 
@@ -93,15 +94,15 @@ export function SaleMobileShell({
                 VBNB
               </Title>
               <Text size="sm" c="dimmed">
-                Sale
+                Owner
               </Text>
             </Group>
             <Group gap="md">
               {headerExtra}
               {simple ? null : (
-                <UnstyledButton component={Link} href="/sale/settings">
+                <UnstyledButton component={Link} href="/owner/profile">
                   <Text size="sm" c="dimmed">
-                    Setting
+                    Tài khoản
                   </Text>
                 </UnstyledButton>
               )}
@@ -161,22 +162,10 @@ export function SaleMobileShell({
     <AppShell header={{ height: 56 }} footer={{ height: 64 }} padding="md">
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
-          <Group gap="sm">
-            <Burger opened={opened} onClick={toggle} size="sm" hiddenFrom="sm" style={{ display: 'none' }} />
-            <Title order={4} c="vbnbGreen.6" fw={600}>
-              VBNB
-            </Title>
-          </Group>
-          <Group gap="md">
-            {headerExtra}
-            {simple ? null : (
-              <UnstyledButton component={Link} href="/sale/settings">
-                <Text size="sm" c="dimmed">
-                  Setting
-                </Text>
-              </UnstyledButton>
-            )}
-          </Group>
+          <Title order={4} c="vbnbGreen.6" fw={600}>
+            VBNB
+          </Title>
+          <Group gap="md">{headerExtra}</Group>
         </Group>
       </AppShell.Header>
 

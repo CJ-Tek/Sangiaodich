@@ -7,6 +7,7 @@ import { SaleProfileForm } from '@/components/sale/SaleProfileForm';
 import { OwnerPayoutForm } from '@/components/owner/OwnerPayoutForm';
 import { SaleSettingsTabs } from '@/components/sale/SaleSettingsTabs';
 import { parseSaleSettingTab } from '@/components/sale/sale-setting-tabs';
+import { isSimpleUi } from '@/lib/engines/ui-mode';
 import { SaleMembershipPanel } from '@/components/sale/SaleMembershipPanel';
 import { SaleRatingsPanel } from '@/components/sale/SaleRatingsPanel';
 import { SaleSubscriptionPanel } from '@/components/sale/SaleSubscriptionPanel';
@@ -33,8 +34,9 @@ export default async function SaleSettingsPage({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const { tab: tabParam } = await searchParams;
-  const tab = parseSaleSettingTab(tabParam);
   const profile = await getSessionProfile();
+  const hidePayout = isSimpleUi(profile!.uiMode);
+  const tab = parseSaleSettingTab(tabParam, { hidePayout });
   const admin = await createClient();
 
   const [
@@ -95,6 +97,7 @@ export default async function SaleSettingsPage({
       <Stack gap="md">
         <SaleSettingsTabs
           tab={tab}
+          hidePayout={hidePayout}
           profile={
             <SaleProfileForm
               initial={{

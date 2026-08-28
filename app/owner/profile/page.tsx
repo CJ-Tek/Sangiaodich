@@ -7,6 +7,7 @@ import { OwnerPayoutForm } from '@/components/owner/OwnerPayoutForm';
 import { Alert, Stack, Text } from '@mantine/core';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
 import { signIdDocUrl } from '@/lib/profile/id-docs';
+import { isSimpleUi } from '@/lib/engines/ui-mode';
 import {
   hasOwnerPayoutInfo,
   mapOwnerPayoutInfo,
@@ -30,6 +31,7 @@ export default async function OwnerProfilePage() {
   ]);
 
   const payout = mapOwnerPayoutInfo(row);
+  const simple = isSimpleUi(profile!.uiMode);
 
   return (
     <>
@@ -38,7 +40,7 @@ export default async function OwnerProfilePage() {
         description="Thông tin cá nhân, CCCD và tài khoản nhận tiền từ Sale."
       />
       <Stack gap="md" maw={560}>
-        {!hasOwnerPayoutInfo(payout) ? (
+        {!simple && !hasOwnerPayoutInfo(payout) ? (
           <Alert color="yellow" title="Chưa có STK nhận tiền">
             Sale cần STK để CK phần cost sau khi thu khách. Điền bên dưới — áp
             dụng mọi asset của bạn.
@@ -57,7 +59,7 @@ export default async function OwnerProfilePage() {
             nationalIdBackPreview: backPreview || '',
           }}
         />
-        <OwnerPayoutForm initial={payout} />
+        {simple ? null : <OwnerPayoutForm initial={payout} />}
         <Text size="sm" c="dimmed">
           Xem thêm:{' '}
           <LinkAnchor href="/owner/subscription" c="vbnbGreen.6">

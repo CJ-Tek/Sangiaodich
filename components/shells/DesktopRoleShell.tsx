@@ -17,6 +17,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { colors, radius } from '@/config/design-tokens';
 import { LogoutButton } from '@/components/auth/LogoutButton';
+import type { ReactNode } from 'react';
 
 export type NavItem = {
   label: string;
@@ -33,6 +34,7 @@ export function DesktopRoleShell({
   nav,
   sections,
   accountHref,
+  headerExtra,
   children,
 }: {
   title: string;
@@ -40,6 +42,7 @@ export function DesktopRoleShell({
   sections?: NavSection[];
   /** When set, header "Tài khoản" links here. Omit for Admin (no profile). */
   accountHref?: string;
+  headerExtra?: ReactNode;
   children: React.ReactNode;
 }) {
   const [opened, { toggle }] = useDisclosure();
@@ -93,15 +96,18 @@ export function DesktopRoleShell({
               {title}
             </Text>
           </Group>
-          {accountHref ? (
-            <UnstyledButton component={Link} href={accountHref}>
-              <Text size="sm" c="dimmed">
-                Tài khoản
-              </Text>
-            </UnstyledButton>
-          ) : (
-            <span />
-          )}
+          <Group gap="md">
+            {headerExtra}
+            {accountHref ? (
+              <UnstyledButton component={Link} href={accountHref}>
+                <Text size="sm" c="dimmed">
+                  Tài khoản
+                </Text>
+              </UnstyledButton>
+            ) : (
+              <span />
+            )}
+          </Group>
         </Group>
       </AppShell.Header>
 

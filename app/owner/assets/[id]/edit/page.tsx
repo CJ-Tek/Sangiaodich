@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
-import { Paper } from '@mantine/core';
+import { Paper, Stack } from '@mantine/core';
+import { loadAssetNightBoard } from '@/lib/engines/asset-night-board';
+import { OwnerNightEditor } from '@/components/owner/OwnerNightEditor';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -43,9 +45,10 @@ export default async function EditOwnerAssetPage({
     (asset.asset_images || []) as { url: string; sort_order: number }[]
   ).sort((a, b) => a.sort_order - b.sort_order);
   const discountTiers = await loadAssetDiscountRules(asset.id);
+  const nightBoard = await loadAssetNightBoard(asset.id);
 
   return (
-    <>
+    <Stack gap="lg">
       <PageHeader
         title={`Edit: ${asset.title}`}
         description="Cập nhật thông tin, cost WD/WE và chiết khấu Sale theo căn."
@@ -82,6 +85,14 @@ export default async function EditOwnerAssetPage({
           }}
         />
       </Paper>
-    </>
+      <Paper
+        p="lg"
+        radius={radius.lg}
+        maw={720}
+        style={{ border: `1px solid ${colors.border}` }}
+      >
+        <OwnerNightEditor assetId={asset.id} board={nightBoard} />
+      </Paper>
+    </Stack>
   );
 }

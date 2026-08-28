@@ -88,3 +88,22 @@ export function IconCompass({ color }: { color: string }) {
     </Svg>
   );
 }
+
+export function IconInbox({ color }: { color: string }) {
+  return (
+    <Svg color={color}>
+      <path d="M4 12h4l2 3h4l2-3h4v7H4v-7Z" />
+      <path d="M4 12 6.5 5h11L20 12" />
+    </Svg>
+  );
+}
+
+export function IconClipboard({ color }: { color: string }) {
+  return (
+    <Svg color={color}>
+      <rect x="8" y="3" width="8" height="4" rx="1" />
+      <rect x="5" y="5" width="14" height="16" rx="2" />
+      <path d="M9 12h6M9 16h4" />
+    </Svg>
+  );
+}

@@ -1,6 +1,14 @@
 import { createServiceClient } from '@/lib/supabase/server';
 import { fetchAllPages } from '@/lib/supabase/query-guard';
-import { hasConfirmedConflict, INVENTORY_LOCK_STATUSES } from '@/lib/engines/inventory';
+import {
+  hasClosedConflict,
+  hasConfirmedConflict,
+  INVENTORY_LOCK_STATUSES,
+} from '@/lib/engines/inventory';
+import {
+  loadClosedNightsInRange,
+  loadNightlyCostsInRange,
+} from '@/lib/engines/asset-night-board';
 import {
   applyGuestConfirmProgress,
   applyGuestProgress,
@@ -19,6 +27,7 @@ import { isPastDateOnly } from '@/lib/dates';
 import {
   resolveSaleAssetDiscount,
 } from '@/lib/engines/sale-pricing';
+import { isSimpleUi, parseUiMode } from '@/lib/engines/ui-mode';
 
 /**
  * The date filters already narrow these reads to overlapping rows, so any row
@@ -26,6 +35,17 @@ import {
  * cap only keeps a pathological asset from pulling an unbounded set.
  */
 const OVERLAP_PROBE_LIMIT = 50;
+
+/** Presentation flag for Sale Đơn giản — not used in inventory WHERE. */
+async function saleSkipsSubmitMoneyGates(saleId: string): Promise<boolean> {
+  const admin = createServiceClient();
+  const { data } = await admin
+    .from('profiles')
+    .select('ui_mode')
+    .eq('id', saleId)
+    .maybeSingle();
+  return isSimpleUi(parseUiMode(data?.ui_mode));
+}
 
 export async function saleHasActiveSub(saleId: string): Promise<boolean> {
   return profileHasActiveSubscription(saleId);
@@ -70,6 +90,14 @@ export async function createBooking(input: {
     input.saleId,
     input.assetId
   );
+  const candidate = { checkIn: input.checkIn, checkOut: input.checkOut };
+  const [nightlyCosts, closedNights] = await Promise.all([
+    loadNightlyCostsInRange(input.assetId, input.checkIn, input.checkOut),
+    loadClosedNightsInRange(input.assetId, input.checkIn, input.checkOut),
+  ]);
+  if (hasClosedConflict(candidate, closedNights)) {
+    return { error: 'CLOSED' as const };
+  }
   const pricing = previewPricing({
     checkIn: input.checkIn,
     checkOut: input.checkOut,
@@ -77,16 +105,12 @@ export async function createBooking(input: {
     costWeekend: Number(costs.cost_weekend),
     listSelling: input.listPrice,
     saleCostDiscountPercent: saleDiscount.discountPercent,
+    nightlyCosts,
   });
 
   if (input.listPrice < pricing.effectiveCost) {
-    return {
-      error: 'BELOW_FLOOR' as const,
-      effectiveCost: pricing.effectiveCost,
-    };
+    return { error: 'BELOW_FLOOR' as const, effectiveCost: pricing.effectiveCost };
   }
-
-  const candidate = { checkIn: input.checkIn, checkOut: input.checkOut };
 
   // Stays are half-open [check_in, check_out), so only rows starting before the
   // candidate ends and ending after it starts can overlap. Without this the read
@@ -154,7 +178,12 @@ export async function createBooking(input: {
     .select('*')
     .single();
 
-  if (error) return { error: error.message };
+  if (error) {
+    if (error.message?.includes('closed_night_conflict')) {
+      return { error: 'CLOSED' as const };
+    }
+    return { error: error.message };
+  }
   return { booking };
 }
 
@@ -193,19 +222,33 @@ export async function submitToOwner(input: {
     booking.asset_id
   );
 
+  const stay = {
+    checkIn: booking.check_in as string,
+    checkOut: booking.check_out as string,
+  };
+  const [nightlyCosts, closedNights] = await Promise.all([
+    loadNightlyCostsInRange(booking.asset_id, stay.checkIn, stay.checkOut),
+    loadClosedNightsInRange(booking.asset_id, stay.checkIn, stay.checkOut),
+  ]);
+  if (hasClosedConflict(stay, closedNights)) {
+    return { error: 'CLOSED' as const };
+  }
+
   const pricing = previewPricing({
-    checkIn: booking.check_in,
-    checkOut: booking.check_out,
+    checkIn: stay.checkIn,
+    checkOut: stay.checkOut,
     costWeekday: Number(costs.cost_weekday),
     costWeekend: Number(costs.cost_weekend),
     listSelling: Number(booking.list_price),
     saleCostDiscountPercent: saleMembership.discountPercent,
+    nightlyCosts,
   });
 
   const listPrice = Number(booking.list_price);
   const collected = Number(input.amountCollected || booking.amount_collected || 0);
+  const skipMoneyGates = await saleSkipsSubmitMoneyGates(input.saleId);
   const minGuestDeposit = minDepositToConfirm(listPrice);
-  if (collected < minGuestDeposit) {
+  if (!skipMoneyGates && collected < minGuestDeposit) {
     return {
       error: 'BELOW_DEPOSIT' as const,
       minDeposit: minGuestDeposit,
@@ -219,7 +262,7 @@ export async function submitToOwner(input: {
   if (ownerEarn <= 0) {
     return { error: 'NO_OWNER_EARN' as const };
   }
-  if (ownerPaid < minOwnerPayout) {
+  if (!skipMoneyGates && ownerPaid < minOwnerPayout) {
     return {
       error: 'BELOW_OWNER_PAYOUT' as const,
       minOwnerPayout,
@@ -333,6 +376,19 @@ export async function ownerConfirmBooking(input: {
     return { error: 'INVALID_STATUS' as const };
   }
 
+  const stay = {
+    checkIn: booking.check_in as string,
+    checkOut: booking.check_out as string,
+  };
+  const closedNights = await loadClosedNightsInRange(
+    booking.asset_id,
+    stay.checkIn,
+    stay.checkOut
+  );
+  if (hasClosedConflict(stay, closedNights)) {
+    return { error: 'CLOSED' as const };
+  }
+
   const { data: confirmed } = await admin
     .from('bookings')
     .select('check_in, check_out')
@@ -392,6 +448,9 @@ export async function ownerConfirmBooking(input: {
   if (updateError) {
     if (updateError.code === '23P01' || updateError.message.includes('overlap')) {
       return { error: 'OVERLAP' as const };
+    }
+    if (updateError.message.includes('closed_night_conflict')) {
+      return { error: 'CLOSED' as const };
     }
     return { error: updateError.message };
   }

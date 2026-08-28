@@ -14,28 +14,49 @@ import dayjs from 'dayjs';
 import { bookingStatusColors } from '@/config/booking-status';
 import { colors, radius } from '@/config/design-tokens';
 import { todayDateOnly } from '@/lib/dates';
-import { activeStayRanges } from '@/lib/engines/inventory';
+import {
+  nightStatus,
+  type AssetNightBoard,
+  type NightStatus,
+} from '@/lib/engines/inventory';
 
-/** Locked nights on the guest/sale asset calendar — same red as Sale's picker. */
 const BOOKED_TONE = {
   bg: colors.dangerSoft,
   text: colors.danger,
   border: '#E8D0D0',
 } as const;
 
+const CLOSED_TONE = bookingStatusColors.blocked;
+
+export type CalendarVariant = 'guest' | 'sale' | 'owner';
+
+function toneForStatus(
+  status: NightStatus,
+  variant: CalendarVariant
+): { bg: string; text: string; border: string } {
+  if (status === 'locked') return BOOKED_TONE;
+  if (status === 'closed') return CLOSED_TONE;
+  if (status === 'hold' && variant !== 'guest') {
+    return bookingStatusColors.hold;
+  }
+  return bookingStatusColors.available;
+}
+
 export function MarketplaceCalendar({
   month,
-  confirmedRanges,
+  board,
+  variant = 'guest',
 }: {
   month: Date;
-  confirmedRanges: { checkIn: string; checkOut: string }[];
+  board: AssetNightBoard;
+  /** Guest paints hold as empty (PENDING does not occupy public free/busy). */
+  variant?: CalendarVariant;
 }) {
   const [viewMonth, setViewMonth] = useState(() =>
     dayjs(month).startOf('month')
   );
   const start = viewMonth;
   const today = todayDateOnly();
-  const visibleRanges = activeStayRanges(confirmedRanges, today);
   const minMonth = dayjs(month).startOf('month');
   const canGoPrev = start.isAfter(minMonth, 'month');
   const daysInMonth = start.daysInMonth();
@@ -45,10 +66,7 @@ export function MarketplaceCalendar({
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ];
 
-  function isConfirmed(day: number) {
-    const date = start.date(day).format('YYYY-MM-DD');
-    return visibleRanges.some((r) => date >= r.checkIn && date < r.checkOut);
-  }
+  const showHold = variant !== 'guest';
 
   return (
     <Stack gap="md">
@@ -79,6 +97,10 @@ export function MarketplaceCalendar({
         </Group>
         <Group gap="md">
           <Legend color={bookingStatusColors.available} label="Trống" />
+          {showHold ? (
+            <Legend color={bookingStatusColors.hold} label="Đang giữ" />
+          ) : null}
+          <Legend color={CLOSED_TONE} label="Đóng" />
           <Legend color={BOOKED_TONE} label="Đã book" />
         </Group>
       </Group>
@@ -92,9 +114,9 @@ export function MarketplaceCalendar({
           const monthKey = start.format('YYYY-MM');
           if (!day) return <Box key={`${monthKey}-e-${idx}`} h={44} />;
           const dateStr = start.date(day).format('YYYY-MM-DD');
-          const busy = isConfirmed(day);
+          const status = nightStatus(dateStr, board);
           const past = dateStr < today;
-          const tone = busy ? BOOKED_TONE : bookingStatusColors.available;
+          const tone = toneForStatus(status, variant);
           return (
             <Box
               key={dateStr}

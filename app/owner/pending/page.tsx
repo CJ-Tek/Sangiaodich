@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 import { getSessionProfile } from '@/lib/auth/session';
+import { isSimpleUi } from '@/lib/engines/ui-mode';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { BookingStatusBadge } from '@/components/bookings/BookingStatusBadge';
@@ -251,7 +252,10 @@ export default async function OwnerPendingBookingsPage() {
                     : '—'}
                 </Text>
 
-                <OwnerBookingActions bookingId={b.id} />
+                <OwnerBookingActions
+                  bookingId={b.id}
+                  requireStkCheck={!isSimpleUi(profile!.uiMode)}
+                />
               </Paper>
             );
           })}

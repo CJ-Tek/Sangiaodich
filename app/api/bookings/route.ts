@@ -54,9 +54,11 @@ export async function POST(request: Request) {
     const message =
       result.error === 'BELOW_FLOOR' && 'effectiveCost' in result
         ? `Giá bán dưới floor ${Number(result.effectiveCost).toLocaleString('vi-VN')}`
-        : result.error === 'OVERLAP'
-          ? 'Ngày đã được sale khác confirm — lịch đã khóa'
-          : result.error === 'GUEST_DUPLICATE'
+            : result.error === 'OVERLAP'
+            ? 'Ngày đã được sale khác confirm — lịch đã khóa'
+            : result.error === 'CLOSED'
+              ? 'Owner đã đóng một hoặc nhiều đêm trong khoảng này'
+              : result.error === 'GUEST_DUPLICATE'
             ? 'Guest này đã có booking trùng ngày trên asset này'
             : result.error === 'SUBSCRIPTION_INACTIVE'
               ? 'Subscription hết hạn — gia hạn để tiếp tục'
@@ -96,7 +98,9 @@ export async function PATCH(request: Request) {
               ? `Cần thu cọc Guest tối thiểu 50% giá bán (${Number(result.minDeposit).toLocaleString('vi-VN')}) trước khi gửi`
               : result.error === 'OVERLAP'
               ? 'Ngày đã bị Sale khác chốt (CONFIRMED) — không gửi được'
-              : String(result.error);
+              : result.error === 'CLOSED'
+                ? 'Owner đã đóng đêm này — không gửi được'
+                : String(result.error);
       return NextResponse.json(fail(String(result.error), message), {
         status: 400,
       });

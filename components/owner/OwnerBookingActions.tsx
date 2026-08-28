@@ -5,7 +5,14 @@ import { notifications } from '@mantine/notifications';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
-export function OwnerBookingActions({ bookingId }: { bookingId: string }) {
+export function OwnerBookingActions({
+  bookingId,
+  requireStkCheck = true,
+}: {
+  bookingId: string;
+  /** Simple mode skips the STK checkbox — owners check the bank app themselves. */
+  requireStkCheck?: boolean;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [reason, setReason] = useState('');
@@ -13,7 +20,7 @@ export function OwnerBookingActions({ bookingId }: { bookingId: string }) {
   const [stkChecked, setStkChecked] = useState(false);
 
   async function act(action: 'confirm' | 'reject') {
-    if (action === 'confirm' && !stkChecked) {
+    if (action === 'confirm' && requireStkCheck && !stkChecked) {
       notifications.show({
         color: 'yellow',
         message: 'Hãy đối chiếu STK / mã CK trước khi xác nhận',
@@ -54,21 +61,26 @@ export function OwnerBookingActions({ bookingId }: { bookingId: string }) {
 
   return (
     <Stack gap="xs">
-      <Checkbox
-        checked={stkChecked}
-        onChange={(e) => setStkChecked(e.currentTarget.checked)}
-        label="Đã đối chiếu STK / mã CK từ Sale (tự check app NH)"
-        size="sm"
-      />
-      <Text size="xs" c="dimmed">
-        Confirm = bạn xác nhận đã nhận tiền — không dựa vào tick “đã CK” của Sale.
-      </Text>
+      {requireStkCheck ? (
+        <>
+          <Checkbox
+            checked={stkChecked}
+            onChange={(e) => setStkChecked(e.currentTarget.checked)}
+            label="Đã đối chiếu STK / mã CK từ Sale (tự check app NH)"
+            size="sm"
+          />
+          <Text size="xs" c="dimmed">
+            Confirm = bạn xác nhận đã nhận tiền — không dựa vào tick “đã CK” của
+            Sale.
+          </Text>
+        </>
+      ) : null}
       <Group gap="xs">
         <Button
           size="xs"
           color="vbnbGreen"
           loading={loading}
-          disabled={!stkChecked}
+          disabled={requireStkCheck && !stkChecked}
           onClick={() => act('confirm')}
         >
           Xác nhận (khóa lịch)

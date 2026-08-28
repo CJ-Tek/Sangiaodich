@@ -1,7 +1,9 @@
+import { redirect } from 'next/navigation';
 import { Stack, Group, SimpleGrid, Alert } from '@mantine/core';
 import { createClient } from '@/lib/supabase/server';
 import { fetchAllPages } from '@/lib/supabase/query-guard';
 import { getSessionProfile } from '@/lib/auth/session';
+import { isSimpleUi } from '@/lib/engines/ui-mode';
 import { isSubscriptionActive } from '@/lib/engines/subscription';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LinkButton } from '@/components/ui/LinkButton';
@@ -14,6 +16,7 @@ import {
 
 export default async function OwnerDashboard() {
   const profile = await getSessionProfile();
+  if (isSimpleUi(profile?.uiMode)) redirect('/owner/calendar');
   const admin = await createClient();
 
   const assets = await fetchAllPages((from, to) =>

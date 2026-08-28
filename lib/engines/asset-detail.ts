@@ -1,5 +1,9 @@
 import { createClient } from '@/lib/supabase/server';
-import { activeStayRanges } from '@/lib/engines/inventory';
+import { loadAssetNightBoard } from '@/lib/engines/asset-night-board';
+import {
+  stayRanges,
+  type AssetNightBoard,
+} from '@/lib/engines/inventory';
 
 export type AssetDetailRecord = {
   id: string;
@@ -14,6 +18,7 @@ export type AssetDetailRecord = {
   tags: string[];
   images: { url: string; sort_order: number }[];
   confirmedRanges: { checkIn: string; checkOut: string }[];
+  nightBoard: AssetNightBoard;
 };
 
 /**
@@ -36,9 +41,7 @@ export async function loadAssetDetail(
 
   if (!asset) return null;
 
-  const { data: ranges } = await admin.rpc('asset_confirmed_ranges', {
-    p_asset_id: asset.id,
-  });
+  const board = await loadAssetNightBoard(asset.id);
 
   return {
     id: asset.id,
@@ -52,11 +55,7 @@ export async function loadAssetDetail(
     propertyType: asset.property_type,
     tags: Array.isArray(asset.tags) ? (asset.tags as string[]) : [],
     images: (asset.asset_images || []) as { url: string; sort_order: number }[],
-    confirmedRanges: activeStayRanges(
-      ((ranges || []) as { check_in: string; check_out: string }[]).map((r) => ({
-        checkIn: r.check_in,
-        checkOut: r.check_out,
-      }))
-    ),
+    confirmedRanges: stayRanges(board.confirmedStays),
+    nightBoard: board,
   };
 }

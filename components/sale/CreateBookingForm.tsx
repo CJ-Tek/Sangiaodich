@@ -15,8 +15,14 @@ import { DatePickerInput } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { previewPricing, nightCostBreakdown, quoteAssetCosts } from '@/lib/engines/pricing';
 import {
+  previewPricing,
+  nightCostBreakdown,
+  quoteAssetCosts,
+  effectiveCost,
+} from '@/lib/engines/pricing';
+import {
+  hasClosedConflict,
   hasConfirmedConflict,
   isNightBlocked,
   type DateRange,
@@ -35,6 +41,8 @@ export function CreateBookingForm({
   guestSuggestions,
   confirmedRanges = [],
   awaitingOwnerRanges = [],
+  closedNights = [],
+  nightlyCosts = {},
 }: {
   assetId: string;
   assetTitle?: string;
@@ -46,6 +54,8 @@ export function CreateBookingForm({
   confirmedRanges?: DateRange[];
   /** Soft-hold nights — highlight only, still selectable */
   awaitingOwnerRanges?: DateRange[];
+  closedNights?: string[];
+  nightlyCosts?: Record<string, number>;
 }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
@@ -88,6 +98,17 @@ export function CreateBookingForm({
         },
       };
     }
+    if (closedNights.includes(d)) {
+      return {
+        disabled: true,
+        style: {
+          background: colors.surfaceMuted,
+          color: colors.textMuted,
+          opacity: 1,
+          fontWeight: 600,
+        },
+      };
+    }
     if (isNightBlocked(d, awaitingOwnerRanges)) {
       return {
         style: {
@@ -113,18 +134,36 @@ export function CreateBookingForm({
       costWeekend,
       listSelling: listPrice,
       saleCostDiscountPercent,
+      nightlyCosts,
     });
-  }, [range, listPrice, costWeekday, costWeekend, saleCostDiscountPercent]);
+  }, [
+    range,
+    listPrice,
+    costWeekday,
+    costWeekend,
+    saleCostDiscountPercent,
+    nightlyCosts,
+  ]);
 
   const nights = useMemo(() => {
     if (!range[0] || !range[1] || range[1] <= range[0]) return [];
     return nightCostBreakdown(
       range[0],
       range[1],
-      quoted.effectiveWeekday,
-      quoted.effectiveWeekend
-    );
-  }, [range, quoted.effectiveWeekday, quoted.effectiveWeekend]);
+      costWeekday,
+      costWeekend,
+      nightlyCosts
+    ).map((row) => ({
+      ...row,
+      cost: effectiveCost(row.cost, saleCostDiscountPercent),
+    }));
+  }, [
+    range,
+    costWeekday,
+    costWeekend,
+    nightlyCosts,
+    saleCostDiscountPercent,
+  ]);
 
   const guestLabel = guest?.label;
 
@@ -162,9 +201,15 @@ export function CreateBookingForm({
       if (!range[0] || !range[1] || range[1] <= range[0] || range[0] < minDate) {
         return false;
       }
-      return !hasConfirmedConflict(
-        { checkIn: range[0], checkOut: range[1] },
-        confirmedRanges
+      return (
+        !hasConfirmedConflict(
+          { checkIn: range[0], checkOut: range[1] },
+          confirmedRanges
+        ) &&
+        !hasClosedConflict(
+          { checkIn: range[0], checkOut: range[1] },
+          closedNights
+        )
       );
     }
     if (step === 3)

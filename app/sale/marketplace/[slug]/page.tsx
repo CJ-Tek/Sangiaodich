@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
-import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
-import { todayDateOnly } from '@/lib/dates';
-import { activeStayRanges } from '@/lib/engines/inventory';
+import { loadAssetNightBoard } from '@/lib/engines/asset-night-board';
+import { stayRanges } from '@/lib/engines/inventory';
 import { getSessionProfile } from '@/lib/auth/session';
 import { saleHasActiveSub } from '@/lib/engines/booking-service';
 import { resolveSaleAssetDiscount } from '@/lib/engines/sale-pricing';
@@ -39,9 +38,10 @@ export default async function SaleAssetDetailPage({
     .maybeSingle();
   if (!asset) notFound();
 
-  const [discount, guestSuggestions] = await Promise.all([
+  const [discount, guestSuggestions, nightBoard] = await Promise.all([
     resolveSaleAssetDiscount(profile!.id, asset.id),
     loadSaleGuestSuggestions(profile!.id),
+    loadAssetNightBoard(asset.id),
   ]);
   const discountPercent = discount.discountPercent;
 
@@ -53,32 +53,13 @@ export default async function SaleAssetDetailPage({
   const costWd = Number(costs.cost_weekday);
   const costWe = Number(costs.cost_weekend);
 
-  const { data: ranges } = await admin.rpc('asset_confirmed_ranges', {
-    p_asset_id: asset.id,
-  });
-
-  // Soft-hold and confirmed free/busy only include stays whose check_out is
-  // today or later — past occupancy never needs to travel.
-  const { data: awaitingRows } = await admin
-    .from('bookings')
-    .select('check_in, check_out')
-    .eq('asset_id', asset.id)
-    .eq('status', 'AWAITING_OWNER')
-    .gte('check_out', todayDateOnly())
-    .order('check_in', { ascending: true })
-    .limit(LIST_VIEW_LIMIT);
-
   const images = (asset.asset_images || []) as {
     url: string;
     sort_order: number;
   }[];
   const tags = Array.isArray(asset.tags) ? (asset.tags as string[]) : [];
-  const confirmedRanges = activeStayRanges(
-    ((ranges || []) as { check_in: string; check_out: string }[]).map((r) => ({
-      checkIn: r.check_in,
-      checkOut: r.check_out,
-    }))
-  );
+  const confirmedRanges = stayRanges(nightBoard.confirmedStays);
+  const awaitingOwnerRanges = stayRanges(nightBoard.holdStays);
 
   return (
     <Stack gap={32} pb="xl">
@@ -112,7 +93,8 @@ export default async function SaleAssetDetailPage({
             </Title>
             <MarketplaceCalendar
               month={new Date()}
-              confirmedRanges={confirmedRanges}
+              board={nightBoard}
+              variant="sale"
             />
           </Paper>
         </Stack>
@@ -133,10 +115,9 @@ export default async function SaleAssetDetailPage({
           costWeekend={costWe}
           saleCostDiscountPercent={discountPercent}
           confirmedRanges={confirmedRanges}
-          awaitingOwnerRanges={(awaitingRows || []).map((r) => ({
-            checkIn: r.check_in,
-            checkOut: r.check_out,
-          }))}
+          awaitingOwnerRanges={awaitingOwnerRanges}
+          closedNights={nightBoard.closedNights}
+          nightlyCosts={nightBoard.nightlyCosts}
           guestSuggestions={guestSuggestions}
         />
       </Paper>

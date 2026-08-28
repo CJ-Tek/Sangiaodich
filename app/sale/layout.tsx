@@ -1,6 +1,8 @@
 import { SaleMobileShell } from '@/components/shells/SaleMobileShell';
 import { SubscriptionShell } from '@/components/auth/SubscriptionShell';
+import { UiModeToggle } from '@/components/shells/UiModeToggle';
 import { getSessionProfile } from '@/lib/auth/session';
+import { isSimpleUi } from '@/lib/engines/ui-mode';
 import {
   getLatestSubscription,
 } from '@/lib/engines/subscription-access';
@@ -30,7 +32,19 @@ export default async function SaleLayout({
     .maybeSingle();
 
   return (
-    <SaleMobileShell>
+    <SaleMobileShell
+      uiMode={profile?.uiMode ?? 'expert'}
+      headerExtra={
+        profile && (profile.role === 'SALE') ? (
+          <UiModeToggle
+            mode={profile.uiMode}
+            homeHref={
+              isSimpleUi(profile.uiMode) ? '/sale' : '/sale/calendar'
+            }
+          />
+        ) : null
+      }
+    >
       <SubscriptionShell
         active={active}
         role="SALE"

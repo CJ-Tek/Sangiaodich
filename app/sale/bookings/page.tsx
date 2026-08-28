@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 import { getSessionProfile } from '@/lib/auth/session';
+import { isSimpleUi } from '@/lib/engines/ui-mode';
 import { PageHeader } from '@/components/ui/PageHeader';
 import {
   BookingStatusFilter,
@@ -86,6 +87,7 @@ export default async function SaleBookingsPage({
   const { status: statusParam } = await searchParams;
   const filter = parseStatus(statusParam);
   const profile = await getSessionProfile();
+  const simple = isSimpleUi(profile!.uiMode);
   const admin = await createClient();
   const { data: salePayoutRow } = await admin
     .from('profiles')
@@ -128,6 +130,10 @@ export default async function SaleBookingsPage({
   );
 
   const empty = FILTER_META[filter];
+  const emptyDescription =
+    simple && filter === 'PENDING'
+      ? 'Chọn đêm trên Lịch rồi gửi Owner. Không cần ghi CK tại đây.'
+      : empty.emptyDescription;
 
   const items: SaleBookingListItem[] = (bookings || []).map((b) => {
     const asset = b.assets as unknown as {
@@ -228,7 +234,11 @@ export default async function SaleBookingsPage({
     <>
       <PageHeader
         title="Bookings"
-        description="Thu cọc Guest → Xác nhận CK Owner (50% hoặc đủ) → Gửi Owner. Owner confirm mới khóa lịch."
+        description={
+          simple
+            ? 'Gửi Owner từ Lịch. Owner xác nhận thì khóa. Tab này chỉ xem chỗ đang giữ.'
+            : 'Thu cọc Guest → Xác nhận CK Owner (50% hoặc đủ) → Gửi Owner. Owner confirm mới khóa lịch.'
+        }
       />
       <Stack gap="md" mb="lg">
         <BookingStatusFilter value={filter} />
@@ -236,7 +246,8 @@ export default async function SaleBookingsPage({
       <SaleBookingsList
         items={items}
         emptyTitle={empty.emptyTitle}
-        emptyDescription={empty.emptyDescription}
+        emptyDescription={emptyDescription}
+        simpleUi={simple}
       />
     </>
   );

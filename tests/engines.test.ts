@@ -15,7 +15,7 @@ import {
 import { computeCancelRefund } from '@/lib/engines/cancellation';
 import { hasConfirmedConflict } from '@/lib/engines/inventory';
 import { isSubscriptionActive } from '@/lib/engines/subscription';
-import { addCalendarMonths, parseYearMonth } from '@/lib/dates';
+import { addCalendarMonths, nightsInRange, parseYearMonth } from '@/lib/dates';
 import { planDurationLabel, planDiscount } from '@/lib/engines/subscription-plans';
 import {
   applyGuestConfirmProgress,
@@ -95,6 +95,36 @@ describe('pricing', () => {
       { date: '2026-08-08', weekend: true, cost: 200 },
       { date: '2026-08-09', weekend: true, cost: 200 },
     ]);
+  });
+
+  it('uses per-night cost overrides instead of WD/WE', () => {
+    const rows = nightCostBreakdown('2026-08-07', '2026-08-09', 100, 200, {
+      '2026-08-07': 500,
+    });
+    expect(rows[0].cost).toBe(500);
+    expect(rows[1].cost).toBe(200);
+    const p = previewPricing({
+      checkIn: '2026-08-07',
+      checkOut: '2026-08-09',
+      costWeekday: 100,
+      costWeekend: 200,
+      listSelling: 1,
+      saleCostDiscountPercent: 0,
+      nightlyCosts: { '2026-08-07': 500 },
+    });
+    expect(p.baseCost).toBe(700);
+    expect(p.effectiveCost).toBe(700);
+    const discounted = previewPricing({
+      checkIn: '2026-08-07',
+      checkOut: '2026-08-09',
+      costWeekday: 100,
+      costWeekend: 200,
+      listSelling: 1,
+      saleCostDiscountPercent: 10,
+      nightlyCosts: { '2026-08-07': 500 },
+    });
+    expect(discounted.baseCost).toBe(700);
+    expect(discounted.effectiveCost).toBe(630);
   });
 
   it('requires 50% list price as minimum deposit to confirm', () => {
@@ -186,6 +216,15 @@ describe('calendar months', () => {
     expect(addCalendarMonths('2026-01-31', 1)).toBe('2026-02-28');
     expect(addCalendarMonths('2026-01-31', 12)).toBe('2027-01-31');
     expect(addCalendarMonths('2026-08-07', 3)).toBe('2026-11-07');
+  });
+
+  it('lists occupied nights in a half-open stay', () => {
+    expect(nightsInRange('2026-08-25', '2026-08-28')).toEqual([
+      '2026-08-25',
+      '2026-08-26',
+      '2026-08-27',
+    ]);
+    expect(nightsInRange('2026-08-25', '2026-08-25')).toEqual([]);
   });
 
   it('parses year-month bounds in Vietnam timezone', () => {

@@ -98,10 +98,12 @@ export function SaleBookingsList({
   items,
   emptyTitle,
   emptyDescription,
+  simpleUi = false,
 }: {
   items: SaleBookingListItem[];
   emptyTitle: string;
   emptyDescription: string;
+  simpleUi?: boolean;
 }) {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
@@ -254,28 +256,32 @@ export function SaleBookingsList({
                 </Text>
               ) : (
                 <Stack gap="md">
-                  {[
-                    'PENDING',
-                    'AWAITING_OWNER',
-                  ].includes(b.status) ? (
-                    <GuestCollectedUpdate
-                      bookingId={b.id}
-                      listPrice={b.list}
-                      amountCollected={Number(b.amountCollected || 0)}
-                    />
-                  ) : null}
-                  {b.showOwnerPayout ? (
-                    <OwnerPayoutCard
-                      bookingId={b.id}
-                      ownerName={b.ownerName}
-                      ownerPhone={b.ownerPhone}
-                      ownerEarn={b.ownerEarn}
-                      ownerPaid={b.ownerPaid}
-                      listPrice={b.list}
-                      amountCollected={Number(b.amountCollected || 0)}
-                      payout={b.payout}
-                    />
-                  ) : null}
+                  {simpleUi ? null : (
+                    <>
+                      {[
+                        'PENDING',
+                        'AWAITING_OWNER',
+                      ].includes(b.status) ? (
+                        <GuestCollectedUpdate
+                          bookingId={b.id}
+                          listPrice={b.list}
+                          amountCollected={Number(b.amountCollected || 0)}
+                        />
+                      ) : null}
+                      {b.showOwnerPayout ? (
+                        <OwnerPayoutCard
+                          bookingId={b.id}
+                          ownerName={b.ownerName}
+                          ownerPhone={b.ownerPhone}
+                          ownerEarn={b.ownerEarn}
+                          ownerPaid={b.ownerPaid}
+                          listPrice={b.list}
+                          amountCollected={Number(b.amountCollected || 0)}
+                          payout={b.payout}
+                        />
+                      ) : null}
+                    </>
+                  )}
                   <BookingActions
                     bookingId={b.id}
                     status={b.status}
@@ -286,6 +292,7 @@ export function SaleBookingsList({
                     ownerEarn={b.ownerEarn}
                     ownerPaid={b.ownerPaid}
                     salePayoutReady={b.salePayoutReady}
+                    simpleUi={simpleUi}
                   />
                 </Stack>
               )}

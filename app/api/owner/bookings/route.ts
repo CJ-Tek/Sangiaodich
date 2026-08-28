@@ -52,7 +52,9 @@ export async function PATCH(request: Request) {
       const message =
         result.error === 'OVERLAP'
           ? 'Ngày đã được Sale khác chốt trước — không xác nhận được'
-          : result.error === 'INVALID_STATUS'
+          : result.error === 'CLOSED'
+            ? 'Đêm đã đóng — không xác nhận được'
+            : result.error === 'INVALID_STATUS'
             ? 'Booking không còn ở trạng thái chờ Owner'
             : result.error === 'FORBIDDEN'
               ? 'Không phải asset của bạn'

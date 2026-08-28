@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import type { UserRole } from '@/lib/types';
+import { parseUiMode, type UiMode } from '@/lib/engines/ui-mode';
 
 export type SessionProfile = {
   id: string;
@@ -10,6 +11,7 @@ export type SessionProfile = {
   full_name: string;
   avatar_url: string | null;
   national_id: string | null;
+  uiMode: UiMode;
 };
 
 /**
@@ -31,7 +33,7 @@ export const getSessionProfile = cache(
     const { data } = await supabase
       .from('profiles')
       .select(
-        'id, role, phone, email, full_name, avatar_url, national_id, deleted_at'
+        'id, role, phone, email, full_name, avatar_url, national_id, deleted_at, ui_mode'
       )
       .eq('id', userId)
       .maybeSingle();
@@ -46,6 +48,7 @@ export const getSessionProfile = cache(
       full_name: data.full_name,
       avatar_url: data.avatar_url,
       national_id: data.national_id,
+      uiMode: parseUiMode(data.ui_mode),
     } as SessionProfile;
   }
 );

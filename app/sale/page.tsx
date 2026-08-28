@@ -1,8 +1,10 @@
+import { redirect } from 'next/navigation';
 import { Text, Stack, Title, Group, SimpleGrid, Paper } from '@mantine/core';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { saleHasActiveSub } from '@/lib/engines/booking-service';
+import { isSimpleUi } from '@/lib/engines/ui-mode';
 import { countUnreadLeads, UNREAD_LEAD_CAP } from '@/lib/engines/sale-leads';
 import { resolveSaleAssetDiscounts } from '@/lib/engines/sale-pricing';
 import { quoteAssetCosts } from '@/lib/engines/pricing';
@@ -37,6 +39,7 @@ export default async function SaleHomePage({
   const { ym: ymParam } = await searchParams;
   const period = parseYearMonth(ymParam);
   const profile = await getSessionProfile();
+  if (isSimpleUi(profile?.uiMode)) redirect('/sale/calendar');
   const admin = await createClient();
 
   // Everything below depends only on the profile id, so it runs as one wave

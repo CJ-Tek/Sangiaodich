@@ -51,7 +51,8 @@ export function AssetDetailView({
             </Title>
             <MarketplaceCalendar
               month={new Date()}
-              confirmedRanges={asset.confirmedRanges}
+              board={asset.nightBoard}
+              variant="guest"
             />
           </Paper>
           <AssetCtas

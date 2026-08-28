@@ -1,22 +1,14 @@
-import { DesktopRoleShell } from '@/components/shells/DesktopRoleShell';
+import { OwnerMobileShell } from '@/components/shells/OwnerMobileShell';
 import { SubscriptionShell } from '@/components/auth/SubscriptionShell';
+import { UiModeToggle } from '@/components/shells/UiModeToggle';
 import { getSessionProfile } from '@/lib/auth/session';
 import {
   getLatestSubscription,
 } from '@/lib/engines/subscription-access';
 import { isSubscriptionActive } from '@/lib/engines/subscription';
+import { isSimpleUi } from '@/lib/engines/ui-mode';
 import { createClient } from '@/lib/supabase/server';
 import { mapPaymentInfo } from '@/lib/platform/payment-info';
-
-const nav = [
-  { label: 'Properties', href: '/owner' },
-  { label: 'Assets', href: '/owner/assets' },
-  { label: 'Chờ xác nhận', href: '/owner/pending' },
-  { label: 'Settlements', href: '/owner/bookings' },
-  { label: 'New asset', href: '/owner/assets/new' },
-  { label: 'Subscription', href: '/owner/subscription' },
-  { label: 'Profile', href: '/owner/profile' },
-];
 
 export default async function OwnerLayout({
   children,
@@ -39,11 +31,19 @@ export default async function OwnerLayout({
     .eq('id', 1)
     .maybeSingle();
 
+  const simple = isSimpleUi(profile?.uiMode);
+
   return (
-    <DesktopRoleShell
-      title="Owner"
-      nav={nav}
-      accountHref="/owner/profile"
+    <OwnerMobileShell
+      uiMode={profile?.uiMode ?? 'expert'}
+      headerExtra={
+        profile ? (
+          <UiModeToggle
+            mode={profile.uiMode}
+            homeHref={simple ? '/owner' : '/owner/calendar'}
+          />
+        ) : null
+      }
     >
       <SubscriptionShell
         active={active}
@@ -55,6 +55,6 @@ export default async function OwnerLayout({
       >
         {children}
       </SubscriptionShell>
-    </DesktopRoleShell>
+    </OwnerMobileShell>
   );
 }
