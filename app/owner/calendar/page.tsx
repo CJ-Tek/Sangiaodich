@@ -13,6 +13,8 @@ import { loadRatingsByBookingIds } from '@/lib/engines/sale-ratings';
 import type { SaleRatingRecord } from '@/lib/engines/sale-ratings';
 import { NightBoardGrid } from '@/components/inventory/NightBoardGrid';
 import { NightBoardFromPicker } from '@/components/inventory/NightBoardFromPicker';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { LinkButton } from '@/components/ui/LinkButton';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { colors, radius } from '@/config/design-tokens';
 import type { NightBoardColumn } from '@/lib/engines/night-board-display';
@@ -92,7 +94,14 @@ export default async function OwnerCalendarPage({
 
   return (
     <Stack gap="md">
-      <PageHeader title="Lịch" />
+      <PageHeader
+        title="Lịch"
+        action={
+          <LinkButton href="/owner/assets/new" color="vbnbGreen" size="sm">
+            Thêm căn
+          </LinkButton>
+        }
+      />
       <Box
         component="form"
         method="get"
@@ -126,11 +135,16 @@ export default async function OwnerCalendarPage({
         extraParams={{ q: q || undefined }}
       />
       {!columns.length ? (
-        <Text c="dimmed">
-          {q
-            ? 'Không tìm thấy villa'
-            : 'Chưa có căn ACTIVE. Tạo căn ở chế độ Nâng cao.'}
-        </Text>
+        q ? (
+          <Text c="dimmed">Không tìm thấy villa</Text>
+        ) : (
+          <EmptyState
+            title="Chưa có căn ACTIVE"
+            description="Tạo listing để hiện trên lịch và gửi duyệt lên sàn."
+            actionLabel="Thêm căn"
+            href="/owner/assets/new"
+          />
+        )
       ) : (
         <NightBoardGrid
           role="OWNER"
