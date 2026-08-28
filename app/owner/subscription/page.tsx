@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { PageHeader } from '@/components/ui/PageHeader';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 import { SubscriptionPlanPicker } from '@/components/subscription/SubscriptionPlanPicker';
 import { Paper, Text, Stack } from '@mantine/core';
 import { colors, radius } from '@/config/design-tokens';
@@ -78,6 +79,7 @@ export default async function OwnerSubscriptionPage() {
           initialPending={pending}
           gatewayEnabled={gatewayEnabled}
         />
+        <LogoutButton />
       </Stack>
     </>
   );
