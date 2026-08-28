@@ -54,6 +54,33 @@ function safeNextPath(next: string): string | null {
   return next;
 }
 
+const REMEMBER_KEY = 'vbnb.login.identifier';
+
+function readRememberedIdentifier(): string | null {
+  try {
+    const saved = localStorage.getItem(REMEMBER_KEY)?.trim();
+    return saved || null;
+  } catch {
+    return null;
+  }
+}
+
+function persistRememberedIdentifier(value: string) {
+  try {
+    localStorage.setItem(REMEMBER_KEY, value.trim());
+  } catch {
+    // Private mode may block localStorage.
+  }
+}
+
+function clearRememberedIdentifier() {
+  try {
+    localStorage.removeItem(REMEMBER_KEY);
+  } catch {
+    // ignore
+  }
+}
+
 export function LoginForm() {
   const search = useSearchParams();
   const next = search.get('next') || '';
@@ -70,6 +97,7 @@ export function LoginForm() {
   const [password2, setPassword2] = useState('');
   const [fullName, setFullName] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [rememberAccount, setRememberAccount] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
 
@@ -82,7 +110,14 @@ export function LoginForm() {
 
     const modeParam = search.get('mode');
     const roleParam = search.get('role');
-    if (modeParam !== 'register') return;
+    if (modeParam !== 'register') {
+      const saved = readRememberedIdentifier();
+      if (saved) {
+        setIdentifier(saved);
+        setRememberAccount(true);
+      }
+      return;
+    }
 
     setMode('register');
     setPhone('');
@@ -124,11 +159,21 @@ export function LoginForm() {
     setPhone('');
     setCode('');
     setEmail('');
-    setIdentifier('');
     setPassword('');
     setPassword2('');
     setFullName('');
     setAcceptedTerms(false);
+
+    if (m === 'login') {
+      const saved = readRememberedIdentifier();
+      if (saved) {
+        setIdentifier(saved);
+        setRememberAccount(true);
+        return;
+      }
+    }
+    setIdentifier('');
+    setRememberAccount(false);
   }
 
   async function sendOtp() {
@@ -217,6 +262,8 @@ export function LoginForm() {
         setMessage(json.error.message);
         return;
       }
+      if (rememberAccount) persistRememberedIdentifier(identifier);
+      else clearRememberedIdentifier();
       redirectByRole(json.data.role);
     } finally {
       setLoading(false);
@@ -303,13 +350,24 @@ export function LoginForm() {
             <TextInput
               label="Email hoặc số điện thoại"
               value={identifier}
+              autoComplete="username"
               onChange={(e) => setIdentifier(e.currentTarget.value)}
               placeholder="email@... hoặc +84..."
             />
             <PasswordInput
               label="Mật khẩu"
               value={password}
+              autoComplete="current-password"
               onChange={(e) => setPassword(e.currentTarget.value)}
+            />
+            <Checkbox
+              checked={rememberAccount}
+              onChange={(e) => {
+                const checked = e.currentTarget.checked;
+                setRememberAccount(checked);
+                if (!checked) clearRememberedIdentifier();
+              }}
+              label="Lưu tài khoản"
             />
             <Button
               color="vbnbGreen"
