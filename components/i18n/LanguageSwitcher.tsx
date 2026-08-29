@@ -29,7 +29,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
           size={compact ? 'xs' : 'sm'}
           fw={active ? 700 : 500}
           c={active ? colors.primaryDark : colors.textMuted}
-          td={active ? undefined : 'underline'}
+          td={active ? 'underline' : undefined}
           style={{ textUnderlineOffset: 3 }}
         >
           {label}
