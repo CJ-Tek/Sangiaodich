@@ -10,19 +10,19 @@ import {
   UnstyledButton,
 } from '@mantine/core';
 import { useDisclosure, useWindowScroll } from '@mantine/hooks';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { colors, motion } from '@/config/design-tokens';
-import { landingContainer } from '@/components/landing/landing-media';
+import { useTranslations } from 'next-intl';
+import { colors, motion, zIndex } from '@/config/design-tokens';
 import { goToLandingSection } from '@/components/landing/landing-nav';
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import { Link, usePathname } from '@/lib/i18n/navigation';
 import { LinkButton } from '@/components/ui/LinkButton';
 
-const nav = [
-  { label: 'Khám phá villas', href: '/marketplace' },
-  { label: 'Dành cho Chủ villa', href: '/#owner' },
-  { label: 'Dành cho Sale', href: '/#sale' },
-  { label: 'Bảng giá', href: '/#pricing' },
-  { label: 'Về chúng tôi', href: '/#how' },
+const navItems = [
+  { labelKey: 'exploreVillas' as const, href: '/marketplace' },
+  { labelKey: 'forOwners' as const, href: '/#owner' },
+  { labelKey: 'forSales' as const, href: '/#sale' },
+  { labelKey: 'pricing' as const, href: '/#pricing' },
+  { labelKey: 'aboutUs' as const, href: '/#how' },
 ];
 
 export function LandingHeader({
@@ -35,6 +35,8 @@ export function LandingHeader({
   solid?: boolean;
 }) {
   const pathname = usePathname();
+  const tNav = useTranslations('nav');
+  const tCommon = useTranslations('common');
   const [{ y }] = useWindowScroll();
   const scrolled = solid || y > 12;
   const [opened, { toggle, close }] = useDisclosure(false);
@@ -62,7 +64,7 @@ export function LandingHeader({
       style={{
         position: 'sticky',
         top: 0,
-        zIndex: 100,
+        zIndex: zIndex.sticky,
         height: 64,
         background: scrolled ? 'rgba(250, 250, 248, 0.94)' : 'transparent',
         borderBottom: scrolled ? `1px solid ${colors.border}` : '1px solid transparent',
@@ -70,19 +72,19 @@ export function LandingHeader({
         transition: `background ${motion.normal}ms ${motion.easing}, border-color ${motion.normal}ms ${motion.easing}`,
       }}
     >
-      <Group h="100%" justify="space-between" wrap="nowrap" style={landingContainer}>
-        <UnstyledButton component={Link} href="/" aria-label="VBNB trang chủ">
+      <Group h="100%" justify="space-between" wrap="nowrap" className="vbnb-landing-container">
+        <UnstyledButton component={Link} href="/" aria-label={tCommon('homeAriaLabel')}>
           <Text fw={700} c="vbnbGreen.6" style={{ letterSpacing: '-0.04em', fontSize: 22 }}>
-            VBNB
+            {tCommon('appName')}
           </Text>
         </UnstyledButton>
 
         <Group gap={22} visibleFrom="md">
-          {nav.map((item) => {
+          {navItems.map((item) => {
             const active = isActive(item.href);
             return (
               <UnstyledButton
-                key={item.label}
+                key={item.labelKey}
                 component={Link}
                 href={item.href}
                 onClick={(event) => onNavClick(event, item.href)}
@@ -95,7 +97,7 @@ export function LandingHeader({
                     transition: `color ${motion.fast}ms ${motion.easing}`,
                   }}
                 >
-                  {item.label}
+                  {tNav(item.labelKey)}
                 </Text>
               </UnstyledButton>
             );
@@ -103,19 +105,20 @@ export function LandingHeader({
         </Group>
 
         <Group gap="sm" visibleFrom="md">
+          <LanguageSwitcher />
           {isLoggedIn ? (
             <LinkButton href={appHref} color="vbnbGreen" size="sm">
-              Vào app
+              {tCommon('enterApp')}
             </LinkButton>
           ) : (
             <>
               <UnstyledButton component={Link} href="/login">
                 <Text size="sm" fw={500} c={colors.textPrimary}>
-                  Đăng nhập
+                  {tCommon('login')}
                 </Text>
               </UnstyledButton>
               <LinkButton href="/login?mode=register" color="vbnbGreen" size="sm">
-                Bắt đầu ngay
+                {tCommon('getStarted')}
               </LinkButton>
             </>
           )}
@@ -127,7 +130,7 @@ export function LandingHeader({
           hiddenFrom="md"
           size="sm"
           color={colors.textPrimary}
-          aria-label="Mở menu"
+          aria-label={tCommon('openMenu')}
         />
       </Group>
 
@@ -139,37 +142,38 @@ export function LandingHeader({
         hiddenFrom="md"
         title={
           <Text fw={700} c="vbnbGreen.6">
-            VBNB
+            {tCommon('appName')}
           </Text>
         }
       >
         <Stack gap="lg" pt="md">
-          {nav.map((item) => {
+          {navItems.map((item) => {
             const active = isActive(item.href);
             return (
               <UnstyledButton
-                key={item.label}
+                key={item.labelKey}
                 component={Link}
                 href={item.href}
                 onClick={(event) => onNavClick(event, item.href)}
               >
                 <Text size="md" fw={active ? 600 : 500}>
-                  {item.label}
+                  {tNav(item.labelKey)}
                 </Text>
               </UnstyledButton>
             );
           })}
+          <LanguageSwitcher />
           {isLoggedIn ? (
             <LinkButton href={appHref} color="vbnbGreen">
-              Vào app
+              {tCommon('enterApp')}
             </LinkButton>
           ) : (
             <>
               <LinkButton href="/login" variant="default">
-                Đăng nhập
+                {tCommon('login')}
               </LinkButton>
               <LinkButton href="/login?mode=register" color="vbnbGreen">
-                Bắt đầu ngay
+                {tCommon('getStarted')}
               </LinkButton>
             </>
           )}

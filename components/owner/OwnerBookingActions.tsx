@@ -2,7 +2,8 @@
 
 import { Button, Checkbox, Group, Stack, Textarea, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/lib/i18n/navigation';
 import { useState } from 'react';
 
 export function OwnerBookingActions({
@@ -13,6 +14,7 @@ export function OwnerBookingActions({
   /** Simple mode skips the STK checkbox — owners check the bank app themselves. */
   requireStkCheck?: boolean;
 }) {
+  const t = useTranslations('owner.bookingActions');
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [reason, setReason] = useState('');
@@ -23,7 +25,7 @@ export function OwnerBookingActions({
     if (action === 'confirm' && requireStkCheck && !stkChecked) {
       notifications.show({
         color: 'yellow',
-        message: 'Hãy đối chiếu STK / mã CK trước khi xác nhận',
+        message: t('reconcileHint'),
       });
       return;
     }
@@ -42,16 +44,13 @@ export function OwnerBookingActions({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Lỗi',
+          message: json.error?.message || t('error'),
         });
         return;
       }
       notifications.show({
         color: 'vbnbGreen',
-        message:
-          action === 'confirm'
-            ? 'Đã xác nhận — lịch đã khóa'
-            : 'Đã từ chối — hoàn 100% cọc Guest',
+        message: action === 'confirm' ? t('confirmed') : t('rejected'),
       });
       router.refresh();
     } finally {
@@ -66,12 +65,11 @@ export function OwnerBookingActions({
           <Checkbox
             checked={stkChecked}
             onChange={(e) => setStkChecked(e.currentTarget.checked)}
-            label="Đã đối chiếu STK / mã CK từ Sale (tự check app NH)"
+            label={t('reconciled')}
             size="sm"
           />
           <Text size="xs" c="dimmed">
-            Confirm = bạn xác nhận đã nhận tiền — không dựa vào tick “đã CK” của
-            Sale.
+            {t('confirmNote')}
           </Text>
         </>
       ) : null}
@@ -83,7 +81,7 @@ export function OwnerBookingActions({
           disabled={requireStkCheck && !stkChecked}
           onClick={() => act('confirm')}
         >
-          Xác nhận (khóa lịch)
+          {t('confirm')}
         </Button>
         <Button
           size="xs"
@@ -92,17 +90,17 @@ export function OwnerBookingActions({
           loading={loading}
           onClick={() => setShowReject((v) => !v)}
         >
-          Từ chối
+          {t('reject')}
         </Button>
       </Group>
       {showReject ? (
         <Stack gap="xs">
           <Textarea
-            label="Lý do (tuỳ chọn)"
+            label={t('reasonOptional')}
             value={reason}
             onChange={(e) => setReason(e.currentTarget.value)}
             minRows={2}
-            placeholder="VD: Chưa nhận đủ tiền / trùng lịch cá nhân..."
+            placeholder={t('reasonPlaceholder')}
           />
           <Button
             size="xs"
@@ -110,7 +108,7 @@ export function OwnerBookingActions({
             loading={loading}
             onClick={() => act('reject')}
           >
-            Xác nhận từ chối
+            {t('confirmReject')}
           </Button>
         </Stack>
       ) : null}

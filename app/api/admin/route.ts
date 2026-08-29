@@ -3,7 +3,7 @@ import { getSessionProfile, writeAudit } from '@/lib/auth/session';
 import { createServiceClient } from '@/lib/supabase/server';
 import { fail, ok } from '@/lib/types';
 import { activateSubscription } from '@/lib/engines/subscription-activate';
-import { planDurationLabel } from '@/lib/engines/subscription-plans';
+import { planDurationLabel } from '@/lib/i18n/format';
 import {
   AdminUserError,
   hardDeleteUser,
@@ -11,8 +11,27 @@ import {
   restoreUser,
   softDeleteUser,
 } from '@/lib/engines/admin-user-management';
+import { getApiRouteContext } from '@/lib/i18n/api-route-context';
 
-function adminUserFail(e: unknown) {
+function adminUserMessage(
+  t: Awaited<ReturnType<typeof getApiRouteContext>>['t'],
+  e: AdminUserError
+): string {
+  if (e.code === 'NOT_ACTIVE') {
+    return t('ADMIN_USER.NOT_ACTIVE', { status: e.message });
+  }
+  const key = `ADMIN_USER.${e.code}` as const;
+  try {
+    return t(key);
+  } catch {
+    return e.message;
+  }
+}
+
+function adminUserFail(
+  t: Awaited<ReturnType<typeof getApiRouteContext>>['t'],
+  e: unknown
+) {
   if (e instanceof AdminUserError) {
     const status =
       e.code === 'HARD_DELETE_DISABLED' || e.code === 'SELF_DELETE'
@@ -20,12 +39,12 @@ function adminUserFail(e: unknown) {
         : e.code === 'NOT_FOUND'
           ? 404
           : 400;
-    return NextResponse.json(fail(e.code, e.message), { status });
+    return NextResponse.json(fail(e.code, adminUserMessage(t, e)), { status });
   }
   return NextResponse.json(
     fail(
       'UPDATE_FAILED',
-      e instanceof Error ? e.message : 'Admin user action failed'
+      e instanceof Error ? e.message : t('ADMIN_UPDATE_FAILED')
     ),
     { status: 500 }
   );
@@ -38,9 +57,12 @@ async function requireAdmin() {
 }
 
 export async function PATCH(request: Request) {
+  const { t, locale } = await getApiRouteContext();
   const adminProfile = await requireAdmin();
   if (!adminProfile) {
-    return NextResponse.json(fail('UNAUTHORIZED', 'Admin only'), { status: 401 });
+    return NextResponse.json(fail('UNAUTHORIZED', t('UNAUTHORIZED.adminOnly')), {
+      status: 401,
+    });
   }
 
   const body = await request.json();
@@ -51,7 +73,10 @@ export async function PATCH(request: Request) {
     const assetId = String(body.assetId || '');
     const status = String(body.status || '');
     if (!['ACTIVE', 'REJECTED', 'SUSPENDED', 'INACTIVE'].includes(status)) {
-      return NextResponse.json(fail('INVALID', 'Invalid status'), { status: 400 });
+      return NextResponse.json(
+        fail('INVALID', t('INVALID.invalidStatus')),
+        { status: 400 }
+      );
     }
     const { data, error } = await db
       .from('assets')
@@ -64,14 +89,15 @@ export async function PATCH(request: Request) {
       .select('*')
       .single();
     if (error) {
-      return NextResponse.json(fail('UPDATE_FAILED', error.message), { status: 500 });
+      return NextResponse.json(fail('UPDATE_FAILED', error.message), {
+        status: 500,
+      });
     }
     await writeAudit(adminProfile.id, 'review_asset', { assetId, status });
     return NextResponse.json(ok({ asset: data }));
   }
 
   if (action === 'update_fees') {
-    // Upsert: bảng singleton (id=1) có thể chưa có row nếu seed chưa chạy.
     const { data, error } = await db
       .from('platform_fee_settings')
       .upsert(
@@ -97,7 +123,9 @@ export async function PATCH(request: Request) {
       .select('*')
       .single();
     if (error) {
-      return NextResponse.json(fail('UPDATE_FAILED', error.message), { status: 500 });
+      return NextResponse.json(fail('UPDATE_FAILED', error.message), {
+        status: 500,
+      });
     }
     await writeAudit(adminProfile.id, 'update_fees', body);
     return NextResponse.json(ok({ fees: data }));
@@ -106,17 +134,19 @@ export async function PATCH(request: Request) {
   if (action === 'upsert_subscription_plan') {
     const id = String(body.id || '');
     if (!id) {
-      return NextResponse.json(fail('INVALID', 'id required'), { status: 400 });
+      return NextResponse.json(fail('INVALID', t('INVALID.idRequired')), {
+        status: 400,
+      });
     }
     const amount = Number(body.amount);
     if (!Number.isFinite(amount) || amount <= 0) {
-      return NextResponse.json(fail('INVALID', 'amount invalid'), {
+      return NextResponse.json(fail('INVALID', t('INVALID.amountInvalid')), {
         status: 400,
       });
     }
     const months = Number(body.months);
     const label =
-      String(body.label || '').trim() || planDurationLabel(months);
+      String(body.label || '').trim() || planDurationLabel(months, locale);
     const compareRaw = body.compareAtAmount;
     const compareAtAmount =
       compareRaw === null ||
@@ -129,16 +159,13 @@ export async function PATCH(request: Request) {
       (!Number.isFinite(compareAtAmount) || compareAtAmount <= 0)
     ) {
       return NextResponse.json(
-        fail('INVALID', 'compareAtAmount invalid'),
+        fail('INVALID', t('INVALID.compareAtAmountInvalid')),
         { status: 400 }
       );
     }
     if (compareAtAmount != null && compareAtAmount <= amount) {
       return NextResponse.json(
-        fail(
-          'INVALID',
-          'Giá gốc (so sánh) phải lớn hơn giá gói thanh toán'
-        ),
+        fail('INVALID', t('INVALID.compareAtMustExceedPrice')),
         { status: 400 }
       );
     }
@@ -174,7 +201,7 @@ export async function PATCH(request: Request) {
     const planId = String(body.planId || '');
     if (!profileId || !planId) {
       return NextResponse.json(
-        fail('INVALID', 'profileId and planId required'),
+        fail('INVALID', t('INVALID.profileIdAndPlanIdRequired')),
         { status: 400 }
       );
     }
@@ -185,7 +212,7 @@ export async function PATCH(request: Request) {
       .eq('id', planId)
       .maybeSingle();
     if (planErr || !plan || !plan.is_active) {
-      return NextResponse.json(fail('INVALID', 'Plan not found'), {
+      return NextResponse.json(fail('INVALID', t('INVALID.planNotFound')), {
         status: 400,
       });
     }
@@ -197,7 +224,7 @@ export async function PATCH(request: Request) {
       .maybeSingle();
     if (!target || target.role !== plan.role) {
       return NextResponse.json(
-        fail('INVALID', 'Plan role does not match user'),
+        fail('INVALID', t('INVALID.planRoleMismatch')),
         { status: 400 }
       );
     }
@@ -222,8 +249,8 @@ export async function PATCH(request: Request) {
     } catch (e) {
       return NextResponse.json(
         fail(
-          'UPDATE_FAILED',
-          e instanceof Error ? e.message : 'Activate failed'
+          'ACTIVATE_FAILED',
+          e instanceof Error ? e.message : t('ACTIVATE_FAILED')
         ),
         { status: 500 }
       );
@@ -245,7 +272,9 @@ export async function PATCH(request: Request) {
       .select('*')
       .single();
     if (error) {
-      return NextResponse.json(fail('UPDATE_FAILED', error.message), { status: 500 });
+      return NextResponse.json(fail('UPDATE_FAILED', error.message), {
+        status: 500,
+      });
     }
     await writeAudit(adminProfile.id, 'upsert_guest_tier', row);
     return NextResponse.json(ok({ tier: data }));
@@ -254,7 +283,7 @@ export async function PATCH(request: Request) {
   if (action === 'remove_subscription') {
     const profileId = String(body.profileId || '');
     if (!profileId) {
-      return NextResponse.json(fail('INVALID', 'profileId required'), {
+      return NextResponse.json(fail('INVALID', t('INVALID.profileIdRequired')), {
         status: 400,
       });
     }
@@ -265,14 +294,14 @@ export async function PATCH(request: Request) {
       });
       return NextResponse.json(ok({ subscription: result }));
     } catch (e) {
-      return adminUserFail(e);
+      return adminUserFail(t, e);
     }
   }
 
   if (action === 'soft_delete_user') {
     const profileId = String(body.profileId || '');
     if (!profileId) {
-      return NextResponse.json(fail('INVALID', 'profileId required'), {
+      return NextResponse.json(fail('INVALID', t('INVALID.profileIdRequired')), {
         status: 400,
       });
     }
@@ -284,14 +313,14 @@ export async function PATCH(request: Request) {
       });
       return NextResponse.json(ok({ user: result }));
     } catch (e) {
-      return adminUserFail(e);
+      return adminUserFail(t, e);
     }
   }
 
   if (action === 'restore_user') {
     const profileId = String(body.profileId || '');
     if (!profileId) {
-      return NextResponse.json(fail('INVALID', 'profileId required'), {
+      return NextResponse.json(fail('INVALID', t('INVALID.profileIdRequired')), {
         status: 400,
       });
     }
@@ -302,7 +331,7 @@ export async function PATCH(request: Request) {
       });
       return NextResponse.json(ok({ user: result }));
     } catch (e) {
-      return adminUserFail(e);
+      return adminUserFail(t, e);
     }
   }
 
@@ -313,11 +342,11 @@ export async function PATCH(request: Request) {
         profileId: String(body.profileId || ''),
       });
     } catch (e) {
-      return adminUserFail(e);
+      return adminUserFail(t, e);
     }
   }
 
-  return NextResponse.json(fail('INVALID_ACTION', 'Unknown action'), {
+  return NextResponse.json(fail('INVALID_ACTION', t('INVALID_ACTION')), {
     status: 400,
   });
 }

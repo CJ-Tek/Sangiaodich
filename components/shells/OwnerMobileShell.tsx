@@ -12,10 +12,11 @@ import {
   Box,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { Link, usePathname } from '@/lib/i18n/navigation';
 import { colors, radius } from '@/config/design-tokens';
 import { LogoutButton } from '@/components/auth/LogoutButton';
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import {
   IconCalendar,
   IconClipboard,
@@ -28,36 +29,8 @@ import {
 import type { UiMode } from '@/lib/engines/ui-mode';
 import { isSimpleUi } from '@/lib/engines/ui-mode';
 import type { ReactNode } from 'react';
-
-const expertDesktop = [
-  { label: 'Properties', href: '/owner' },
-  { label: 'Assets', href: '/owner/assets' },
-  { label: 'Chờ xác nhận', href: '/owner/pending' },
-  { label: 'Settlements', href: '/owner/bookings' },
-  { label: 'New asset', href: '/owner/assets/new' },
-  { label: 'Subscription', href: '/owner/subscription' },
-  { label: 'Profile', href: '/owner/profile' },
-];
-
-const simpleDesktop = [
-  { label: 'Lịch', href: '/owner/calendar' },
-  { label: 'Chờ xác nhận', href: '/owner/pending' },
-  { label: 'Phí sàn', href: '/owner/subscription' },
-];
-
-const expertMobile = [
-  { label: 'Home', href: '/owner', Icon: IconHome },
-  { label: 'Căn', href: '/owner/assets', Icon: IconStore },
-  { label: 'Chờ', href: '/owner/pending', Icon: IconInbox },
-  { label: 'Quyết toán', href: '/owner/bookings', Icon: IconClipboard },
-  { label: 'Tài khoản', href: '/owner/profile', Icon: IconUser },
-];
-
-const simpleMobile = [
-  { label: 'Lịch', href: '/owner/calendar', Icon: IconCalendar },
-  { label: 'Chờ xác nhận', href: '/owner/pending', Icon: IconInbox },
-  { label: 'Phí sàn', href: '/owner/subscription', Icon: IconSettings },
-];
+import { isNavItemActive } from '@/components/shells/nav-active';
+import { shellNavLinkClass } from '@/components/shells/shell-nav-link-styles';
 
 export function OwnerMobileShell({
   children,
@@ -68,16 +41,47 @@ export function OwnerMobileShell({
   uiMode?: UiMode;
   headerExtra?: ReactNode;
 }) {
+  const t = useTranslations('owner.nav');
+  const tShell = useTranslations('owner.shell');
   const pathname = usePathname();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const simple = isSimpleUi(uiMode);
+
+  const expertDesktop = [
+    { label: t('properties'), href: '/owner' },
+    { label: t('assets'), href: '/owner/assets' },
+    { label: t('pending'), href: '/owner/pending' },
+    { label: t('settlements'), href: '/owner/bookings' },
+    { label: t('subscription'), href: '/owner/subscription' },
+    { label: t('profile'), href: '/owner/profile' },
+  ];
+
+  const simpleDesktop = [
+    { label: t('calendar'), href: '/owner/calendar' },
+    { label: t('pending'), href: '/owner/pending' },
+    { label: t('platformFee'), href: '/owner/subscription' },
+  ];
+
+  const expertMobile = [
+    { label: t('home'), href: '/owner', Icon: IconHome },
+    { label: t('assetsShort'), href: '/owner/assets', Icon: IconStore },
+    { label: t('pendingShort'), href: '/owner/pending', Icon: IconInbox },
+    { label: t('settlementsShort'), href: '/owner/bookings', Icon: IconClipboard },
+    { label: t('account'), href: '/owner/profile', Icon: IconUser },
+  ];
+
+  const simpleMobile = [
+    { label: t('calendar'), href: '/owner/calendar', Icon: IconCalendar },
+    { label: t('pending'), href: '/owner/pending', Icon: IconInbox },
+    { label: t('platformFee'), href: '/owner/subscription', Icon: IconSettings },
+  ];
+
   const desktopItems = simple ? simpleDesktop : expertDesktop;
   const mobileItems = simple ? simpleMobile : expertMobile;
+  const navHrefs = desktopItems.map((item) => item.href);
 
   function isActive(href: string) {
-    const path = href.split('?')[0];
-    if (path === '/owner') return pathname === '/owner';
-    return pathname === path || pathname.startsWith(`${path}/`);
+    return isNavItemActive(pathname, href, navHrefs, ['/owner']);
   }
 
   if (isDesktop) {
@@ -90,19 +94,20 @@ export function OwnerMobileShell({
         <AppShell.Header>
           <Group h="100%" px="md" justify="space-between">
             <Group gap="sm">
-              <Title order={3} c="vbnbGreen.6" fw={600}>
+              <Title order={3} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
                 VBNB
               </Title>
               <Text size="sm" c="dimmed">
-                Owner
+                {tShell('roleLabel')}
               </Text>
             </Group>
             <Group gap="md">
+              <LanguageSwitcher compact />
               {headerExtra}
               {simple ? null : (
                 <UnstyledButton component={Link} href="/owner/profile">
                   <Text size="sm" c="dimmed">
-                    Tài khoản
+                    {tShell('account')}
                   </Text>
                 </UnstyledButton>
               )}
@@ -125,22 +130,11 @@ export function OwnerMobileShell({
                 return (
                   <NavLink
                     key={item.href}
+                    className={shellNavLinkClass}
                     component={Link}
                     href={item.href}
                     label={item.label}
                     active={active}
-                    styles={{
-                      root: {
-                        borderRadius: radius.md,
-                        backgroundColor: active
-                          ? colors.primarySoft
-                          : 'transparent',
-                        color: active
-                          ? colors.primaryDark
-                          : colors.textPrimary,
-                        fontWeight: active ? 600 : 500,
-                      },
-                    }}
                   />
                 );
               })}
@@ -162,10 +156,13 @@ export function OwnerMobileShell({
     <AppShell header={{ height: 56 }} footer={{ height: 64 }} padding="md">
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
-          <Title order={4} c="vbnbGreen.6" fw={600}>
+          <Title order={4} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
             VBNB
           </Title>
-          <Group gap="md">{headerExtra}</Group>
+          <Group gap="md">
+            <LanguageSwitcher compact />
+            {headerExtra}
+          </Group>
         </Group>
       </AppShell.Header>
 

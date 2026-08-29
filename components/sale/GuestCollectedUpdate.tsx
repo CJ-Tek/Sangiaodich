@@ -2,11 +2,13 @@
 
 import { Button, Group, NumberInput, Paper, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/lib/i18n/navigation';
 import { useState } from 'react';
 import { colors, radius } from '@/config/design-tokens';
 import { BookingTransferMemo } from '@/components/sale/BookingTransferMemo';
 import { minDepositToConfirm } from '@/lib/engines/pricing';
+import { useFormat } from '@/lib/i18n/use-format';
 
 /** Cập nhật amount_collected Guest — đặt cạnh CK Owner, tách khỏi Check-in/Cancel. */
 export function GuestCollectedUpdate({
@@ -18,6 +20,8 @@ export function GuestCollectedUpdate({
   listPrice: number;
   amountCollected: number;
 }) {
+  const t = useTranslations('sale.guestCollected');
+  const { formatNumber } = useFormat();
   const router = useRouter();
   const collected = Number(amountCollected || 0);
   const left = Math.max(0, listPrice - collected);
@@ -43,13 +47,13 @@ export function GuestCollectedUpdate({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Không lưu được',
+          message: json.error?.message || t('saveFailed'),
         });
         return;
       }
       notifications.show({
         color: 'vbnbGreen',
-        message: 'Đã cập nhật số tiền thu',
+        message: t('saved'),
       });
       router.refresh();
     } finally {
@@ -68,62 +72,61 @@ export function GuestCollectedUpdate({
     >
       <Stack gap="sm">
         <Text size="xs" c="dimmed">
-          Thu từ khách
+          {t('label')}
         </Text>
         <BookingTransferMemo bookingId={bookingId} />
         {left <= 0 ? (
           <Text size="sm" fw={600} c="vbnbGreen.6">
-            Bạn đã thu đủ tiền
+            {t('paidFull')}
           </Text>
         ) : (
           <>
-        <Text size="sm" fw={600}>
-          Đã thu {collected.toLocaleString('vi-VN')}
-          <Text span c="dimmed" fw={400}>
-            {' '}
-            · còn {left.toLocaleString('vi-VN')}
-          </Text>
-        </Text>
-        <Group align="flex-end" gap="sm" wrap="wrap">
-          <NumberInput
-            label="Cập nhật đã thu"
-            value={settleAmount}
-            onChange={(v) => setSettleAmount(Number(v) || 0)}
-            min={collected}
-            max={listPrice}
-            thousandSeparator="."
-            decimalSeparator=","
-            w={200}
-          />
-        </Group>
-        <Group gap="xs">
-          <Button
-            size="xs"
-            variant={settleAmount === minDeposit ? 'filled' : 'light'}
-            color="vbnbGreen"
-            onClick={() => setSettleAmount(minDeposit)}
-          >
-            50% cọc
-          </Button>
-          <Button
-            size="xs"
-            variant={settleAmount === listPrice ? 'filled' : 'light'}
-            color="vbnbGreen"
-            onClick={() => setSettleAmount(listPrice)}
-          >
-            Đủ giá bán
-          </Button>
-          <Button
-            size="xs"
-            variant="light"
-            color="vbnbGreen"
-            loading={loading}
-            disabled={settleAmount < collected || settleAmount > listPrice}
-            onClick={() => save(settleAmount)}
-          >
-            Lưu đã thu
-          </Button>
-        </Group>
+            <Text size="sm" fw={600}>
+              {t('collectedLine', {
+                collected: formatNumber(collected),
+                left: formatNumber(left),
+              })}
+            </Text>
+            <Group align="flex-end" gap="sm" wrap="wrap">
+              <NumberInput
+                label={t('update')}
+                value={settleAmount}
+                onChange={(v) => setSettleAmount(Number(v) || 0)}
+                min={collected}
+                max={listPrice}
+                thousandSeparator="."
+                decimalSeparator=","
+                w={200}
+              />
+            </Group>
+            <Group gap="xs">
+              <Button
+                size="xs"
+                variant={settleAmount === minDeposit ? 'filled' : 'light'}
+                color="vbnbGreen"
+                onClick={() => setSettleAmount(minDeposit)}
+              >
+                {t('halfDeposit')}
+              </Button>
+              <Button
+                size="xs"
+                variant={settleAmount === listPrice ? 'filled' : 'light'}
+                color="vbnbGreen"
+                onClick={() => setSettleAmount(listPrice)}
+              >
+                {t('fullPrice')}
+              </Button>
+              <Button
+                size="xs"
+                variant="light"
+                color="vbnbGreen"
+                loading={loading}
+                disabled={settleAmount < collected || settleAmount > listPrice}
+                onClick={() => save(settleAmount)}
+              >
+                {t('save')}
+              </Button>
+            </Group>
           </>
         )}
       </Stack>

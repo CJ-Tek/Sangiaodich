@@ -1,11 +1,17 @@
+'use client';
+
 import { Box, Group, Stack, Text, Title } from '@mantine/core';
 import Image from 'next/image';
-import { colors } from '@/config/design-tokens';
-import { landingContainer, landingMedia } from '@/components/landing/landing-media';
+import { useTranslations } from 'next-intl';
+import { colors, spacing, typography } from '@/config/design-tokens';
+import { containerClassName, landingMedia } from '@/components/landing/landing-media';
 import { LinkButton } from '@/components/ui/LinkButton';
 import { VillaSearch } from '@/components/landing/VillaSearch';
 
 export function HeroSection() {
+  const t = useTranslations('landing.hero');
+  const bullets = t.raw('bullets') as string[];
+
   return (
     <Box
       component="section"
@@ -13,61 +19,39 @@ export function HeroSection() {
       style={{ position: 'relative', overflow: 'hidden' }}
     >
       <Box
-        className="vbnb-landing-hero"
+        className={`${containerClassName} vbnb-landing-hero`}
         style={{
-          ...landingContainer,
           position: 'relative',
-          paddingTop: 'clamp(24px, 5vw, 56px)',
-          paddingBottom: 8,
+          paddingTop: spacing['3xl'],
+          paddingBottom: spacing.sm,
         }}
       >
         <Stack
           gap="lg"
           maw={620}
           className="vbnb-landing-fade-up vbnb-landing-hero-copy"
-          style={{ position: 'relative', zIndex: 1, paddingBottom: 12 }}
+          style={{ position: 'relative', zIndex: 1, paddingBottom: spacing.md }}
         >
-          <Text
-            component="p"
-            fw={600}
-            c="vbnbGreen.6"
-            style={{
-              display: 'inline-flex',
-              alignSelf: 'flex-start',
-              fontSize: 11,
-              letterSpacing: '0.1em',
-              textTransform: 'uppercase',
-              background: colors.primarySoft,
-              borderRadius: 999,
-              padding: '6px 12px',
-              lineHeight: 1.4,
-            }}
-          >
-            Nền tảng thông minh kết nối chủ villa, sale & khách hàng
-          </Text>
+          <span className="vbnb-eyebrow">{t('badge')}</span>
 
           <Title
             id="landing-hero-title"
             order={1}
-            fw={700}
+            fw={typography.display.fontWeight}
             c={colors.textPrimary}
+            className="vbnb-text-balance"
             style={{
-              fontSize: 'clamp(1.9rem, 3.4vw, 3.4rem)',
-              lineHeight: 1.08,
-              letterSpacing: '-0.035em',
+              fontSize: typography.display.fontSize,
+              lineHeight: typography.display.lineHeight,
+              letterSpacing: typography.display.letterSpacing,
             }}
           >
-            Sàn giao dịch villa
+            {t('titleLine1')}
             <br />
-            thông minh kết nối
+            {t('titleLine2')}
             <br />
-            <Text
-              span
-              inherit
-              c="vbnbGreen.6"
-              style={{ fontSize: 'inherit', fontWeight: 'inherit' }}
-            >
-              Chủ villa, Sale & Khách hàng
+            <Text span inherit c="vbnbGreen.6">
+              {t('titleHighlight')}
             </Text>
           </Title>
 
@@ -76,22 +60,21 @@ export function HeroSection() {
             maw={520}
             style={{
               margin: 0,
-              paddingLeft: 18,
+              paddingLeft: spacing.lg,
               display: 'flex',
               flexDirection: 'column',
-              gap: 6,
+              gap: spacing.xs,
               color: colors.primary,
             }}
           >
-            {[
-              'Chủ villa kết nối được với nhiều sale, tăng lợi nhuận',
-              'Sale không cần tự tìm kiếm khách và chủ nhà',
-              'Khách hàng được hưởng dịch vụ tốt hơn từ sale có tâm',
-            ].map((line) => (
+            {bullets.map((line) => (
               <Text
                 key={line}
                 component="li"
-                style={{ fontSize: 16, lineHeight: 1.55 }}
+                style={{
+                  fontSize: typography.body.fontSize,
+                  lineHeight: typography.body.lineHeight,
+                }}
               >
                 <Text span c={colors.textSecondary} inherit>
                   {line}
@@ -102,7 +85,7 @@ export function HeroSection() {
 
           <Group gap="sm" className="vbnb-landing-hero-ctas">
             <LinkButton href="/marketplace" color="vbnbGreen" h={46} px={20} fw={600}>
-              Khám phá villas
+              {t('exploreCta')}
             </LinkButton>
             <LinkButton
               href="#how"
@@ -112,7 +95,7 @@ export function HeroSection() {
               fw={500}
               style={{ borderColor: colors.borderStrong, color: colors.textPrimary }}
             >
-              Tìm hiểu thêm
+              {t('learnMoreCta')}
             </LinkButton>
           </Group>
         </Stack>
@@ -120,7 +103,7 @@ export function HeroSection() {
         <Box className="vbnb-landing-hero-image vbnb-landing-fade-in">
           <Image
             src={landingMedia.hero}
-            alt="Villa hiện đại với hồ bơi"
+            alt={t('imageAlt')}
             fill
             priority
             sizes="(max-width: 767px) 100vw, 52vw"

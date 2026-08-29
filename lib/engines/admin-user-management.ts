@@ -219,13 +219,10 @@ export async function removeSubscription(input: {
     throw new AdminUserError('NOT_FOUND', 'User not found');
   }
   if (target.deleted_at) {
-    throw new AdminUserError('IN_TRASH', 'User đang trong trash');
+    throw new AdminUserError('IN_TRASH', 'IN_TRASH');
   }
   if (target.role !== 'OWNER' && target.role !== 'SALE') {
-    throw new AdminUserError(
-      'INVALID_ROLE',
-      'Chỉ gỡ subscription cho Owner/Sale'
-    );
+    throw new AdminUserError('INVALID_ROLE', 'INVALID_ROLE');
   }
 
   const { data: latest } = await admin
@@ -237,13 +234,10 @@ export async function removeSubscription(input: {
     .maybeSingle();
 
   if (!latest) {
-    throw new AdminUserError('NO_SUB', 'User chưa có subscription');
+    throw new AdminUserError('NO_SUB', 'NO_SUB');
   }
   if (latest.status !== 'ACTIVE') {
-    throw new AdminUserError(
-      'NOT_ACTIVE',
-      `Subscription hiện tại là ${latest.status}, không cần gỡ`
-    );
+    throw new AdminUserError('NOT_ACTIVE', latest.status);
   }
 
   const today = todayDateOnly();
@@ -282,10 +276,7 @@ export async function softDeleteUser(input: {
   reason?: string | null;
 }): Promise<{ id: string; deleted_at: string }> {
   if (input.actorId === input.profileId) {
-    throw new AdminUserError(
-      'SELF_DELETE',
-      'Không thể đưa chính tài khoản admin đang đăng nhập vào trash'
-    );
+    throw new AdminUserError('SELF_DELETE', 'SELF_DELETE');
   }
 
   const admin = createServiceClient();
@@ -299,7 +290,7 @@ export async function softDeleteUser(input: {
     throw new AdminUserError('NOT_FOUND', 'User not found');
   }
   if (target.deleted_at) {
-    throw new AdminUserError('ALREADY_TRASHED', 'User đã ở trong trash');
+    throw new AdminUserError('ALREADY_TRASHED', 'ALREADY_TRASHED');
   }
 
   const deletedAt = new Date().toISOString();
@@ -322,7 +313,7 @@ export async function softDeleteUser(input: {
     throw new AdminUserError('UPDATE_FAILED', error.message);
   }
   if (!updated?.deleted_at) {
-    throw new AdminUserError('RACE', 'Không thể soft delete (đã thay đổi)');
+    throw new AdminUserError('RACE_SOFT_DELETE', 'RACE_SOFT_DELETE');
   }
 
   if (target.role === 'OWNER') {
@@ -352,7 +343,7 @@ export async function restoreUser(input: {
     throw new AdminUserError('NOT_FOUND', 'User not found');
   }
   if (!target.deleted_at) {
-    throw new AdminUserError('NOT_IN_TRASH', 'User không nằm trong trash');
+    throw new AdminUserError('NOT_IN_TRASH', 'NOT_IN_TRASH');
   }
 
   const { data: updated, error } = await admin
@@ -372,7 +363,7 @@ export async function restoreUser(input: {
     throw new AdminUserError('UPDATE_FAILED', error.message);
   }
   if (!updated) {
-    throw new AdminUserError('RACE', 'Không thể restore (đã thay đổi)');
+    throw new AdminUserError('RACE_RESTORE', 'RACE_RESTORE');
   }
 
   await writeAudit(input.actorId, 'restore_user', {

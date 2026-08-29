@@ -2,10 +2,12 @@
 
 import { Button, Group, Textarea } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { useRouter } from '@/lib/i18n/navigation';
 
 export function AdminAssetActions({ assetId }: { assetId: string }) {
+  const t = useTranslations('admin.assets');
   const router = useRouter();
   const [reason, setReason] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,7 +24,10 @@ export function AdminAssetActions({ assetId }: { assetId: string }) {
       if (!json.success) {
         notifications.show({ color: 'red', message: json.error.message });
       } else {
-        notifications.show({ color: 'vbnbGreen', message: `Đã cập nhật ${status}` });
+        notifications.show({
+          color: 'vbnbGreen',
+          message: t('updatedStatus', { status }),
+        });
         router.refresh();
       }
     } finally {
@@ -33,20 +38,20 @@ export function AdminAssetActions({ assetId }: { assetId: string }) {
   return (
     <div>
       <Textarea
-        label="Lý do (reject/suspend)"
+        label={t('reasonLabel')}
         value={reason}
         onChange={(e) => setReason(e.currentTarget.value)}
         mb="sm"
       />
       <Group>
         <Button color="vbnbGreen" loading={loading} onClick={() => act('ACTIVE')}>
-          Duyệt
+          {t('approve')}
         </Button>
         <Button color="red" variant="light" loading={loading} onClick={() => act('REJECTED')}>
-          Từ chối
+          {t('reject')}
         </Button>
         <Button color="gray" variant="outline" loading={loading} onClick={() => act('SUSPENDED')}>
-          Suspend
+          {t('suspend')}
         </Button>
       </Group>
     </div>

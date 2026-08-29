@@ -1,6 +1,9 @@
+'use client';
+
 import { Box, Group, Stack, Text } from '@mantine/core';
-import { colors } from '@/config/design-tokens';
-import { landingContainer } from '@/components/landing/landing-media';
+import { useTranslations } from 'next-intl';
+import { colors, spacing, typography } from '@/config/design-tokens';
+import { containerClassName } from '@/components/landing/landing-media';
 
 const brands = [
   'DALAT WONDER',
@@ -12,34 +15,29 @@ const brands = [
 ];
 
 export function TrustStrip() {
+  const t = useTranslations('landing.trustStrip');
+
   return (
     <Box
       component="section"
-      aria-label="Đối tác tin tưởng"
-      style={{
-        ...landingContainer,
-        paddingTop: 'clamp(48px, 7vw, 80px)',
-        paddingBottom: 'clamp(24px, 4vw, 40px)',
-      }}
+      aria-label={t('ariaLabel')}
+      className={containerClassName}
+      py={spacing['4xl']}
     >
       <Stack gap="lg" align="center">
-        <Text
-          ta="center"
-          size="sm"
-          c={colors.textMuted}
-          style={{ letterSpacing: '0.02em' }}
-        >
-          Được tin tưởng bởi chủ villa và sales chuyên nghiệp
+        <Text ta="center" size="sm" c={colors.textMuted} style={typography.label}>
+          {t('tagline')}
         </Text>
-        <Group justify="center" gap={28} wrap="wrap">
+        <Group justify="center" gap={spacing['2xl']} wrap="wrap">
           {brands.map((name) => (
             <Text
               key={name}
-              fw={600}
+              fw={typography.label.fontWeight}
               c={colors.textMuted}
               style={{
-                fontSize: 'clamp(12px, 1.4vw, 14px)',
-                letterSpacing: '0.08em',
+                fontSize: typography.label.fontSize,
+                letterSpacing: typography.label.letterSpacing,
+                textTransform: typography.label.textTransform,
                 opacity: 0.72,
               }}
             >

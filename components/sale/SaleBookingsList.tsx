@@ -13,6 +13,8 @@ import {
   Pagination,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { useTranslations } from 'next-intl';
+import { useFormat } from '@/lib/i18n/use-format';
 import { colors, radius } from '@/config/design-tokens';
 import { BookingStatusBadge } from '@/components/bookings/BookingStatusBadge';
 import { BookingActions } from '@/components/sale/BookingActions';
@@ -53,11 +55,17 @@ function ContactRow({
   name,
   phone,
   phoneLabel,
+  noPhoneLabel,
+  copyPhoneLabel,
+  copiedMessage,
 }: {
   label: string;
   name: string;
   phone: string;
   phoneLabel: string;
+  noPhoneLabel: string;
+  copyPhoneLabel: string;
+  copiedMessage: string;
 }) {
   return (
     <Group gap="sm" wrap="wrap" align="center">
@@ -68,26 +76,26 @@ function ContactRow({
         {name || '—'}
       </Text>
       <Text size="sm" c="dimmed" style={{ minWidth: 130 }}>
-        {phone || 'Chưa có SĐT'}
+        {phone || noPhoneLabel}
       </Text>
       {phone ? (
         <Button
           size="compact-xs"
           variant="default"
-          onClick={() => copyPhone(phoneLabel, phone)}
+          onClick={() => copyPhone(phoneLabel, phone, copiedMessage)}
         >
-          Copy SĐT
+          {copyPhoneLabel}
         </Button>
       ) : null}
     </Group>
   );
 }
 
-function copyPhone(label: string, phone: string) {
+function copyPhone(label: string, phone: string, copiedMessage: string) {
   void navigator.clipboard.writeText(phone);
   notifications.show({
     color: 'vbnbGreen',
-    message: `Đã copy SĐT ${label}`,
+    message: copiedMessage,
     autoClose: 1600,
   });
 }
@@ -105,6 +113,8 @@ export function SaleBookingsList({
   emptyDescription: string;
   simpleUi?: boolean;
 }) {
+  const t = useTranslations('sale.bookings');
+  const { formatNumber } = useFormat();
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(1);
 
@@ -140,21 +150,17 @@ export function SaleBookingsList({
   return (
     <Stack gap="md">
       <TextInput
-        label="Tìm kiếm"
-        placeholder="Mã CK VBNB…, tên villa, khách, SĐT..."
+        label={t('searchLabel')}
+        placeholder={t('searchPlaceholder')}
         value={query}
         onChange={(e) => setQuery(e.currentTarget.value)}
         style={{ maxWidth: 420 }}
       />
       {!filtered.length ? (
         <EmptyState
-          title={q ? 'Không tìm thấy booking' : emptyTitle}
-          description={
-            q
-              ? 'Thử tên villa, tên khách, hoặc SĐT (0 hoặc 84) khác.'
-              : emptyDescription
-          }
-          actionLabel={q ? undefined : 'Explore marketplace'}
+          title={q ? t('notFound') : emptyTitle}
+          description={q ? t('notFoundHint') : emptyDescription}
+          actionLabel={q ? undefined : t('exploreMarketplace')}
           href={q ? undefined : '/sale/marketplace'}
         />
       ) : (
@@ -195,16 +201,22 @@ export function SaleBookingsList({
                 <Stack gap={6}>
                   <Text fw={600}>{b.villaTitle}</Text>
                   <ContactRow
-                    label="Khách"
+                    label={t('guestLabel')}
                     name={b.guestName}
                     phone={b.guestPhone}
                     phoneLabel="khách"
+                    noPhoneLabel={t('noPhone')}
+                    copyPhoneLabel={t('copyPhone')}
+                    copiedMessage={t('copiedPhone', { label: 'khách' })}
                   />
                   <ContactRow
-                    label="Chủ nhà"
+                    label={t('ownerLabel')}
                     name={b.ownerName}
                     phone={b.ownerPhone}
                     phoneLabel="chủ nhà"
+                    noPhoneLabel={t('noPhone')}
+                    copyPhoneLabel={t('copyPhone')}
+                    copiedMessage={t('copiedPhone', { label: 'chủ nhà' })}
                   />
                   <Text size="sm" mt={2}>
                     {b.check_in} → {b.check_out}
@@ -215,41 +227,38 @@ export function SaleBookingsList({
               <Group gap="xl" mb="md">
                 <div>
                   <Text size="xs" c="dimmed">
-                    Giá bán
+                    {t('listPrice')}
                   </Text>
                   <Text size="sm" fw={600}>
-                    {b.list.toLocaleString('vi-VN')}
+                    {formatNumber(b.list)}
                   </Text>
                 </div>
                 <div>
                   <Text size="xs" c="dimmed">
-                    Tiền lời
+                    {t('margin')}
                   </Text>
                   <Text size="sm" fw={600} c="vbnbGreen.6">
-                    {b.margin.toLocaleString('vi-VN')}
+                    {formatNumber(b.margin)}
                   </Text>
                 </div>
                 <div>
                   <Text size="xs" c="dimmed">
-                    Giá gốc
+                    {t('floor')}
                   </Text>
                   <Text size="sm" c="dimmed">
-                    {b.floor.toLocaleString('vi-VN')}
+                    {formatNumber(b.floor)}
                   </Text>
                 </div>
               </Group>
               <Divider mb="md" color={colors.border} />
               {b.status === 'CANCELLED' ? (
                 <Text size="sm" c="dimmed">
-                  Hoàn{' '}
-                  {Number(b.refund_amount || 0).toLocaleString('vi-VN')}
-                  {' · '}
-                  giữ{' '}
-                  {Number(b.refund_kept_amount || 0).toLocaleString('vi-VN')}
-                  {b.refund_percent != null
-                    ? ` (${Number(b.refund_percent)}%)`
-                    : ''}
-                  {b.cancel_reason === 'GOODWILL' ? ' · goodwill' : ''}
+                  {t('refundLine', {
+                    refund: formatNumber(Number(b.refund_amount || 0)),
+                    kept: formatNumber(Number(b.refund_kept_amount || 0)),
+                    percent: Number(b.refund_percent ?? 0),
+                  })}
+                  {b.cancel_reason === 'GOODWILL' ? t('refundGoodwill') : ''}
                   {b.cancellation_policy
                     ? ` · ${b.cancellation_policy}`
                     : ''}

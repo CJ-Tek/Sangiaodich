@@ -2,7 +2,8 @@
 
 import { Box, Group, SimpleGrid, Stack, Text, Title } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/lib/i18n/navigation';
 import { useState } from 'react';
 import dayjs from 'dayjs';
 import { bookingStatusColors } from '@/config/booking-status';
@@ -26,6 +27,8 @@ export function OwnerNightEditor({
   assetId: string;
   board: AssetNightBoard;
 }) {
+  const t = useTranslations('owner.nightEditor');
+  const weekdays = t.raw('weekdays') as string[];
   const router = useRouter();
   const [viewMonth, setViewMonth] = useState(() => dayjs().startOf('month'));
   const [pending, setPending] = useState<string | null>(null);
@@ -43,14 +46,14 @@ export function OwnerNightEditor({
     if (status === 'locked') {
       notifications.show({
         color: 'red',
-        message: 'Đêm đã khóa booking — không đóng được',
+        message: t('locked'),
       });
       return;
     }
     if (status === 'hold') {
       notifications.show({
         color: 'yellow',
-        message: 'Đêm đang giữ chỗ — xác nhận hoặc từ chối ở Chờ xác nhận',
+        message: t('pending'),
       });
       return;
     }
@@ -69,7 +72,7 @@ export function OwnerNightEditor({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Không cập nhật được',
+          message: json.error?.message || t('updateFailed'),
         });
         return;
       }
@@ -83,7 +86,7 @@ export function OwnerNightEditor({
     <Stack gap="sm">
       <Group justify="space-between">
         <Title order={5} fw={600}>
-          Đêm đóng / mở
+          {t('title')}
         </Title>
         <Group gap="xs">
           <Text
@@ -108,11 +111,10 @@ export function OwnerNightEditor({
         </Group>
       </Group>
       <Text size="xs" c="dimmed">
-        Bấm ngày trống để đóng (không nhận khách). Bấm ngày xám để mở lại. Đỏ =
-        đã book.
+        {t('hint')}
       </Text>
       <SimpleGrid cols={7} spacing={6}>
-        {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((d) => (
+        {weekdays.map((d) => (
           <Text key={d} size="xs" ta="center" c="dimmed">
             {d}
           </Text>

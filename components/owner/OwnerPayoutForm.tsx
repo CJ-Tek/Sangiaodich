@@ -9,12 +9,12 @@ import {
   Text,
   TextInput,
   Textarea,
-  Paper,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/lib/i18n/navigation';
 import { useState } from 'react';
-import { colors, radius } from '@/config/design-tokens';
+import { SurfaceCard } from '@/components/ui/SurfaceCard';
 import { VietQrBankSelect } from '@/components/ui/VietQrBankSelect';
 import type { OwnerPayoutInfo } from '@/lib/owner/payout-info';
 
@@ -25,6 +25,7 @@ export function OwnerPayoutForm({
   initial: OwnerPayoutInfo;
   audience?: 'owner' | 'sale';
 }) {
+  const t = useTranslations('sale.payout');
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -50,12 +51,12 @@ export function OwnerPayoutForm({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Upload thất bại',
+          message: json.error?.message || t('uploadFailed'),
         });
         return;
       }
       setQrImageUrl(json.data.previewUrl as string);
-      notifications.show({ color: 'vbnbGreen', message: 'Đã tải QR lên' });
+      notifications.show({ color: 'vbnbGreen', message: t('qrUploaded') });
     } finally {
       setUploading(false);
     }
@@ -80,13 +81,13 @@ export function OwnerPayoutForm({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Không lưu được',
+          message: json.error?.message || t('saveFailed'),
         });
         return;
       }
       notifications.show({
         color: 'vbnbGreen',
-        message: 'Đã lưu tài khoản nhận tiền',
+        message: t('saved'),
       });
       router.refresh();
     } finally {
@@ -95,22 +96,16 @@ export function OwnerPayoutForm({
   }
 
   return (
-    <Paper
-      p="lg"
-      radius={radius.lg}
-      style={{ border: `1px solid ${colors.border}` }}
-    >
+    <SurfaceCard>
       <Stack gap="md">
         <div>
-          <Text fw={600}>Tài khoản nhận tiền</Text>
+          <Text fw={600}>{t('title')}</Text>
           <Text size="sm" c="dimmed" mt={4}>
-            {audience === 'sale'
-              ? 'Khách quét VietQR trên invoice (STK + mã NH) sẽ tự điền số tiền và mã CK. Ảnh QR tĩnh là dự phòng. Không hiện STK trên card booking.'
-              : 'Áp dụng cho mọi asset. Sale quét VietQR động (STK + mã NH) sẽ tự điền số tiền và nội dung CK; ảnh QR tĩnh là dự phòng.'}
+            {audience === 'sale' ? t('descSale') : t('descOwner')}
           </Text>
         </div>
         <TextInput
-          label="Ngân hàng"
+          label={t('bank')}
           value={bankName}
           onChange={(e) => setBankName(e.currentTarget.value)}
           placeholder="Vietcombank"
@@ -123,13 +118,13 @@ export function OwnerPayoutForm({
           }}
         />
         <TextInput
-          label="Chủ tài khoản"
+          label={t('accountName')}
           value={accountName}
           onChange={(e) => setAccountName(e.currentTarget.value)}
           placeholder="NGUYEN VAN A"
         />
         <TextInput
-          label="Số tài khoản"
+          label={t('accountNumber')}
           value={accountNumber}
           onChange={(e) => setAccountNumber(e.currentTarget.value)}
           placeholder="0123456789"
@@ -137,16 +132,15 @@ export function OwnerPayoutForm({
 
         <div>
           <Text size="sm" fw={500} mb={4}>
-            Ảnh QR tĩnh (tuỳ chọn)
+            {t('qrImage')}
           </Text>
           <Text size="xs" c="dimmed" mb={8}>
-            Upload từ app ngân hàng nếu chưa dùng VietQR động. JPG/PNG/WebP, tối
-            đa 3MB.
+            {t('qrHint')}
           </Text>
           {qrImageUrl ? (
             <Image
               src={qrImageUrl}
-              alt="QR nhận tiền"
+              alt={t('qrAlt')}
               maw={180}
               radius="md"
               mb="sm"
@@ -166,7 +160,7 @@ export function OwnerPayoutForm({
                   size="sm"
                   loading={uploading}
                 >
-                  Chọn ảnh QR
+                  {t('chooseQr')}
                 </Button>
               )}
             </FileButton>
@@ -177,23 +171,23 @@ export function OwnerPayoutForm({
                 size="sm"
                 onClick={() => setQrImageUrl('')}
               >
-                Xóa QR
+                {t('removeQr')}
               </Button>
             ) : null}
           </Group>
         </div>
 
         <Textarea
-          label={audience === 'sale' ? 'Ghi chú cho khách' : 'Ghi chú cho Sale'}
-          description="VD: CK trong giờ hành chính."
+          label={audience === 'sale' ? t('noteSale') : t('noteOwner')}
+          description={t('notePlaceholder')}
           value={note}
           onChange={(e) => setNote(e.currentTarget.value)}
           minRows={2}
         />
         <Button color="vbnbGreen" loading={loading} onClick={save}>
-          Lưu tài khoản nhận tiền
+          {t('save')}
         </Button>
       </Stack>
-    </Paper>
+    </SurfaceCard>
   );
 }

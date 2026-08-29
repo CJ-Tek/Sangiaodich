@@ -11,9 +11,11 @@ import {
   Paper,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/lib/i18n/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { colors, radius } from '@/config/design-tokens';
+import { useFormat } from '@/lib/i18n/use-format';
 import { BookingTransferMemo } from '@/components/sale/BookingTransferMemo';
 import { ownerTransferMemo } from '@/lib/engines/booking-search';
 import { saleOwnerPayoutSatisfied } from '@/lib/engines/guest-balance';
@@ -29,20 +31,14 @@ import {
   resolveOwnerVietQrBank,
 } from '@/lib/sepay/vietqr';
 
-function copyText(label: string, value: string) {
+function copyText(message: string, value: string) {
   void navigator.clipboard.writeText(value);
   notifications.show({
     color: 'vbnbGreen',
-    message: `Đã copy ${label}`,
+    message,
     autoClose: 1600,
   });
 }
-
-const STATUS_META = {
-  none: { label: 'Chưa CK Owner', color: 'red' as const },
-  partial: { label: 'CK một phần', color: 'yellow' as const },
-  full: { label: 'Đã CK đủ', color: 'vbnbGreen' as const },
-};
 
 type QrPreset = 'deposit' | 'remaining';
 
@@ -65,6 +61,8 @@ export function OwnerPayoutCard({
   payout: OwnerPayoutInfo;
   transferHint?: string;
 }) {
+  const t = useTranslations('sale.ownerPayout');
+  const { formatNumber } = useFormat();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const remaining = Math.max(0, ownerEarn - ownerPaid);
@@ -100,7 +98,12 @@ export function OwnerPayoutCard({
   }, [preset, ownerPaid, ownerEarn, qrChunk]);
 
   const status = ownerPayoutStatus({ ownerEarn, ownerPaid });
-  const meta = STATUS_META[status];
+  const statusMeta = {
+    none: { label: t('notPaid'), color: 'red' as const },
+    partial: { label: t('partial'), color: 'yellow' as const },
+    full: { label: t('paidFull'), color: 'vbnbGreen' as const },
+  };
+  const meta = statusMeta[status];
   const hasBank = hasOwnerPayoutInfo(payout);
 
   const hint = useMemo(
@@ -137,13 +140,13 @@ export function OwnerPayoutCard({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Không lưu được',
+          message: json.error?.message || t('saveFailed'),
         });
         return;
       }
       notifications.show({
         color: 'vbnbGreen',
-        message: 'Đã cập nhật CK Owner',
+        message: t('saved'),
       });
       router.refresh();
     } finally {
@@ -162,16 +165,14 @@ export function OwnerPayoutCard({
     >
       <Stack gap="sm">
         <Text size="xs" c="dimmed">
-          Chủ nhà / CK Owner
+          {t('title')}
         </Text>
 
         {dutyDone ? (
           <>
             <BookingTransferMemo bookingId={bookingId} transferHint={hint} />
             <Text size="sm" fw={600} c="vbnbGreen.6">
-              {remaining > 0
-                ? 'Đã CK đủ 50% giá gốc. Phần còn lại khách chuyển chủ nhà lúc check-in.'
-                : 'Bạn đã chuyển đủ tiền'}
+              {remaining > 0 ? t('paidHalfNote') : t('youPaidFull')}
             </Text>
           </>
         ) : (
@@ -189,7 +190,7 @@ export function OwnerPayoutCard({
                     disabled={!depositStillNeeded}
                     onClick={() => setPreset('deposit')}
                   >
-                    50% ({depositChunk.toLocaleString('vi-VN')})
+                    {t('halfChunk', { amount: formatNumber(depositChunk) })}
                   </Button>
                   <Button
                     size="xs"
@@ -197,20 +198,20 @@ export function OwnerPayoutCard({
                     variant={preset === 'remaining' ? 'filled' : 'light'}
                     onClick={() => setPreset('remaining')}
                   >
-                    Còn lại ({remaining.toLocaleString('vi-VN')})
+                    {t('remainingChunk', { amount: formatNumber(remaining) })}
                   </Button>
                 </Group>
 
                 {displayQrUrl ? (
                   <Image
                     src={displayQrUrl}
-                    alt="QR CK Owner"
+                    alt={t('qrTitle')}
                     maw={200}
                     radius="md"
                   />
                 ) : (
                   <Badge size="sm" variant="light" color="yellow">
-                    Chưa có QR
+                    {t('noQr')}
                   </Badge>
                 )}
 
@@ -228,9 +229,11 @@ export function OwnerPayoutCard({
                   <Button
                     size="xs"
                     variant="default"
-                    onClick={() => copyText('STK', payout.accountNumber)}
+                    onClick={() =>
+                      copyText(t('copied', { label: 'STK' }), payout.accountNumber)
+                    }
                   >
-                    Copy STK
+                    {t('copyAccount')}
                   </Button>
                 </Group>
 
@@ -243,7 +246,7 @@ export function OwnerPayoutCard({
             ) : (
               <Stack gap="sm">
                 <Badge size="sm" variant="light" color="yellow">
-                  Owner chưa cấu hình STK
+                  {t('noAccount')}
                 </Badge>
                 <BookingTransferMemo bookingId={bookingId} transferHint={hint} />
               </Stack>
@@ -252,33 +255,33 @@ export function OwnerPayoutCard({
             <Group gap="md" wrap="wrap">
               <div>
                 <Text size="xs" c="dimmed">
-                  Cần CK
+                  {t('needPay')}
                 </Text>
                 <Text size="sm" fw={600}>
-                  {ownerEarn.toLocaleString('vi-VN')}
+                  {formatNumber(ownerEarn)}
                 </Text>
               </div>
               <div>
                 <Text size="xs" c="dimmed">
-                  Đã CK
+                  {t('paid')}
                 </Text>
                 <Text size="sm" fw={600}>
-                  {ownerPaid.toLocaleString('vi-VN')}
+                  {formatNumber(ownerPaid)}
                 </Text>
               </div>
               <div>
                 <Text size="xs" c="dimmed">
-                  Còn lại
+                  {t('remaining')}
                 </Text>
                 <Text size="sm" fw={600} c="red">
-                  {remaining.toLocaleString('vi-VN')}
+                  {formatNumber(remaining)}
                 </Text>
               </div>
             </Group>
 
             <Stack gap="xs">
               <Text size="sm" fw={500}>
-                Tổng đã CK
+                {t('totalPaid')}
               </Text>
               <NumberInput
                 value={amount}
@@ -299,7 +302,7 @@ export function OwnerPayoutCard({
                   }
                   onClick={() => markPaid(amount)}
                 >
-                  Xác nhận CK
+                  {t('confirmPaid')}
                 </Button>
             </Stack>
           </>

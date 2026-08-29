@@ -1,111 +1,101 @@
-import { Box, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+'use client';
+
+import type { ReactNode } from 'react';
+import { Box, Group, SimpleGrid, Stack, Text, Title } from '@mantine/core';
 import Image from 'next/image';
-import { colors, radius, shadows } from '@/config/design-tokens';
-import { landingContainer, landingMedia } from '@/components/landing/landing-media';
+import { useTranslations } from 'next-intl';
+import { colors, radius, shadows, spacing, typography } from '@/config/design-tokens';
+import { containerClassName, landingMedia } from '@/components/landing/landing-media';
 import { LinkButton } from '@/components/ui/LinkButton';
+import { SurfaceCard } from '@/components/ui/SurfaceCard';
 import {
   IconNetwork,
   IconShield,
   IconTrend,
 } from '@/components/landing/LandingIcons';
 
-const features = [
-  {
-    title: 'Tiếp cận mạng lưới sale chất lượng',
-    body: 'Villa của bạn đến đúng người đang có khách — không cần tự chạy ads.',
-    Icon: IconNetwork,
-  },
-  {
-    title: 'Minh bạch & an toàn',
-    body: 'Giá vốn, lịch trống và đối soát rõ ràng. Guest không thấy giá trên sàn.',
-    Icon: IconShield,
-  },
-  {
-    title: 'Tăng booking, tăng doanh thu',
-    body: 'Ít thao tác vận hành hơn, nhiều đêm được lấp hơn.',
-    Icon: IconTrend,
-  },
-];
+const featureKeys = ['network', 'transparency', 'growth'] as const;
+const featureIcons = {
+  network: IconNetwork,
+  transparency: IconShield,
+  growth: IconTrend,
+} as const;
 
 export function OwnerFeatureSection() {
+  const t = useTranslations('landing.owner');
+
   return (
     <Box
       id="owner"
       component="section"
-      className="vbnb-landing-section"
+      className="vbnb-landing-section vbnb-landing-section--lg"
       aria-labelledby="owner-heading"
-      style={{
-        ...landingContainer,
-        paddingTop: 'clamp(64px, 10vw, 120px)',
-        paddingBottom: 'clamp(64px, 10vw, 120px)',
-      }}
     >
-      <SimpleGrid cols={{ base: 1, md: 2 }} spacing={{ base: 40, md: 56 }} style={{ alignItems: 'center' }}>
-        <Box style={{ position: 'relative' }}>
+      <SimpleGrid
+        cols={{ base: 1, md: 2 }}
+        spacing={{ base: spacing['4xl'], md: spacing['5xl'] }}
+        className={containerClassName}
+        style={{ alignItems: 'center' }}
+      >
+        <Box pos="relative">
           <Box
-            style={{
-              position: 'relative',
-              aspectRatio: '4 / 5',
-              maxHeight: 560,
-              borderRadius: radius.xl,
-              overflow: 'hidden',
-            }}
+            pos="relative"
+            mih={0}
+            mah={560}
+            style={{ aspectRatio: '4 / 5', borderRadius: radius.xl, overflow: 'hidden' }}
           >
             <Image
               src={landingMedia.owner}
-              alt="Không gian nội thất villa"
+              alt={t('imageAlt')}
               fill
               sizes="(max-width: 768px) 100vw, 48vw"
               style={{ objectFit: 'cover' }}
             />
           </Box>
-          <Box
+          <SurfaceCard
+            p="md"
             style={{
               position: 'absolute',
-              left: 20,
-              bottom: 20,
+              left: spacing.xl,
+              bottom: spacing.xl,
               width: 'min(260px, 72%)',
-              background: colors.surface,
-              borderRadius: radius.lg,
               boxShadow: shadows.float,
-              border: `1px solid ${colors.border}`,
-              padding: 16,
             }}
           >
-            <Text size="sm" fw={600} mb={12}>
-              Hiệu suất villa của bạn
+            <Text size="sm" fw={600} mb="sm">
+              {t('statsTitle')}
             </Text>
-            <Box style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
+            <SimpleGrid cols={2} spacing="sm">
+              <Stack gap={2}>
                 <Text size="xs" c={colors.textMuted}>
-                  Booking
+                  {t('statsBooking')}
                 </Text>
-                <Text fw={700} fz={22}>
+                <Text fw={700} className="vbnb-tabular-nums" style={{ fontSize: typography.data.fontSize }}>
                   24
                 </Text>
                 <Text size="xs" c="vbnbGreen.6" fw={600}>
                   ↑ 10%
                 </Text>
-              </div>
-              <div>
+              </Stack>
+              <Stack gap={2}>
                 <Text size="xs" c={colors.textMuted}>
-                  Doanh thu
+                  {t('statsRevenue')}
                 </Text>
-                <Text fw={700} fz={22}>
+                <Text fw={700} className="vbnb-tabular-nums" style={{ fontSize: typography.data.fontSize }}>
                   96.5M
                 </Text>
                 <Text size="xs" c="vbnbGreen.6" fw={600}>
                   ↑ 14%
                 </Text>
-              </div>
-            </Box>
+              </Stack>
+            </SimpleGrid>
             <svg
               width="100%"
               height="36"
               viewBox="0 0 220 36"
               fill="none"
               aria-hidden
-              style={{ marginTop: 10 }}
+              style={{ marginTop: spacing.sm }}
             >
               <path
                 d="M0 28 C20 26 30 22 50 20 C70 18 80 10 110 12 C140 14 150 8 180 6 C200 5 210 4 220 3"
@@ -113,63 +103,49 @@ export function OwnerFeatureSection() {
                 strokeWidth="1.8"
               />
             </svg>
-          </Box>
+          </SurfaceCard>
         </Box>
 
         <Stack gap="lg">
-          <div>
-            <Text
-              fw={600}
-              c="vbnbGreen.6"
-              mb={10}
-              style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-            >
-              Dành cho Chủ villa
-            </Text>
+          <Stack gap="sm">
+            <span className="vbnb-eyebrow">{t('eyebrow')}</span>
             <Title
               id="owner-heading"
               order={2}
-              fw={700}
+              fw={typography.title.fontWeight}
+              className="vbnb-text-balance"
               style={{
-                fontSize: 'clamp(1.75rem, 3.4vw, 2.6rem)',
-                letterSpacing: '-0.03em',
-                lineHeight: 1.12,
+                fontSize: typography.title.fontSize,
+                letterSpacing: typography.title.letterSpacing,
+                lineHeight: typography.title.lineHeight,
+                color: colors.textPrimary,
               }}
             >
-              Hiển thị nhiều hơn.
+              {t('titleLine1')}
               <br />
-              Booking nhiều hơn. Ít nỗ lực hơn.
+              {t('titleLine2')}
             </Title>
-          </div>
+          </Stack>
 
           <Stack gap="md">
-            {features.map((item) => (
-              <Box key={item.title} style={{ display: 'flex', gap: 14 }}>
-                <Box
-                  style={{
-                    width: 40,
-                    height: 40,
-                    flexShrink: 0,
-                    borderRadius: radius.md,
-                    background: '#F0F3EC',
-                    color: colors.primaryDark,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <item.Icon size={18} />
-                </Box>
-                <div>
-                  <Text fw={600} size="sm" mb={4}>
-                    {item.title}
-                  </Text>
-                  <Text size="sm" c={colors.textSecondary} style={{ lineHeight: 1.6 }}>
-                    {item.body}
-                  </Text>
-                </div>
-              </Box>
-            ))}
+            {featureKeys.map((key) => {
+              const Icon = featureIcons[key];
+              return (
+                <Group key={key} gap="md" align="flex-start" wrap="nowrap">
+                  <FeatureIcon>
+                    <Icon size={18} />
+                  </FeatureIcon>
+                  <div>
+                    <Text fw={600} size="sm" mb={4}>
+                      {t(`features.${key}.title`)}
+                    </Text>
+                    <Text size="sm" c={colors.textSecondary} style={{ lineHeight: typography.body.lineHeight }}>
+                      {t(`features.${key}.body`)}
+                    </Text>
+                  </div>
+                </Group>
+              );
+            })}
           </Stack>
 
           <LinkButton
@@ -180,10 +156,30 @@ export function OwnerFeatureSection() {
             fw={600}
             w={{ base: '100%', sm: 'auto' }}
           >
-            Đăng villa ngay
+            {t('cta')}
           </LinkButton>
         </Stack>
       </SimpleGrid>
+    </Box>
+  );
+}
+
+function FeatureIcon({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      style={{
+        width: 40,
+        height: 40,
+        flexShrink: 0,
+        borderRadius: radius.md,
+        background: colors.primarySoft,
+        color: colors.primaryDark,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {children}
     </Box>
   );
 }

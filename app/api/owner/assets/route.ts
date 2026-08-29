@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { createServiceClient } from '@/lib/supabase/server';
 import {
-  DRAFT_LIMIT_MESSAGE,
   filterValidAssetTags,
   isPropertyType,
   MAX_ASSET_IMAGES,
@@ -12,31 +11,16 @@ import {
 } from '@/config/asset-tags';
 import { parseOwnerDiscountRules } from '@/lib/engines/membership';
 import { replaceAssetDiscountRules } from '@/lib/engines/sale-pricing';
+import { getApiRouteContext } from '@/lib/i18n/api-route-context';
+import { translateEngineError } from '@/lib/i18n/engine-error';
 import { fail, ok } from '@/lib/types';
-
-function discountRuleErrorMessage(code: string): string {
-  switch (code) {
-    case 'INVALID_DISCOUNT_PERCENT':
-      return '% chiết khấu phải từ 0 đến 100';
-    case 'INVALID_DISCOUNT_THRESHOLD':
-      return 'Mốc lần không hợp lệ';
-    case 'DUPLICATE_DISCOUNT_THRESHOLD':
-      return 'Trùng mốc lần';
-    case 'TOO_MANY_DISCOUNT_RULES':
-      return 'Quá nhiều mốc chiết khấu';
-    case 'INVALID_DISCOUNT_RULES':
-      return 'Danh sách chiết khấu không hợp lệ';
-    default:
-      return code;
-  }
-}
 
 async function saveDiscountRules(
   assetId: string,
   raw: unknown
 ): Promise<string | null> {
   const parsed = parseOwnerDiscountRules(raw ?? []);
-  if ('error' in parsed) return discountRuleErrorMessage(parsed.error);
+  if ('error' in parsed) return parsed.error;
   const saved = await replaceAssetDiscountRules(assetId, parsed.rules);
   return saved.error ?? null;
 }
@@ -68,15 +52,16 @@ function parseImages(body: unknown): string[] {
 }
 
 export async function POST(request: Request) {
+  const { t } = await getApiRouteContext();
   const profile = await getSessionProfile();
   if (!profile || profile.role !== 'OWNER') {
-    return NextResponse.json(fail('UNAUTHORIZED', 'Owner only'), { status: 401 });
+    return NextResponse.json(fail('UNAUTHORIZED', t('UNAUTHORIZED.ownerOnly')), { status: 401 });
   }
 
   const body = await request.json();
   const title = String(body.title || '').trim();
   if (!title) {
-    return NextResponse.json(fail('INVALID', 'Title required'), { status: 400 });
+    return NextResponse.json(fail('INVALID', t('INVALID.titleRequired')), { status: 400 });
   }
 
   const propertyType = isPropertyType(body.propertyType)
@@ -84,7 +69,7 @@ export async function POST(request: Request) {
     : null;
   if (!propertyType) {
     return NextResponse.json(
-      fail('INVALID', 'Chọn loại hình: Villa hoặc Căn hộ'),
+      fail('INVALID', t('INVALID.propertyTypeRequired')),
       { status: 400 }
     );
   }
@@ -96,13 +81,13 @@ export async function POST(request: Request) {
   if (submit) {
     if (images.length < MIN_ASSET_IMAGES_FOR_REVIEW) {
       return NextResponse.json(
-        fail('INVALID', 'Cần ít nhất 1 ảnh khi nộp duyệt'),
+        fail('INVALID', t('INVALID.imagesRequiredForReview')),
         { status: 400 }
       );
     }
     if (tags.length < MIN_ASSET_TAGS) {
       return NextResponse.json(
-        fail('INVALID', 'Chọn ít nhất 1 tag khi nộp duyệt'),
+        fail('INVALID', t('INVALID.tagsRequiredForReview')),
         { status: 400 }
       );
     }
@@ -122,7 +107,7 @@ export async function POST(request: Request) {
       });
     }
     if ((count ?? 0) >= MAX_OWNER_DRAFT_ASSETS) {
-      return NextResponse.json(fail('DRAFT_LIMIT', DRAFT_LIMIT_MESSAGE), {
+      return NextResponse.json(fail('DRAFT_LIMIT', t('DRAFT_LIMIT')), {
         status: 400,
       });
     }
@@ -152,11 +137,11 @@ export async function POST(request: Request) {
 
   if (error || !asset) {
     if (error?.message?.includes('DRAFT_LIMIT')) {
-      return NextResponse.json(fail('DRAFT_LIMIT', DRAFT_LIMIT_MESSAGE), {
+      return NextResponse.json(fail('DRAFT_LIMIT', t('DRAFT_LIMIT')), {
         status: 400,
       });
     }
-    return NextResponse.json(fail('CREATE_FAILED', error?.message || 'Failed'), {
+    return NextResponse.json(fail('CREATE_FAILED', error?.message || t('CREATE_FAILED')), {
       status: 500,
     });
   }
@@ -179,16 +164,20 @@ export async function POST(request: Request) {
 
   const discountError = await saveDiscountRules(asset.id, body.discountRules);
   if (discountError) {
-    return NextResponse.json(fail('INVALID', discountError), { status: 400 });
+    return NextResponse.json(
+      fail('INVALID', translateEngineError(t, discountError)),
+      { status: 400 }
+    );
   }
 
   return NextResponse.json(ok({ asset }));
 }
 
 export async function PATCH(request: Request) {
+  const { t } = await getApiRouteContext();
   const profile = await getSessionProfile();
   if (!profile || profile.role !== 'OWNER') {
-    return NextResponse.json(fail('UNAUTHORIZED', 'Owner only'), { status: 401 });
+    return NextResponse.json(fail('UNAUTHORIZED', t('UNAUTHORIZED.ownerOnly')), { status: 401 });
   }
 
   const body = await request.json();
@@ -202,7 +191,7 @@ export async function PATCH(request: Request) {
     .maybeSingle();
 
   if (!existing || existing.owner_id !== profile.id) {
-    return NextResponse.json(fail('FORBIDDEN', 'Not your asset'), { status: 403 });
+    return NextResponse.json(fail('FORBIDDEN', t('FORBIDDEN.notYourAsset')), { status: 403 });
   }
 
   const submit = Boolean(body.submit);
@@ -223,7 +212,7 @@ export async function PATCH(request: Request) {
 
     if (imageCount < MIN_ASSET_IMAGES_FOR_REVIEW) {
       return NextResponse.json(
-        fail('INVALID', 'Cần ít nhất 1 ảnh khi nộp duyệt'),
+        fail('INVALID', t('INVALID.imagesRequiredForReview')),
         { status: 400 }
       );
     }
@@ -243,7 +232,7 @@ export async function PATCH(request: Request) {
 
     if (tagCount < MIN_ASSET_TAGS) {
       return NextResponse.json(
-        fail('INVALID', 'Chọn ít nhất 1 tag khi nộp duyệt'),
+        fail('INVALID', t('INVALID.tagsRequiredForReview')),
         { status: 400 }
       );
     }
@@ -269,7 +258,7 @@ export async function PATCH(request: Request) {
   if (body.propertyType !== undefined) {
     if (!isPropertyType(body.propertyType)) {
       return NextResponse.json(
-        fail('INVALID', 'Loại hình không hợp lệ'),
+        fail('INVALID', t('INVALID.invalidPropertyType')),
         { status: 400 }
       );
     }
@@ -326,7 +315,10 @@ export async function PATCH(request: Request) {
   if (body.discountRules !== undefined) {
     const discountError = await saveDiscountRules(assetId, body.discountRules);
     if (discountError) {
-      return NextResponse.json(fail('INVALID', discountError), { status: 400 });
+      return NextResponse.json(
+      fail('INVALID', translateEngineError(t, discountError)),
+      { status: 400 }
+    );
     }
   }
 

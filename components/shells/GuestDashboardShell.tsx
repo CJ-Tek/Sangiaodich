@@ -11,11 +11,13 @@ import {
   Title,
   UnstyledButton,
 } from '@mantine/core';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { Link, usePathname } from '@/lib/i18n/navigation';
 import { colors, radius } from '@/config/design-tokens';
+import { shellNavLinkClass } from '@/components/shells/shell-nav-link-styles';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { guestNav } from '@/components/shells/guest-nav';
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 
 /**
  * Chrome for a signed-in guest: sidebar on desktop, tab bar on mobile.
@@ -28,6 +30,8 @@ export function GuestDashboardShell({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const tNav = useTranslations('guest.nav');
+  const tShell = useTranslations('guest.shell');
 
   // Longest match wins, otherwise `/me` would light up on `/me/bookings` too.
   const activeHref = guestNav
@@ -48,19 +52,22 @@ export function GuestDashboardShell({
         <Group h="100%" px="md" justify="space-between">
           <Group gap="sm">
             <UnstyledButton component={Link} href="/me">
-              <Title order={3} c="vbnbGreen.6" fw={600}>
+              <Title order={3} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
                 VBNB
               </Title>
             </UnstyledButton>
             <Text size="sm" c="dimmed" visibleFrom="md">
-              Khách
+              {tShell('roleLabel')}
             </Text>
           </Group>
-          <UnstyledButton component={Link} href="/me/profile">
-            <Text size="sm" c="dimmed">
-              Tài khoản
-            </Text>
-          </UnstyledButton>
+          <Group gap="sm">
+            <LanguageSwitcher compact />
+            <UnstyledButton component={Link} href="/me/profile">
+              <Text size="sm" c="dimmed">
+                {tShell('account')}
+              </Text>
+            </UnstyledButton>
+          </Group>
         </Group>
       </AppShell.Header>
 
@@ -79,20 +86,11 @@ export function GuestDashboardShell({
               return (
                 <NavLink
                   key={item.href}
+                  className={shellNavLinkClass}
                   component={Link}
                   href={item.href}
-                  label={item.label}
+                  label={tNav(item.labelKey)}
                   active={active}
-                  styles={{
-                    root: {
-                      borderRadius: radius.md,
-                      backgroundColor: active
-                        ? colors.primarySoft
-                        : 'transparent',
-                      color: active ? colors.primaryDark : colors.textPrimary,
-                      fontWeight: active ? 600 : 500,
-                    },
-                  }}
                 />
               );
             })}
@@ -119,8 +117,8 @@ export function GuestDashboardShell({
                 key={item.href}
                 component={Link}
                 href={item.href}
-                title={item.label}
-                aria-label={item.label}
+                title={tNav(item.labelKey)}
+                aria-label={tNav(item.labelKey)}
                 style={{ textAlign: 'center', padding: 8, minHeight: 44 }}
               >
                 <Box

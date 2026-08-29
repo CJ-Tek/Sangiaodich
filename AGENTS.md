@@ -1,3 +1,4 @@
+run gitnexus after edits
 # VBNB — project state
 
 Hand-written section. Keep it above the generated blocks below: `next dev` and GitNexus
@@ -40,22 +41,23 @@ When writing a status note, name which of the three it is.
 
 ## Environments
 
-This project is **already deployed**. The local Supabase stack and the hosted Supabase
-project both exist — never conflate them.
+This project is **already deployed**. Local dev and production share **one hosted
+Supabase database** (`bidhzgcdlxjzsxhbxarl`). Vercel runs the production app; your
+machine runs Next.js locally against the same data.
 
-| | Local | Production |
+| | Local dev | Production |
 |---|---|---|
-| Database | Supabase CLI via `npm run local`, ports 54321+ (`supabase/config.toml`) | Hosted Supabase project |
+| Database | Hosted Supabase (via `.env.local`) | Same hosted Supabase project |
 | App | http://localhost:3000 | Vercel project `sangiaodich` |
-| Env vars | `.env.local`, generated (see below) | Vercel → Settings → Environment Variables |
+| Env vars | `.env.local` (you maintain — never auto-overwritten) | Vercel → Settings → Environment Variables |
 
-`.env.local` is **overwritten** with local Supabase keys every time `npm run local` runs
-(`scripts/run-local.ps1`). Never store hosted credentials there — they get wiped. Production
-values live only in Vercel.
+`npm run local` only starts Next.js. It **does not** start Docker or overwrite
+`.env.local`. Copy `.env.example` → `.env.local` once and keep hosted keys there.
+Vercel still needs the same Supabase URL/keys plus production-only secrets (SePay, KV, cron).
 
 Check live state instead of trusting anything written here:
 
-- `npm run db:status` — migrations already applied to production
+- `npm run db:status` — migrations applied to the hosted project
 - `vercel env ls` — env vars that exist in production
 - `git log origin/main..HEAD` — commits not yet deployed
 
@@ -78,10 +80,9 @@ The Supabase CLI is not linked on a fresh clone (`supabase/.temp/project-ref` is
 
 ## Never do
 
-- NEVER run `npm run db:reset` (or `supabase db reset`) against the hosted project — it drops
-  all data. Only `db:link`, `db:push`, and `db:status` touch production; every other `db:*`
-  script is local-only.
-- NEVER write production secrets into `.env.local` or any committed file.
+- NEVER run `npm run db:reset` (or `supabase db reset`) — it wipes the shared hosted
+  database. Only `db:link`, `db:push`, and `db:status` are safe for schema changes.
+- NEVER commit `.env.local` or put service-role keys in git.
 - NEVER treat a green Vercel build as a healthy release. A missing migration builds fine and
   then fails at runtime.
 
@@ -98,31 +99,30 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **Sangiaodich** (3021 symbols, 6708 relationships, 249 execution flows).
+This project is indexed by GitNexus as **Sangiaodich** (2158 symbols, 6106 relationships, 161 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
-> Index stale? Run `node .gitnexus/run.cjs analyze --index-only` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? Bootstrap with `npx`, `bunx`, or `pnpm dlx` — e.g. `bunx gitnexus@latest analyze` (npm 11 npx crash; #1939).
+> Index stale? Run `node .gitnexus/run.cjs analyze` from the project root — it auto-selects an available runner. No `.gitnexus/run.cjs` yet? `npx gitnexus analyze` (npm 11 crash → `npm i -g gitnexus`; #1939).
 
 ## Always Do
 
-- **MUST run impact analysis before editing.** Use `impact({target: "symbolName", direction: "upstream"})` (MCP) or `node .gitnexus/run.cjs impact "symbolName" --direction upstream --repo .` (CLI fallback); report callers, processes, and risk. Never substitute grep for graph analysis.
-- **MUST analyze graph changes before committing.** Use `detect_changes({scope: "all"})` (MCP) or `node .gitnexus/run.cjs detect-changes --scope all --repo .` (CLI fallback). `partial: true` or `truncated: true` is not a clean check — a zero means unseen, not unaffected; re-run it. For regression review: `detect_changes({scope: "compare", base_ref: "main"})` or `node .gitnexus/run.cjs detect-changes --scope compare --base-ref "main" --repo .`.
+- **MUST run impact analysis before editing any symbol.** Before modifying a function, class, or method, run `impact({target: "symbolName", direction: "upstream"})` and report the blast radius (direct callers, affected processes, risk level) to the user.
+- **MUST run `detect_changes()` before committing** to verify your changes only affect expected symbols and execution flows. For regression review, compare against the default branch: `detect_changes({scope: "compare", base_ref: "main"})`.
 - **MUST warn the user** if impact analysis returns HIGH or CRITICAL risk before proceeding with edits.
-- **MUST treat `risk: UNKNOWN` as unresolved, not as low.** An empty caller set is not evidence the symbol is unused — it can also mean the callers are not resolvable by the index (plain-object property access, dynamic dispatch, cross-language calls). `impact` pairs `UNKNOWN` with a `riskNote` saying so. Confirm with a text search before treating the symbol as safe to change or delete; do not proceed on the strength of a zero.
 - When exploring unfamiliar code, use `query({search_query: "concept"})` to find execution flows instead of grepping. It returns process-grouped results ranked by relevance.
 - When you need full context on a specific symbol — callers, callees, which execution flows it participates in — use `context({name: "symbolName"})`.
 - For security review, `explain({target: "fileOrSymbol"})` lists taint findings (source→sink flows; needs `analyze --pdg`).
 
 ## Never Do
 
-- NEVER edit a function, class, or method before MCP/CLI impact analysis.
-- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis, and never read `UNKNOWN` as an all-clear — it means the walk could not answer, which is the one verdict that requires confirming by other means.
+- NEVER edit a function, class, or method without first running `impact` on it.
+- NEVER ignore HIGH or CRITICAL risk warnings from impact analysis.
 - NEVER rename symbols with find-and-replace — use `rename` which understands the call graph.
-- NEVER commit before MCP/CLI graph change analysis.
+- NEVER commit changes without running `detect_changes()` to check affected scope.
 
 ## Resources
 
 | Resource | Use for |
-| --- | --- |
+|----------|---------|
 | `gitnexus://repo/Sangiaodich/context` | Codebase overview, check index freshness |
 | `gitnexus://repo/Sangiaodich/clusters` | All functional areas |
 | `gitnexus://repo/Sangiaodich/processes` | All execution flows |
@@ -131,12 +131,12 @@ This project is indexed by GitNexus as **Sangiaodich** (3021 symbols, 6708 relat
 ## CLI
 
 | Task | Read this skill file |
-| --- | --- |
-| Understand architecture / "How does X work?" | `.claude/skills/gitnexus-exploring/SKILL.md` |
-| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus-impact-analysis/SKILL.md` |
-| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus-debugging/SKILL.md` |
-| Rename / extract / split / refactor | `.claude/skills/gitnexus-refactoring/SKILL.md` |
-| Tools, resources, schema reference | `.claude/skills/gitnexus-guide/SKILL.md` |
-| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus-cli/SKILL.md` |
+|------|---------------------|
+| Understand architecture / "How does X work?" | `.claude/skills/gitnexus/gitnexus-exploring/SKILL.md` |
+| Blast radius / "What breaks if I change X?" | `.claude/skills/gitnexus/gitnexus-impact-analysis/SKILL.md` |
+| Trace bugs / "Why is X failing?" | `.claude/skills/gitnexus/gitnexus-debugging/SKILL.md` |
+| Rename / extract / split / refactor | `.claude/skills/gitnexus/gitnexus-refactoring/SKILL.md` |
+| Tools, resources, schema reference | `.claude/skills/gitnexus/gitnexus-guide/SKILL.md` |
+| Index, status, clean, wiki CLI commands | `.claude/skills/gitnexus/gitnexus-cli/SKILL.md` |
 
 <!-- gitnexus:end -->

@@ -11,7 +11,8 @@ import {
   Textarea,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/lib/i18n/navigation';
 import type { SaleRatingRecord } from '@/lib/engines/sale-ratings';
 
 export function OwnerSaleRatingForm({
@@ -21,6 +22,7 @@ export function OwnerSaleRatingForm({
   bookingId: string;
   rating: SaleRatingRecord | null;
 }) {
+  const t = useTranslations('owner.ratingForm');
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [scorePayment, setScorePayment] = useState(8);
@@ -46,19 +48,19 @@ export function OwnerSaleRatingForm({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Không lưu được đánh giá',
+          message: json.error?.message || t('saveFailed'),
         });
       } else {
         notifications.show({
           color: 'vbnbGreen',
-          message: 'Đã gửi đánh giá',
+          message: t('saved'),
         });
         router.refresh();
       }
     } catch {
       notifications.show({
         color: 'red',
-        message: 'Không kết nối được máy chủ. Thử lại.',
+        message: t('connectionFailed'),
       });
     } finally {
       setLoading(false);
@@ -70,15 +72,17 @@ export function OwnerSaleRatingForm({
       <Stack gap="xs" mt="md">
         <Group gap="xs">
           <Text size="sm" fw={600}>
-            Đánh giá Sale
+            {t('title')}
           </Text>
           <Badge color="gray" variant="light">
-            Đã khóa
+            {t('locked')}
           </Badge>
         </Group>
         <Text size="sm">
-          Thanh toán {rating.scorePayment} · Xử lý {rating.scoreHandling} · Giao
-          tiếp {rating.scoreCommunication} · TB {rating.overall}/10
+          {t('payment')} {rating.scorePayment} · {t('handling')}{' '}
+          {rating.scoreHandling} · {t('communication')}{' '}
+          {rating.scoreCommunication} ·{' '}
+          {t('overall', { score: rating.overall })}
         </Text>
         {rating.comment ? (
           <Text size="sm" c="dimmed">
@@ -86,7 +90,7 @@ export function OwnerSaleRatingForm({
           </Text>
         ) : null}
         <Text size="xs" c="dimmed">
-          Đã gửi — không sửa được.
+          {t('submittedLocked')}
         </Text>
       </Stack>
     );
@@ -96,15 +100,15 @@ export function OwnerSaleRatingForm({
     <Stack gap="sm" mt="md">
       <Group gap="xs">
         <Text size="sm" fw={600}>
-          Đánh giá Sale
+          {t('title')}
         </Text>
         <Badge color="yellow" variant="light">
-          Chưa đánh giá
+          {t('notRated')}
         </Badge>
       </Group>
       <Group grow align="flex-start">
         <NumberInput
-          label="Thanh toán đúng"
+          label={t('paymentLabel')}
           min={1}
           max={10}
           clampBehavior="strict"
@@ -112,7 +116,7 @@ export function OwnerSaleRatingForm({
           onChange={(v) => setScorePayment(Number(v) || 1)}
         />
         <NumberInput
-          label="Xử lý tình huống"
+          label={t('handlingLabel')}
           min={1}
           max={10}
           clampBehavior="strict"
@@ -120,7 +124,7 @@ export function OwnerSaleRatingForm({
           onChange={(v) => setScoreHandling(Number(v) || 1)}
         />
         <NumberInput
-          label="Giao tiếp"
+          label={t('communicationLabel')}
           min={1}
           max={10}
           clampBehavior="strict"
@@ -129,7 +133,7 @@ export function OwnerSaleRatingForm({
         />
       </Group>
       <Textarea
-        label="Nhận xét (công khai cho mọi Owner, kèm tên bạn)"
+        label={t('commentLabel')}
         minRows={2}
         value={comment}
         onChange={(e) => setComment(e.currentTarget.value)}
@@ -142,7 +146,7 @@ export function OwnerSaleRatingForm({
         loading={loading}
         onClick={save}
       >
-        Gửi đánh giá
+        {t('submit')}
       </Button>
     </Stack>
   );

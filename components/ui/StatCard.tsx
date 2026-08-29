@@ -1,5 +1,6 @@
-import { Paper, Text, Stack } from '@mantine/core';
-import { colors, radius, shadows } from '@/config/design-tokens';
+import { Text, Stack } from '@mantine/core';
+import { colors, typography } from '@/config/design-tokens';
+import { SurfaceCard } from '@/components/ui/SurfaceCard';
 import type { ReactNode } from 'react';
 
 export function StatCard({
@@ -16,31 +17,27 @@ export function StatCard({
   const isHero = emphasis === 'hero';
 
   return (
-    <Paper
-      p="lg"
-      radius={radius.lg}
-      style={{
-        border: `1px solid ${colors.border}`,
-        background: colors.surface,
-        boxShadow: shadows.card,
-        height: '100%',
-      }}
-    >
+    <SurfaceCard style={{ height: '100%' }}>
       <Stack gap={8}>
         <Text
-          size="sm"
-          fw={500}
-          style={{ color: colors.textSecondary, letterSpacing: '0.01em' }}
+          size="xs"
+          fw={600}
+          tt="uppercase"
+          style={{
+            color: colors.textSecondary,
+            letterSpacing: typography.label.letterSpacing,
+          }}
         >
           {label}
         </Text>
         <Text
           component="div"
           fw={600}
+          className="vbnb-tabular-nums"
           style={{
-            fontSize: isHero ? 36 : 28,
-            letterSpacing: '-0.03em',
-            lineHeight: 1.1,
+            fontSize: isHero ? typography.data.fontSize : '1.375rem',
+            letterSpacing: typography.data.letterSpacing,
+            lineHeight: typography.data.lineHeight,
             color: colors.textPrimary,
             wordBreak: 'break-word',
           }}
@@ -48,11 +45,11 @@ export function StatCard({
           {value}
         </Text>
         {hint ? (
-          <Text size="sm" style={{ color: colors.textMuted }}>
+          <Text size="xs" c="dimmed" style={{ lineHeight: 1.45 }}>
             {hint}
           </Text>
         ) : null}
       </Stack>
-    </Paper>
+    </SurfaceCard>
   );
 }

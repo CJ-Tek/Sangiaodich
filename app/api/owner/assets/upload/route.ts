@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { createServiceClient } from '@/lib/supabase/server';
 import { MAX_ASSET_IMAGES } from '@/config/asset-tags';
+import { getApiRouteContext } from '@/lib/i18n/api-route-context';
 import { fail, ok } from '@/lib/types';
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -13,11 +14,11 @@ function extForMime(mime: string): string {
   return 'jpg';
 }
 
-/** Owner: upload asset gallery images to public `asset-images` bucket. */
 export async function POST(request: Request) {
+  const { t } = await getApiRouteContext();
   const profile = await getSessionProfile();
   if (!profile || profile.role !== 'OWNER') {
-    return NextResponse.json(fail('UNAUTHORIZED', 'Owner only'), {
+    return NextResponse.json(fail('UNAUTHORIZED', t('UNAUTHORIZED.ownerOnly')), {
       status: 401,
     });
   }
@@ -27,21 +28,21 @@ export async function POST(request: Request) {
   const assetIdRaw = String(form.get('assetId') || '').trim();
 
   if (!(file instanceof File)) {
-    return NextResponse.json(fail('INVALID', 'Thiếu file'), { status: 400 });
+    return NextResponse.json(fail('INVALID', t('INVALID.missingFile')), {
+      status: 400,
+    });
   }
 
   if (!ALLOWED_MIME.has(file.type)) {
-    return NextResponse.json(
-      fail('INVALID', 'Chỉ chấp nhận JPG, PNG hoặc WebP'),
-      { status: 400 }
-    );
+    return NextResponse.json(fail('INVALID', t('INVALID.imageTypeOnly')), {
+      status: 400,
+    });
   }
 
   if (file.size > MAX_BYTES) {
-    return NextResponse.json(
-      fail('INVALID', 'File quá lớn (tối đa 5MB)'),
-      { status: 400 }
-    );
+    return NextResponse.json(fail('INVALID', t('INVALID.fileTooLarge5Mb')), {
+      status: 400,
+    });
   }
 
   const admin = createServiceClient();
@@ -55,7 +56,7 @@ export async function POST(request: Request) {
       .maybeSingle();
 
     if (!owned) {
-      return NextResponse.json(fail('FORBIDDEN', 'Not your asset'), {
+      return NextResponse.json(fail('FORBIDDEN', t('FORBIDDEN.notYourAsset')), {
         status: 403,
       });
     }
@@ -66,10 +67,7 @@ export async function POST(request: Request) {
       .eq('asset_id', assetIdRaw);
 
     if ((count ?? 0) >= MAX_ASSET_IMAGES) {
-      return NextResponse.json(
-        fail('LIMIT', `Tối đa ${MAX_ASSET_IMAGES} ảnh / asset`),
-        { status: 400 }
-      );
+      return NextResponse.json(fail('LIMIT', t('LIMIT')), { status: 400 });
     }
   }
 

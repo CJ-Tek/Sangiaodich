@@ -1,19 +1,23 @@
-import { Badge, Group, Paper, Progress, Stack, Text, Title } from '@mantine/core';
-import { colors, radius } from '@/config/design-tokens';
+'use client';
+
+import { Badge, Group, Progress, Stack, Text, Title } from '@mantine/core';
+import { useLocale, useTranslations } from 'next-intl';
+import { SurfaceCard } from '@/components/ui/SurfaceCard';
+import { formatCurrency } from '@/lib/i18n/format';
+import type { AppLocale } from '@/lib/i18n/routing';
 import type { GuestTierProgress } from '@/lib/engines/guest-overview';
 
 export function GuestTierCard({ tier }: { tier: GuestTierProgress }) {
+  const locale = useLocale() as AppLocale;
+  const t = useTranslations('guest.tier');
+
   return (
-    <Paper
-      p="lg"
-      radius={radius.lg}
-      style={{ border: `1px solid ${colors.border}` }}
-    >
+    <SurfaceCard>
       <Stack gap="sm">
         <Group justify="space-between" align="flex-start">
           <div>
             <Text size="sm" c="dimmed">
-              Hạng hiện tại
+              {t('currentLabel')}
             </Text>
             <Title order={3} fw={600} mt={4}>
               {tier.currentLabel}
@@ -21,37 +25,40 @@ export function GuestTierCard({ tier }: { tier: GuestTierProgress }) {
           </div>
           {tier.atMaxTier ? (
             <Badge color="vbnbGreen" variant="light">
-              Hạng cao nhất
+              {t('maxBadge')}
             </Badge>
           ) : null}
         </Group>
 
         {tier.atMaxTier ? (
           <Text size="sm" c="dimmed">
-            Bạn đang ở hạng cao nhất.
+            {t('atMax')}
           </Text>
         ) : (
           <>
             <Text size="sm">
-              Tiến độ lên {tier.nextLabel}: {tier.progressBooks}/
-              {tier.neededBooks} booking ·{' '}
-              {tier.progressGmv.toLocaleString('vi-VN')}/
-              {tier.neededGmv.toLocaleString('vi-VN')} ₫
+              {t('progress', {
+                nextLabel: tier.nextLabel ?? '',
+                progressBooks: tier.progressBooks,
+                neededBooks: tier.neededBooks,
+                progressGmv: formatCurrency(tier.progressGmv, locale),
+                neededGmv: formatCurrency(tier.neededGmv, locale),
+              })}
             </Text>
             <Progress value={tier.percent} color="vbnbGreen" radius="sm" />
             <Text size="xs" c="dimmed">
-              Cần đủ cả số booking và số tiền mới lên hạng. Còn{' '}
-              {tier.remainingBooks} booking và{' '}
-              {tier.remainingGmv.toLocaleString('vi-VN')} ₫.
+              {t('remaining', {
+                remainingBooks: tier.remainingBooks,
+                remainingGmv: formatCurrency(tier.remainingGmv, locale),
+              })}
             </Text>
           </>
         )}
 
         <Text size="xs" c="dimmed">
-          Tích luỹ tính khi booking được chốt. Hủy booking đã chốt có thể hạ
-          hạng.
+          {t('note')}
         </Text>
       </Stack>
-    </Paper>
+    </SurfaceCard>
   );
 }

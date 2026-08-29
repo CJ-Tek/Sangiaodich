@@ -2,23 +2,23 @@ import { NextResponse } from 'next/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { issueGuestInvoice } from '@/lib/engines/guest-invoice-issue';
 import { assertActiveSubscription } from '@/lib/engines/subscription-access';
+import { getApiRouteContext } from '@/lib/i18n/api-route-context';
 import { fail, ok } from '@/lib/types';
 
 export async function POST(request: Request) {
+  const { t } = await getApiRouteContext();
   const profile = await getSessionProfile();
   if (!profile || (profile.role !== 'SALE' && profile.role !== 'OWNER')) {
-    return NextResponse.json(fail('UNAUTHORIZED', 'Sale or Owner only'), {
-      status: 401,
-    });
+    return NextResponse.json(
+      fail('UNAUTHORIZED', t('UNAUTHORIZED.saleOrOwnerOnly')),
+      { status: 401 }
+    );
   }
   try {
     await assertActiveSubscription(profile.id);
   } catch {
     return NextResponse.json(
-      fail(
-        'SUBSCRIPTION_INACTIVE',
-        'Subscription hết hạn — gia hạn để tiếp tục'
-      ),
+      fail('SUBSCRIPTION_INACTIVE', t('SUBSCRIPTION_INACTIVE')),
       { status: 403 }
     );
   }
@@ -26,7 +26,9 @@ export async function POST(request: Request) {
   const body = await request.json();
   const bookingId = String(body.bookingId || '');
   if (!bookingId) {
-    return NextResponse.json(fail('INVALID', 'Thiếu bookingId'), { status: 400 });
+    return NextResponse.json(fail('INVALID', t('INVALID.bookingIdRequired')), {
+      status: 400,
+    });
   }
 
   const payee = profile.role === 'OWNER' ? 'OWNER' : 'SALE';
@@ -38,24 +40,24 @@ export async function POST(request: Request) {
 
   if ('error' in result) {
     const messages: Record<string, { status: number; message: string }> = {
-      NOT_FOUND: { status: 404, message: 'Không tìm thấy booking' },
-      FORBIDDEN: { status: 403, message: 'Không phải booking của bạn' },
-      INVALID_STATUS: { status: 400, message: 'Booking này không xuất invoice' },
-      ALREADY_PAID: { status: 400, message: 'Khách đã đủ giá bán' },
-      NO_PAYOUT: {
+      NOT_FOUND: { status: 404, message: t('NOT_FOUND.booking') },
+      FORBIDDEN: { status: 403, message: t('FORBIDDEN.notYourBooking') },
+      INVALID_STATUS: {
         status: 400,
-        message: 'Chưa cấu hình STK — vào Profile để điền tài khoản nhận tiền',
+        message: t('INVALID_STATUS.bookingInvoice'),
       },
+      ALREADY_PAID: { status: 400, message: t('ALREADY_PAID') },
+      NO_PAYOUT: { status: 400, message: t('NO_PAYOUT') },
       INSERT_FAILED: {
         status: 500,
-        message: result.message || 'Không tạo được invoice',
+        message: result.message || t('INSERT_FAILED'),
       },
     };
     const errorCode = result.error;
     const meta =
       (errorCode ? messages[errorCode] : undefined) || {
         status: 500,
-        message: 'Không tạo được invoice',
+        message: t('INSERT_FAILED'),
       };
     return NextResponse.json(fail(errorCode ?? 'UNKNOWN', meta.message), {
       status: meta.status,

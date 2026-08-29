@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { createServiceClient } from '@/lib/supabase/server';
+import { getApiRouteContext } from '@/lib/i18n/api-route-context';
 import { fail, ok } from '@/lib/types';
 
 const KINDS = [
@@ -35,9 +36,10 @@ function isUploadKind(v: string): v is UploadKind {
 }
 
 export async function POST(request: Request) {
+  const { t } = await getApiRouteContext();
   const profile = await getSessionProfile();
   if (!profile) {
-    return NextResponse.json(fail('UNAUTHORIZED', 'Login required'), {
+    return NextResponse.json(fail('UNAUTHORIZED', t('UNAUTHORIZED.loginRequired')), {
       status: 401,
     });
   }
@@ -48,10 +50,7 @@ export async function POST(request: Request) {
 
   if (!isUploadKind(kindRaw)) {
     return NextResponse.json(
-      fail(
-        'INVALID',
-        'kind phải là avatar | national_id_front | national_id_back | payout_qr'
-      ),
+      fail('INVALID', t('INVALID.uploadKindInvalid')),
       { status: 400 }
     );
   }
@@ -62,26 +61,27 @@ export async function POST(request: Request) {
     profile.role !== 'SALE'
   ) {
     return NextResponse.json(
-      fail('FORBIDDEN', 'Chỉ Owner hoặc Sale upload QR nhận tiền'),
+      fail('FORBIDDEN', t('FORBIDDEN.payoutQrOwnerSaleOnly')),
       { status: 403 }
     );
   }
 
   if (!(file instanceof File)) {
-    return NextResponse.json(fail('INVALID', 'Thiếu file'), { status: 400 });
+    return NextResponse.json(fail('INVALID', t('INVALID.missingFile')), {
+      status: 400,
+    });
   }
 
   if (!ALLOWED_MIME.has(file.type)) {
-    return NextResponse.json(
-      fail('INVALID', 'Chỉ chấp nhận JPG, PNG hoặc WebP'),
-      { status: 400 }
-    );
+    return NextResponse.json(fail('INVALID', t('INVALID.imageTypeOnly')), {
+      status: 400,
+    });
   }
 
   if (file.size > MAX_BYTES[kindRaw]) {
     const mb = MAX_BYTES[kindRaw] / (1024 * 1024);
     return NextResponse.json(
-      fail('INVALID', `File quá lớn (tối đa ${mb}MB)`),
+      fail('INVALID', t('INVALID.fileTooLargeMb', { mb })),
       { status: 400 }
     );
   }
@@ -118,7 +118,6 @@ export async function POST(request: Request) {
     }
 
     const { data } = admin.storage.from('avatars').getPublicUrl(path);
-    // cache-bust so preview refreshes after replace
     const url = `${data.publicUrl}?v=${Date.now()}`;
 
     return NextResponse.json(
@@ -153,7 +152,6 @@ export async function POST(request: Request) {
     });
   }
 
-  // Store object path in profiles.*_url; preview is short-lived signed URL
   return NextResponse.json(
     ok({
       kind: kindRaw,

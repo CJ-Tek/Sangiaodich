@@ -11,8 +11,9 @@ import {
   TextInput,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { useTranslations } from 'next-intl';
 import { useMediaQuery } from '@mantine/hooks';
-import Link from 'next/link';
+import { Link } from '@/lib/i18n/navigation';
 import { useRouter } from 'next/navigation';
 import {
   useEffect,
@@ -23,6 +24,7 @@ import {
 } from 'react';
 import { bookingStatusColors } from '@/config/booking-status';
 import { colors } from '@/config/design-tokens';
+import { useFormat } from '@/lib/i18n/use-format';
 import { nightsInRange, todayDateOnly } from '@/lib/dates';
 import {
   nightStatus,
@@ -91,6 +93,8 @@ export function NightBoardGrid({
   simpleUi?: boolean;
 }) {
   const router = useRouter();
+  const t = useTranslations('inventory');
+  const { formatNumber } = useFormat();
   const today = todayDateOnly();
   const audience = role === 'OWNER' ? 'owner' : 'sale';
   const isDesktop = useMediaQuery('(min-width: 1024px)') === true;
@@ -710,7 +714,7 @@ export function NightBoardGrid({
           {holdPreview ? (
             <Text size="xs" c="dimmed">
               Cost Owner (sau hạng):{' '}
-              {holdPreview.effectiveCost.toLocaleString('vi-VN')} — giá bán
+              {formatNumber(holdPreview.effectiveCost)} — giá bán
               không được thấp hơn.
             </Text>
           ) : null}
@@ -720,7 +724,7 @@ export function NightBoardGrid({
             suggestions={guestSuggestions}
           />
           <NumberInput
-            label="Giá bán cả stay (guest pay)"
+            label={t('listPriceGuestPay')}
             value={listPrice}
             onChange={(v) => setListPrice(Number(v) || 0)}
             min={holdPreview?.effectiveCost || 0}
@@ -730,7 +734,9 @@ export function NightBoardGrid({
           {simpleUi ? null : (
             <>
               <NumberInput
-                label={`Đã thu khách (tối thiểu 50% = ${minGuest.toLocaleString('vi-VN')})`}
+                label={t('collectedGuestMin', {
+                  amount: formatNumber(minGuest),
+                })}
                 value={collected}
                 onChange={(v) => setCollected(Number(v) || 0)}
                 min={0}
@@ -738,7 +744,9 @@ export function NightBoardGrid({
                 decimalSeparator=","
               />
               <NumberInput
-                label={`Đã CK Owner (tối thiểu 50% cost = ${minOwner.toLocaleString('vi-VN')})`}
+                label={t('collectedOwnerMin', {
+                  amount: formatNumber(minOwner),
+                })}
                 value={ownerPaid}
                 onChange={(v) => setOwnerPaid(Number(v) || 0)}
                 min={0}
@@ -789,7 +797,7 @@ export function NightBoardGrid({
           {simpleUi ? null : (
             <>
               <NumberInput
-                label="Đã thu khách"
+                label={t('collectedGuest')}
                 value={collected}
                 onChange={(v) => setCollected(Number(v) || 0)}
                 min={0}
@@ -797,7 +805,7 @@ export function NightBoardGrid({
                 decimalSeparator=","
               />
               <NumberInput
-                label="Đã CK Owner"
+                label={t('collectedOwner')}
                 value={ownerPaid}
                 onChange={(v) => setOwnerPaid(Number(v) || 0)}
                 min={0}
@@ -849,12 +857,12 @@ export function NightBoardGrid({
       <Modal
         opened={!!costEdit}
         onClose={() => setCostEdit(null)}
-        title="Giá đêm (cost Owner)"
+        title={t('costNightTitle')}
       >
         <Stack>
-          <TextInput value={costEdit?.date ?? ''} readOnly label="Đêm" />
+          <TextInput value={costEdit?.date ?? ''} readOnly label={t('night')} />
           <NumberInput
-            label="Cost (VND). Để trống rồi lưu = dùng WD/WE"
+            label={t('costInput')}
             value={costEdit?.value ?? 0}
             onChange={(v) =>
               setCostEdit((cur) =>

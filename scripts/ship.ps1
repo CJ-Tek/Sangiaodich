@@ -5,7 +5,7 @@
 
 .DESCRIPTION
   Fast  = last 6h,           tsc + test
-  Solid = last 24h,          db:reset (local) + tsc + build + test
+  Solid = last 24h,          tsc + build + test (shared DB — no db:reset)
   All   = every dirty file,  tsc + test (same checks as Fast; no time cutoff)
 
     Fast/Solid only stage files that are dirty AND modified within the time
@@ -225,10 +225,8 @@ if ($migPaths.Count -gt 0 -and -not $DryRun) {
 if (-not $SkipTests) {
   Write-Host ''
   if ($Mode -eq 'Solid') {
-    Write-Host '-> Solid checks: db:reset (LOCAL) + tsc + build + test' -ForegroundColor Cyan
+    Write-Host '-> Solid checks: tsc + build + test (shared hosted DB — no db:reset)' -ForegroundColor Cyan
     if (-not $DryRun) {
-      npm run db:reset
-      Assert-ExitOk 'db:reset'
       npx tsc --noEmit
       Assert-ExitOk 'tsc'
       npm run build

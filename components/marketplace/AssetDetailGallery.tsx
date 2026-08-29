@@ -11,6 +11,7 @@ import {
   UnstyledButton,
 } from '@mantine/core';
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
+import { useTranslations } from 'next-intl';
 import { colors, motion, radius, shadows } from '@/config/design-tokens';
 
 const PLACEHOLDER = 'https://placehold.co/1400x900/F3F3EF/536B58?text=VBNB';
@@ -118,6 +119,7 @@ function MobileGallery({
   urls: string[];
   onOpen: (index: number) => void;
 }) {
+  const t = useTranslations('marketplace.gallery');
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
   const multi = urls.length > 1;
@@ -178,7 +180,7 @@ function MobileGallery({
           <UnstyledButton
             key={`${url}-${i}`}
             onClick={() => onOpen(i)}
-            aria-label={`Ảnh ${i + 1} của ${title}`}
+            aria-label={t('photoOf', { index: i + 1, title })}
             style={{
               flex: '0 0 100%',
               scrollSnapAlign: 'start',
@@ -190,7 +192,7 @@ function MobileGallery({
           >
             <Image
               src={url}
-              alt={i === 0 ? title : `${title} — ảnh ${i + 1}`}
+              alt={i === 0 ? title : t('photoAlt', { title, index: i + 1 })}
               fit="cover"
               h="100%"
               w="100%"
@@ -206,7 +208,7 @@ function MobileGallery({
             size="lg"
             radius="xl"
             variant="filled"
-            aria-label="Ảnh trước"
+            aria-label={t('prevPhoto')}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -220,7 +222,7 @@ function MobileGallery({
             size="lg"
             radius="xl"
             variant="filled"
-            aria-label="Ảnh sau"
+            aria-label={t('nextPhoto')}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -266,6 +268,7 @@ function DesktopGallery({
   urls: string[];
   onOpen: (index: number) => void;
 }) {
+  const t = useTranslations('marketplace.gallery');
   const count = urls.length;
 
   let grid: CSSProperties;
@@ -338,7 +341,7 @@ function DesktopGallery({
             <UnstyledButton
               key={`${urls[i]}-${i}`}
               onClick={() => onOpen(i)}
-              aria-label={`Xem ảnh ${i + 1}`}
+              aria-label={t('viewPhoto', { index: i + 1 })}
               style={cellStyle}
               onMouseEnter={(e) => {
                 e.currentTarget.style.opacity = '0.92';
@@ -349,7 +352,7 @@ function DesktopGallery({
             >
               <Image
                 src={urls[i]}
-                alt={i === 0 ? title : `${title} — ảnh ${i + 1}`}
+                alt={i === 0 ? title : t('photoAlt', { title, index: i + 1 })}
                 fit="cover"
                 h="100%"
                 w="100%"
@@ -376,7 +379,8 @@ function DesktopGallery({
             fontWeight: 600,
           }}
         >
-          Xem tất cả ảnh{count > slotCount ? ` (${count})` : ''}
+          {t('viewAllPhotos')}
+          {count > slotCount ? ` (${count})` : ''}
         </Button>
       ) : null}
     </Box>
@@ -396,6 +400,7 @@ function PhotoLightbox({
   onClose: () => void;
   onChange: (index: number) => void;
 }) {
+  const t = useTranslations('marketplace.gallery');
   const open = index != null;
   const current = index ?? 0;
 
@@ -450,7 +455,7 @@ function PhotoLightbox({
             color="gray"
             size="lg"
             onClick={onClose}
-            aria-label="Đóng"
+            aria-label={t('close')}
           >
             <CloseIcon />
           </ActionIcon>
@@ -475,7 +480,7 @@ function PhotoLightbox({
               color="dark"
               size="xl"
               radius="xl"
-              aria-label="Ảnh trước"
+              aria-label={t('prevPhoto')}
               onClick={() =>
                 onChange((current - 1 + urls.length) % urls.length)
               }
@@ -493,7 +498,7 @@ function PhotoLightbox({
               color="dark"
               size="xl"
               radius="xl"
-              aria-label="Ảnh sau"
+              aria-label={t('nextPhoto')}
               onClick={() => onChange((current + 1) % urls.length)}
               style={{
                 position: 'absolute',
@@ -509,7 +514,7 @@ function PhotoLightbox({
 
         <Image
           src={urls[current]}
-          alt={`${title} — ảnh ${current + 1}`}
+          alt={t('photoAlt', { title, index: current + 1 })}
           fit="contain"
           mah="calc(100vh - 120px)"
           maw="100%"

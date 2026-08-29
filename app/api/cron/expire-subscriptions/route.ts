@@ -1,22 +1,24 @@
 import { NextResponse } from 'next/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { getRequiredSecret } from '@/lib/security/secrets';
+import { getApiRouteContext } from '@/lib/i18n/api-route-context';
 import { fail, ok } from '@/lib/types';
 
 export async function GET(request: Request) {
+  const { t } = await getApiRouteContext();
   const secret = getRequiredSecret('CRON_SECRET');
   if (!secret) {
-    return NextResponse.json(
-      fail('MISCONFIGURED', 'CRON_SECRET is not configured'),
-      { status: 503 }
-    );
+    return NextResponse.json(fail('MISCONFIGURED', t('MISCONFIGURED')), {
+      status: 503,
+    });
   }
 
   const auth = request.headers.get('authorization');
   if (auth !== `Bearer ${secret}`) {
-    return NextResponse.json(fail('UNAUTHORIZED', 'Invalid cron secret'), {
-      status: 401,
-    });
+    return NextResponse.json(
+      fail('UNAUTHORIZED', t('UNAUTHORIZED.invalidCronSecret')),
+      { status: 401 }
+    );
   }
 
   const admin = createServiceClient();
@@ -34,8 +36,6 @@ export async function GET(request: Request) {
     });
   }
 
-  // Rides along on the daily schedule rather than owning one: the purge is
-  // batched, so falling a run behind only delays it.
   const { data: purged, error: purgeError } = await admin.rpc(
     'purge_sepay_webhook_events'
   );

@@ -20,16 +20,20 @@ import {
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/lib/i18n/navigation';
 import { useRef, useState } from 'react';
 import {
   ASSET_TAG_GROUPS,
   ASSET_TAGS,
+  assetTagGroupLabel,
+  assetTagLabel,
   DRAFT_LIMIT_MESSAGE,
   MAX_ASSET_IMAGES,
   MAX_OWNER_DRAFT_ASSETS,
   MIN_ASSET_IMAGES_FOR_REVIEW,
   MIN_ASSET_TAGS,
+  propertyTypeLabel,
   PROPERTY_TYPES,
   type PropertyType,
 } from '@/config/asset-tags';
@@ -91,6 +95,9 @@ export function AssetForm({
   draftCount?: number;
 }) {
   const router = useRouter();
+  const t = useTranslations('owner.assetForm');
+  const tTags = useTranslations('assetTags');
+  const tPropertyTypes = useTranslations('propertyTypes');
   const isEdit = mode === 'edit';
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -100,7 +107,7 @@ export function AssetForm({
   if (isEdit && !assetId) {
     return (
       <Text c="red" size="sm">
-        Thiếu assetId — không thể sửa.
+        {t('missingId')}
       </Text>
     );
   }
@@ -124,7 +131,7 @@ export function AssetForm({
     if (room <= 0) {
       notifications.show({
         color: 'orange',
-        message: `Tối đa ${MAX_ASSET_IMAGES} ảnh`,
+        message: t('maxPhotos', { count: MAX_ASSET_IMAGES }),
       });
       return;
     }
@@ -145,7 +152,7 @@ export function AssetForm({
         if (!json.success) {
           notifications.show({
             color: 'red',
-            message: json.error?.message || 'Upload thất bại',
+            message: json.error?.message || t('uploadFailed'),
           });
           continue;
         }
@@ -155,7 +162,7 @@ export function AssetForm({
         setForm((f) => ({ ...f, images: [...f.images, ...uploaded] }));
         notifications.show({
           color: 'vbnbGreen',
-          message: `Đã tải ${uploaded.length} ảnh`,
+          message: t('photosUploaded', { count: uploaded.length }),
         });
       }
     } finally {
@@ -192,14 +199,14 @@ export function AssetForm({
       if (form.images.length < MIN_ASSET_IMAGES_FOR_REVIEW) {
         notifications.show({
           color: 'red',
-          message: 'Cần ít nhất 1 ảnh khi nộp duyệt',
+          message: t('needPhotoSubmit'),
         });
         return;
       }
       if (form.tags.length < MIN_ASSET_TAGS) {
         notifications.show({
           color: 'red',
-          message: 'Chọn ít nhất 1 tag khi nộp duyệt',
+          message: t('needTagSubmit'),
         });
         return;
       }
@@ -236,7 +243,7 @@ export function AssetForm({
       }
       notifications.show({
         color: 'vbnbGreen',
-        message: isEdit ? 'Đã cập nhật asset' : 'Đã tạo asset',
+        message: isEdit ? t('updated') : t('created'),
       });
       router.push('/owner/assets');
       router.refresh();
@@ -250,7 +257,7 @@ export function AssetForm({
       {isEdit ? (
         <Group gap="sm">
           <Text size="sm" c="dimmed">
-            Đang sửa asset
+            {t('editing')}
           </Text>
           {status ? (
             <Badge variant="light" color="gray" size="sm">
@@ -262,7 +269,7 @@ export function AssetForm({
 
       <div>
         <Text size="sm" fw={500} mb={6}>
-          Loại hình
+          {t('propertyType')}
         </Text>
         <SegmentedControl
           fullWidth
@@ -273,19 +280,19 @@ export function AssetForm({
           }
           data={PROPERTY_TYPES.map((t) => ({
             value: t.value,
-            label: t.label,
+            label: propertyTypeLabel(t.value, tPropertyTypes),
           }))}
         />
       </div>
 
       <TextInput
-        label="Title"
+        label={t('title')}
         value={form.title}
         onChange={(e) => setForm({ ...form, title: e.currentTarget.value })}
         required
       />
       <Textarea
-        label="Description"
+        label={t('description')}
         minRows={3}
         value={form.description}
         onChange={(e) =>
@@ -293,26 +300,26 @@ export function AssetForm({
         }
       />
       <TextInput
-        label="Location"
+        label={t('location')}
         value={form.location}
         onChange={(e) => setForm({ ...form, location: e.currentTarget.value })}
       />
 
       <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
         <NumberInput
-          label="Capacity"
+          label={t('capacity')}
           min={1}
           value={form.capacity}
           onChange={(v) => setForm({ ...form, capacity: Number(v) || 1 })}
         />
         <NumberInput
-          label="Bedrooms"
+          label={t('bedrooms')}
           min={0}
           value={form.bedrooms}
           onChange={(v) => setForm({ ...form, bedrooms: Number(v) || 0 })}
         />
         <NumberInput
-          label="Bathrooms"
+          label={t('bathrooms')}
           min={0}
           value={form.bathrooms}
           onChange={(v) => setForm({ ...form, bathrooms: Number(v) || 0 })}
@@ -323,10 +330,10 @@ export function AssetForm({
         <Group justify="space-between" align="flex-end">
           <div>
             <Text size="sm" fw={500}>
-              Ảnh gallery
+              {t('gallery')}
             </Text>
             <Text size="xs" c="dimmed">
-              Tối đa {MAX_ASSET_IMAGES} ảnh · ảnh đầu là cover · JPG/PNG/WebP
+              {t('galleryHint', { count: MAX_ASSET_IMAGES })}
             </Text>
           </div>
           <FileButton
@@ -344,7 +351,7 @@ export function AssetForm({
                 loading={uploading}
                 size="compact-sm"
               >
-                Thêm ảnh
+                {t('addPhotos')}
               </Button>
             )}
           </FileButton>
@@ -361,7 +368,7 @@ export function AssetForm({
             }}
           >
             <Text size="sm" c="dimmed">
-              Chưa có ảnh — bấm &quot;Thêm ảnh&quot; để upload
+              {t('noPhotos')}
             </Text>
           </Box>
         ) : (
@@ -389,7 +396,7 @@ export function AssetForm({
                       left: 6,
                     }}
                   >
-                    Cover
+                    {t('cover')}
                   </Badge>
                 ) : null}
                 <Group
@@ -404,7 +411,7 @@ export function AssetForm({
                     size="sm"
                     variant="filled"
                     color="dark"
-                    aria-label="Đưa sang trái"
+                    aria-label={t('moveLeft')}
                     disabled={index === 0}
                     onClick={() => moveImage(index, -1)}
                   >
@@ -414,7 +421,7 @@ export function AssetForm({
                     size="sm"
                     variant="filled"
                     color="dark"
-                    aria-label="Đưa sang phải"
+                    aria-label={t('moveRight')}
                     disabled={index === form.images.length - 1}
                     onClick={() => moveImage(index, 1)}
                   >
@@ -424,7 +431,7 @@ export function AssetForm({
                     size="sm"
                     variant="filled"
                     color="red"
-                    aria-label="Xóa ảnh"
+                    aria-label={t('removePhoto')}
                     onClick={() => removeImage(url)}
                   >
                     ×
@@ -439,11 +446,10 @@ export function AssetForm({
       <Stack gap="sm">
         <div>
           <Text size="sm" fw={500}>
-            Tag đặc tính
+            {t('tags')}
           </Text>
           <Text size="xs" c="dimmed">
-            Chọn tự do (tối thiểu {MIN_ASSET_TAGS} khi nộp duyệt) · đã chọn{' '}
-            {form.tags.length}
+            {t('tagsHint', { min: MIN_ASSET_TAGS, count: form.tags.length })}
           </Text>
         </div>
         {ASSET_TAG_GROUPS.map((group) => {
@@ -451,7 +457,7 @@ export function AssetForm({
           return (
             <Box key={group.id}>
               <Title order={6} fw={600} mb={8} c="dimmed">
-                {group.label}
+                {assetTagGroupLabel(group.id, tTags)}
               </Title>
               <Group gap={8}>
                 {tagsInGroup.map((tag) => (
@@ -463,7 +469,7 @@ export function AssetForm({
                     size="sm"
                     onChange={() => toggleTag(tag.id)}
                   >
-                    {tag.label}
+                    {assetTagLabel(tag.id, tTags)}
                   </Chip>
                 ))}
               </Group>
@@ -474,7 +480,7 @@ export function AssetForm({
 
       <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
         <NumberInput
-          label="Cost weekday"
+          label={t('costWeekday')}
           min={0}
           thousandSeparator="."
           decimalSeparator=","
@@ -483,7 +489,7 @@ export function AssetForm({
           onChange={(v) => setForm({ ...form, costWeekday: Number(v) || 0 })}
         />
         <NumberInput
-          label="Cost weekend"
+          label={t('costWeekend')}
           min={0}
           thousandSeparator="."
           decimalSeparator=","
@@ -499,7 +505,7 @@ export function AssetForm({
       />
 
       {draftLimitReached ? (
-        <Alert color="yellow" title="Đã đủ 15 nháp">
+        <Alert color="yellow" title={t('draftLimit')}>
           {DRAFT_LIMIT_MESSAGE}
         </Alert>
       ) : null}
@@ -511,7 +517,7 @@ export function AssetForm({
             loading={loading}
             onClick={() => submit(true)}
           >
-            {isEdit ? 'Lưu & nộp duyệt' : 'Tạo & nộp duyệt'}
+            {isEdit ? t('saveSubmit') : t('createSubmit')}
           </Button>
           <Button
             variant="light"
@@ -519,7 +525,7 @@ export function AssetForm({
             disabled={draftLimitReached}
             onClick={() => submit(false)}
           >
-            {isEdit ? 'Lưu (giữ nháp)' : 'Lưu nháp'}
+            {isEdit ? t('saveDraft') : t('createDraft')}
           </Button>
         </>
       ) : (
@@ -528,7 +534,7 @@ export function AssetForm({
           loading={loading}
           onClick={() => submit(false)}
         >
-          Lưu thay đổi
+          {t('saveChanges')}
         </Button>
       )}
     </Stack>

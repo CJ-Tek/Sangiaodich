@@ -8,9 +8,12 @@ import {
   Text,
   Title,
 } from '@mantine/core';
-import Link from 'next/link';
-import { colors, motion, radius } from '@/config/design-tokens';
+import { useLocale, useTranslations } from 'next-intl';
+import { colors, motion, radius, shadows } from '@/config/design-tokens';
 import { assetPublicCode } from '@/lib/engines/asset-search';
+import { formatCurrency } from '@/lib/i18n/format';
+import type { AppLocale } from '@/lib/i18n/routing';
+import { Link } from '@/lib/i18n/navigation';
 
 export type AssetCardData = {
   id: string;
@@ -22,29 +25,21 @@ export type AssetCardData = {
   bathrooms?: number;
   propertyType?: 'VILLA' | 'APARTMENT';
   imageUrl?: string;
-  /** Effective (discounted) weekday cost shown to sale */
   costWeekday?: number;
-  /** Effective (discounted) weekend cost shown to sale */
   costWeekend?: number;
-  /** Base weekday before membership discount */
   baseCostWeekday?: number;
-  /** Base weekend before membership discount */
   baseCostWeekend?: number;
   discountPercent?: number;
   showCost?: boolean;
-  /** Route prefix for the detail page, e.g. `/me/explore` keeps the card
-   * inside the guest dashboard. Defaults to the public asset page. */
   hrefBase?: string;
 };
 
 const PLACEHOLDER =
   'https://placehold.co/800x500/F3F3EF/536B58?text=VBNB';
 
-function formatVnd(n: number) {
-  return n.toLocaleString('vi-VN');
-}
-
 export function AssetCard({ asset }: { asset: AssetCardData }) {
+  const locale = useLocale() as AppLocale;
+  const t = useTranslations('marketplace.assetCard');
   const href = asset.hrefBase
     ? `${asset.hrefBase}/${asset.slug}`
     : asset.showCost
@@ -56,21 +51,35 @@ export function AssetCard({ asset }: { asset: AssetCardData }) {
     asset.baseCostWeekday != null &&
     asset.baseCostWeekday !== asset.costWeekday;
 
+  const propertySuffix =
+    asset.propertyType === 'APARTMENT'
+      ? ` · ${t('apartment')}`
+      : asset.propertyType === 'VILLA'
+        ? ` · ${t('villa')}`
+        : '';
+  const capacitySuffix =
+    asset.bedrooms != null
+      ? ` · ${t('bedrooms', { count: asset.bedrooms })}`
+      : ` · ${t('guests', { count: asset.capacity })}`;
+  const bathroomSuffix =
+    asset.bathrooms != null
+      ? ` · ${t('bathrooms', { count: asset.bathrooms })}`
+      : '';
+
   return (
     <Box
       component={Link}
       href={href}
+      className="vbnb-asset-card vbnb-surface-card vbnb-surface-card--interactive"
       style={{
         display: 'block',
         textDecoration: 'none',
         color: 'inherit',
-        background: colors.surface,
-        border: `1px solid ${colors.border}`,
         borderRadius: radius.lg,
         overflow: 'hidden',
-        transition: `transform ${motion.normal}ms ${motion.easing}`,
+        boxShadow: shadows.card,
+        transition: `transform ${motion.normal}ms ${motion.easing}, box-shadow ${motion.normal}ms ${motion.easing}`,
       }}
-      className="vbnb-asset-card"
     >
       <Box
         style={{
@@ -93,12 +102,12 @@ export function AssetCard({ asset }: { asset: AssetCardData }) {
 
       <Stack gap={4} p="md">
         {asset.showCost ? (
-          <Text size="xs" c="dimmed">
-            ID {assetPublicCode(asset.id)}
+          <Text size="xs" c="dimmed" className="vbnb-tabular-nums">
+            {t('idPrefix')} {assetPublicCode(asset.id)}
           </Text>
         ) : null}
         <Group justify="space-between" align="flex-start" gap="xs" wrap="nowrap">
-          <Title order={4} fw={600} style={{ letterSpacing: '-0.01em' }}>
+          <Title order={4} fw={600} style={{ letterSpacing: '-0.02em' }}>
             {asset.title}
           </Title>
           {discount > 0 ? (
@@ -106,6 +115,7 @@ export function AssetCard({ asset }: { asset: AssetCardData }) {
               size="xs"
               fw={600}
               c="vbnbGreen.6"
+              className="vbnb-tabular-nums"
               style={{ whiteSpace: 'nowrap' }}
             >
               −{discount}%
@@ -114,55 +124,51 @@ export function AssetCard({ asset }: { asset: AssetCardData }) {
         </Group>
         <Text size="sm" c="dimmed">
           {asset.location}
-          {asset.propertyType === 'APARTMENT'
-            ? ' · Căn hộ'
-            : asset.propertyType === 'VILLA'
-              ? ' · Villa'
-              : ''}
-          {asset.bedrooms != null
-            ? ` · ${asset.bedrooms} PN`
-            : ` · ${asset.capacity} khách`}
-          {asset.bathrooms != null ? ` · ${asset.bathrooms} WC` : ''}
+          {propertySuffix}
+          {capacitySuffix}
+          {bathroomSuffix}
         </Text>
 
         {asset.showCost ? (
           <Stack gap={8} mt="sm">
             <Group justify="space-between" gap="xs">
               <Text size="xs" c="dimmed">
-                Cost (WD)
+                {t('costWeekday')}
               </Text>
               <Group gap={6}>
                 {showBase ? (
                   <Text
                     size="xs"
                     c="dimmed"
+                    className="vbnb-tabular-nums"
                     style={{ textDecoration: 'line-through' }}
                   >
-                    {formatVnd(asset.baseCostWeekday || 0)}
+                    {formatCurrency(asset.baseCostWeekday || 0, locale)}
                   </Text>
                 ) : null}
-                <Text size="xs" fw={discount > 0 ? 600 : 400}>
-                  {formatVnd(asset.costWeekday || 0)}
+                <Text size="xs" fw={discount > 0 ? 600 : 400} className="vbnb-tabular-nums">
+                  {formatCurrency(asset.costWeekday || 0, locale)}
                 </Text>
               </Group>
             </Group>
             {asset.costWeekend != null ? (
               <Group justify="space-between" gap="xs">
                 <Text size="xs" c="dimmed">
-                  Cost (WE)
+                  {t('costWeekend')}
                 </Text>
                 <Group gap={6}>
                   {showBase && asset.baseCostWeekend != null ? (
                     <Text
                       size="xs"
                       c="dimmed"
+                      className="vbnb-tabular-nums"
                       style={{ textDecoration: 'line-through' }}
                     >
-                      {formatVnd(asset.baseCostWeekend)}
+                      {formatCurrency(asset.baseCostWeekend, locale)}
                     </Text>
                   ) : null}
-                  <Text size="xs" fw={discount > 0 ? 600 : 400}>
-                    {formatVnd(asset.costWeekend)}
+                  <Text size="xs" fw={discount > 0 ? 600 : 400} className="vbnb-tabular-nums">
+                    {formatCurrency(asset.costWeekend, locale)}
                   </Text>
                 </Group>
               </Group>

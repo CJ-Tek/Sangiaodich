@@ -1,50 +1,16 @@
 import { NextResponse } from 'next/server';
-import { getSessionProfile } from '@/lib/auth/session';
 import { assertActiveSubscription } from '@/lib/engines/subscription-access';
 import {
   setAssetNightClosed,
   setAssetNightlyCost,
 } from '@/lib/engines/owner-inventory';
+import { getApiRouteContext } from '@/lib/i18n/api-route-context';
+import { requireActiveRole, translateEngineError } from '@/lib/i18n/engine-error';
 import { fail, ok } from '@/lib/types';
 
-async function requireActiveOwner() {
-  const profile = await getSessionProfile();
-  if (!profile || profile.role !== 'OWNER') {
-    return {
-      error: NextResponse.json(fail('UNAUTHORIZED', 'Owner only'), {
-        status: 401,
-      }),
-    } as const;
-  }
-  try {
-    await assertActiveSubscription(profile.id);
-  } catch {
-    return {
-      error: NextResponse.json(
-        fail(
-          'SUBSCRIPTION_INACTIVE',
-          'Subscription hết hạn — gia hạn để tiếp tục'
-        ),
-        { status: 403 }
-      ),
-    } as const;
-  }
-  return { profile } as const;
-}
-
-function messageFor(code: string) {
-  if (code === 'PAST_NIGHT') return 'Không sửa đêm đã qua';
-  if (code === 'LOCKED') return 'Đêm đã khóa booking — không đóng được';
-  if (code === 'HOLD') return 'Đêm đang giữ chỗ — không đóng được';
-  if (code === 'FORBIDDEN' || code === 'NOT_FOUND') {
-    return 'Không phải căn của bạn';
-  }
-  if (code === 'INVALID_DATE') return 'Ngày không hợp lệ';
-  return code;
-}
-
 export async function PATCH(request: Request) {
-  const gate = await requireActiveOwner();
+  const { t } = await getApiRouteContext();
+  const gate = await requireActiveRole('OWNER', t);
   if ('error' in gate) return gate.error;
   const { profile } = gate;
   const body = await request.json();
@@ -60,9 +26,10 @@ export async function PATCH(request: Request) {
       closed: action === 'close',
     });
     if (result.error) {
-      return NextResponse.json(fail(result.error, messageFor(result.error)), {
-        status: 400,
-      });
+      return NextResponse.json(
+        fail(result.error, translateEngineError(t, result.error)),
+        { status: 400 }
+      );
     }
     return NextResponse.json(ok({ night, closed: action === 'close' }));
   }
@@ -74,7 +41,7 @@ export async function PATCH(request: Request) {
         ? null
         : Number(raw);
     if (cost != null && (!Number.isFinite(cost) || cost < 0)) {
-      return NextResponse.json(fail('INVALID_COST', 'Giá đêm không hợp lệ'), {
+      return NextResponse.json(fail('INVALID_COST', t('INVALID_COST')), {
         status: 400,
       });
     }
@@ -85,14 +52,15 @@ export async function PATCH(request: Request) {
       cost,
     });
     if (result.error) {
-      return NextResponse.json(fail(result.error, messageFor(result.error)), {
-        status: 400,
-      });
+      return NextResponse.json(
+        fail(result.error, translateEngineError(t, result.error)),
+        { status: 400 }
+      );
     }
     return NextResponse.json(ok({ night, cost }));
   }
 
-  return NextResponse.json(fail('INVALID_ACTION', 'Unknown action'), {
+  return NextResponse.json(fail('INVALID_ACTION', t('INVALID_ACTION')), {
     status: 400,
   });
 }

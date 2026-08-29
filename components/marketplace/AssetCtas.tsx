@@ -2,10 +2,11 @@
 
 import { Alert, Button, Code, Group, Box, Stack, Text } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { usePathname, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { colors, radius } from '@/config/design-tokens';
 import { assetPublicCode } from '@/lib/engines/asset-search';
+import { usePathname, useRouter } from '@/lib/i18n/navigation';
 
 export function AssetCtas({
   slug,
@@ -21,6 +22,7 @@ export function AssetCtas({
   leadIntent?: boolean;
   sticky?: boolean;
 }) {
+  const t = useTranslations('marketplace.ctas');
   const router = useRouter();
   const pathname = usePathname();
   const [loading, setLoading] = useState(false);
@@ -38,7 +40,7 @@ export function AssetCtas({
     await navigator.clipboard.writeText(publicCode);
     notifications.show({
       color: 'vbnbGreen',
-      message: 'Đã copy mã villa',
+      message: t('copyIdSuccess'),
       autoClose: 2000,
     });
   }
@@ -47,14 +49,14 @@ export function AssetCtas({
     await navigator.clipboard.writeText(url);
     notifications.show({
       color: 'vbnbGreen',
-      message: 'Đã copy',
+      message: t('copyLinkSuccess'),
       autoClose: 2000,
     });
   }
 
   async function share() {
     if (navigator.share) {
-      await navigator.share({ title: 'VBNB asset', url });
+      await navigator.share({ title: t('shareTitle'), url });
       return;
     }
     await copyLink();
@@ -62,8 +64,6 @@ export function AssetCtas({
 
   async function contactSale() {
     if (!isLoggedInGuest) {
-      // Carry the intent through login so the guest lands back on a page that
-      // remembers why they left. The lead is never sent automatically.
       const next = encodeURIComponent(`/a/${slug}?lead=1`);
       router.push(`/login?next=${next}`);
       return;
@@ -79,17 +79,14 @@ export function AssetCtas({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Lỗi',
+          message: json.error?.message || t('error'),
         });
       } else {
         notifications.show({
           color: 'vbnbGreen',
-          message:
-            'Đã gửi yêu cầu — sale đang trả phí sẽ thấy thông tin của bạn',
+          message: t('leadSuccess'),
         });
         setShowIntent(false);
-        // Drop ?lead=1 so a refresh does not re-prompt. Stay on the current
-        // route so the guest dashboard does not bounce through /a/[slug].
         router.replace(pathname);
       }
     } finally {
@@ -104,19 +101,15 @@ export function AssetCtas({
       radius={radius.sm}
       withCloseButton
       onClose={() => setShowIntent(false)}
-      title="Đã đăng nhập"
+      title={t('loggedInTitle')}
     >
-      <Text size="sm">
-        Bấm “Cần liên lạc sale” để gửi yêu cầu cho villa này. Chúng tôi chỉ chia
-        sẻ số điện thoại của bạn khi bạn tự bấm.
-      </Text>
+      <Text size="sm">{t('loggedInBody')}</Text>
     </Alert>
   ) : null;
 
   const loginHint = !isLoggedInGuest ? (
     <Text size="xs" c="dimmed">
-      Cần đăng nhập để liên lạc sale — sale chỉ tạo được booking cho tài khoản
-      đã có trên hệ thống.
+      {t('loginHint')}
     </Text>
   ) : null;
 
@@ -125,14 +118,14 @@ export function AssetCtas({
       <Group gap="xs" wrap="nowrap">
         <Code>{publicCode}</Code>
         <Button variant="default" onClick={copyId}>
-          Copy ID
+          {t('copyId')}
         </Button>
       </Group>
       <Button color="vbnbGreen" onClick={copyLink}>
-        Copy link
+        {t('copyLink')}
       </Button>
       <Button variant="default" onClick={share}>
-        Share
+        {t('share')}
       </Button>
       <Button
         variant="outline"
@@ -140,7 +133,7 @@ export function AssetCtas({
         loading={loading}
         onClick={contactSale}
       >
-        Cần liên lạc sale
+        {t('contactSale')}
       </Button>
     </Group>
   );

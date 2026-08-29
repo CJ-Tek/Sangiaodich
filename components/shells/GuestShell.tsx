@@ -9,10 +9,11 @@ import {
   UnstyledButton,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { Link, usePathname } from '@/lib/i18n/navigation';
 import { colors, radius } from '@/config/design-tokens';
 import { guestNav, guestNavHref } from '@/components/shells/guest-nav';
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 
 export function GuestShell({
   children,
@@ -22,6 +23,8 @@ export function GuestShell({
   isLoggedIn?: boolean;
 }) {
   const pathname = usePathname();
+  const tNav = useTranslations('guest.nav');
+  const tShell = useTranslations('guest.shell');
   const isCompact = useMediaQuery('(max-width: 1023px)');
   const isLoginPage = pathname === '/login' || pathname.startsWith('/login/');
 
@@ -58,7 +61,7 @@ export function GuestShell({
         >
           <Group gap="xl">
             <UnstyledButton component={Link} href="/">
-              <Title order={3} c="vbnbGreen.6" fw={600}>
+              <Title order={3} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
                 VBNB
               </Title>
             </UnstyledButton>
@@ -77,7 +80,7 @@ export function GuestShell({
                       fw={active ? 600 : 500}
                       c={active ? colors.primaryDark : colors.textSecondary}
                     >
-                      {item.label}
+                      {tNav(item.labelKey)}
                     </Text>
                   </UnstyledButton>
                 );
@@ -86,10 +89,11 @@ export function GuestShell({
             ) : null}
           </Group>
           <Group gap="sm">
+            <LanguageSwitcher compact />
             {isLoggedIn ? (
               <UnstyledButton component={Link} href="/me/profile">
                 <Text size="sm" c="dimmed">
-                  Tài khoản
+                  {tShell('account')}
                 </Text>
               </UnstyledButton>
             ) : (
@@ -105,7 +109,7 @@ export function GuestShell({
                   fontWeight: 500,
                 }}
               >
-                Đăng nhập
+                {tShell('login')}
               </UnstyledButton>
             )}
           </Group>
@@ -127,8 +131,8 @@ export function GuestShell({
                   key={item.href}
                   component={Link}
                   href={item.target}
-                  title={item.label}
-                  aria-label={item.label}
+                  title={tNav(item.labelKey)}
+                  aria-label={tNav(item.labelKey)}
                   style={{ textAlign: 'center', padding: 8, minHeight: 44 }}
                 >
                   <Box

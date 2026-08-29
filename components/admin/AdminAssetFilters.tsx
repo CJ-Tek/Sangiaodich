@@ -8,8 +8,9 @@ import {
   Stack,
   TextInput,
 } from '@mantine/core';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useEffect, useState } from 'react';
+import { useRouter } from '@/lib/i18n/navigation';
 import { colors, radius } from '@/config/design-tokens';
 import type { AdminAssetFilterStatus } from '@/components/admin/admin-asset-filters';
 
@@ -22,6 +23,7 @@ export function AdminAssetFilters({
   status: AdminAssetFilterStatus;
   counts: Record<AdminAssetFilterStatus, number>;
 }) {
+  const t = useTranslations('admin.assets');
   const router = useRouter();
   const [query, setQuery] = useState(q);
 
@@ -57,14 +59,14 @@ export function AdminAssetFilters({
         <Group align="flex-end" gap="sm" wrap="wrap">
           <TextInput
             name="q"
-            label="Tìm kiếm"
-            placeholder="Tên villa, địa điểm, owner, mô tả..."
+            label={t('searchLabel')}
+            placeholder={t('searchPlaceholder')}
             value={query}
             onChange={(e) => setQuery(e.currentTarget.value)}
             style={{ flex: 1, minWidth: 220 }}
           />
           <Button type="submit" color="vbnbGreen">
-            Tìm
+            {t('searchButton')}
           </Button>
         </Group>
         <div
@@ -78,11 +80,23 @@ export function AdminAssetFilters({
             color="vbnbGreen"
             value={status}
             data={[
-              { value: 'all', label: `Tất cả (${counts.all})` },
-              { value: 'pending', label: `Pending (${counts.pending})` },
-              { value: 'active', label: `Active (${counts.active})` },
-              { value: 'reject', label: `Reject (${counts.reject})` },
-              { value: 'suspend', label: `Suspend (${counts.suspend})` },
+              { value: 'all', label: `${t('filterAll')} (${counts.all})` },
+              {
+                value: 'pending',
+                label: `${t('filterPending')} (${counts.pending})`,
+              },
+              {
+                value: 'active',
+                label: `${t('filterActive')} (${counts.active})`,
+              },
+              {
+                value: 'reject',
+                label: `${t('filterReject')} (${counts.reject})`,
+              },
+              {
+                value: 'suspend',
+                label: `${t('filterSuspend')} (${counts.suspend})`,
+              },
             ]}
             styles={{
               root: { width: 'max-content' },

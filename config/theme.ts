@@ -1,7 +1,7 @@
 'use client';
 
 import { createTheme, MantineColorsTuple } from '@mantine/core';
-import { colors, radius, shadows } from './design-tokens';
+import { colors, fonts, motion, radius, shadows } from './design-tokens';
 
 const primary: MantineColorsTuple = [
   colors.primarySoft,
@@ -16,26 +16,29 @@ const primary: MantineColorsTuple = [
   '#141C17',
 ];
 
+const transition = `${motion.normal}ms ${motion.easing}`;
+
 export const theme = createTheme({
   primaryColor: 'vbnbGreen',
   colors: {
     vbnbGreen: primary,
   },
-  fontFamily: 'Montserrat, system-ui, -apple-system, sans-serif',
+  fontFamily: fonts.sans,
+  fontFamilyMonospace: fonts.mono,
   headings: {
-    fontFamily: 'Montserrat, system-ui, -apple-system, sans-serif',
+    fontFamily: fonts.sans,
     fontWeight: '600',
   },
   defaultRadius: 'md',
   radius: {
-    xs: `${radius.sm}`,
-    sm: `${radius.md}`,
-    md: `${radius.lg}`,
-    lg: `${radius.xl}`,
-    xl: `${radius.xl}`,
+    xs: `${radius.sm}px`,
+    sm: `${radius.md}px`,
+    md: `${radius.lg}px`,
+    lg: `${radius.xl}px`,
+    xl: `${radius['2xl']}px`,
   },
   shadows: {
-    xs: shadows.card,
+    xs: shadows.xs,
     sm: shadows.card,
     md: shadows.cardHover,
     lg: shadows.float,
@@ -57,21 +60,32 @@ export const theme = createTheme({
       defaultProps: { radius: radius.sm },
       styles: {
         root: {
-          fontWeight: 500,
+          fontWeight: 600,
+          transition: `transform ${transition}, box-shadow ${transition}, background-color ${transition}`,
+          '&:hover:not(:disabled)': {
+            transform: motion.hoverLift,
+          },
+          '&:active:not(:disabled)': {
+            transform: motion.activePress,
+          },
         },
       },
     },
     Card: {
-      defaultProps: { radius: radius.lg, shadow: 'none', padding: 'lg' },
+      defaultProps: { radius: radius.lg, shadow: 'sm', padding: 'lg' },
       styles: {
         root: {
           backgroundColor: colors.surface,
           border: `1px solid ${colors.border}`,
+          transition: `box-shadow ${transition}, border-color ${transition}`,
+          '&:hover': {
+            boxShadow: shadows.cardHover,
+          },
         },
       },
     },
     Paper: {
-      defaultProps: { radius: radius.lg, shadow: 'none' },
+      defaultProps: { radius: radius.lg, shadow: 'xs' },
       styles: {
         root: {
           backgroundColor: colors.surface,
@@ -80,6 +94,11 @@ export const theme = createTheme({
     },
     TextInput: {
       defaultProps: { radius: radius.md },
+      styles: {
+        input: {
+          transition: `border-color ${transition}, box-shadow ${transition}`,
+        },
+      },
     },
     Select: {
       defaultProps: { radius: radius.md },
@@ -97,8 +116,9 @@ export const theme = createTheme({
       defaultProps: { radius: radius.sm, size: 'sm' },
       styles: {
         root: {
-          fontWeight: 500,
+          fontWeight: 600,
           textTransform: 'none',
+          letterSpacing: '0.01em',
         },
       },
     },
@@ -107,6 +127,7 @@ export const theme = createTheme({
         root: {
           borderRadius: radius.md,
           fontWeight: 500,
+          transition: `background-color ${transition}, color ${transition}`,
         },
       },
     },
@@ -129,11 +150,20 @@ export const theme = createTheme({
       styles: {
         th: {
           color: colors.textSecondary,
-          fontWeight: 500,
-          fontSize: 13,
+          fontWeight: 600,
+          fontSize: 12,
+          letterSpacing: '0.04em',
+          textTransform: 'uppercase',
         },
         td: {
           fontSize: 14,
+        },
+      },
+    },
+    Alert: {
+      styles: {
+        root: {
+          borderRadius: radius.lg,
         },
       },
     },

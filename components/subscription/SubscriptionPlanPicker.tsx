@@ -8,16 +8,17 @@ import {
   Group,
   Image,
   Loader,
-  Paper,
   SimpleGrid,
   Stack,
   Text,
   UnstyledButton,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/lib/i18n/navigation';
 import { useEffect, useState, useTransition } from 'react';
-import { colors, radius } from '@/config/design-tokens';
+import { colors, motion, radius, shadows } from '@/config/design-tokens';
+import { SurfaceCard } from '@/components/ui/SurfaceCard';
 import {
   formatVnd,
   planDiscount,
@@ -51,6 +52,8 @@ export function SubscriptionPlanPicker({
   initialPending?: PendingCheckout | null;
   gatewayEnabled?: boolean;
 }) {
+  const t = useTranslations('subscription.planPicker');
+  const tCommon = useTranslations('common');
   const router = useRouter();
   const [pending, setPending] = useState<PendingCheckout | null>(
     initialPending ?? null
@@ -76,14 +79,14 @@ export function SubscriptionPlanPicker({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Không tạo được mã thanh toán',
+          message: json.error?.message || t('createIntentFailed'),
         });
         return;
       }
       setPending(json.data as PendingCheckout);
       startTransition(() => router.refresh());
     } catch {
-      notifications.show({ color: 'red', message: 'Lỗi mạng' });
+      notifications.show({ color: 'red', message: t('networkError') });
     } finally {
       setLoadingPlanId(null);
     }
@@ -113,7 +116,7 @@ export function SubscriptionPlanPicker({
         setPending(null);
         notifications.show({
           color: 'vbnbGreen',
-          message: 'Đã nhận thanh toán — subscription được kích hoạt',
+          message: t('paymentReceived'),
         });
         router.refresh();
       } catch {
@@ -125,7 +128,7 @@ export function SubscriptionPlanPicker({
       stopped = true;
       clearInterval(timer);
     };
-  }, [pendingIntentId, router]);
+  }, [pendingIntentId, router, t]);
 
   async function payViaGateway() {
     if (!pending) return;
@@ -143,7 +146,7 @@ export function SubscriptionPlanPicker({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Gateway chưa sẵn sàng',
+          message: json.error?.message || t('gatewayNotReady'),
         });
         return;
       }
@@ -165,7 +168,7 @@ export function SubscriptionPlanPicker({
       document.body.appendChild(form);
       form.submit();
     } catch {
-      notifications.show({ color: 'red', message: 'Lỗi mở cổng SePay' });
+      notifications.show({ color: 'red', message: t('gatewayOpenFailed') });
     } finally {
       setGatewayLoading(false);
     }
@@ -175,11 +178,10 @@ export function SubscriptionPlanPicker({
     <Stack gap="md">
       <div>
         <Text fw={600} mb={4}>
-          Chọn gói subscription
+          {t('choosePlanTitle')}
         </Text>
         <Text size="sm" c="dimmed">
-          Chạm gói để tạo QR — số tiền và nội dung CK đã sẵn trong QR, không
-          cần nhập tay.
+          {t('choosePlanDesc')}
         </Text>
       </div>
 
@@ -198,6 +200,7 @@ export function SubscriptionPlanPicker({
                   selected ? colors.primary : colors.border
                 }`,
                 background: selected ? colors.primarySoft : colors.surface,
+                boxShadow: selected ? shadows.cardHover : shadows.card,
                 cursor: loadingPlanId ? 'wait' : 'pointer',
                 textAlign: 'left',
                 width: '100%',
@@ -205,6 +208,7 @@ export function SubscriptionPlanPicker({
                 borderRadius: radius.lg,
                 padding: 16,
                 position: 'relative',
+                transition: `box-shadow ${motion.normal}ms ${motion.easing}, border-color ${motion.normal}ms ${motion.easing}, background ${motion.normal}ms ${motion.easing}`,
               }}
             >
               <Stack gap={4}>
@@ -234,44 +238,34 @@ export function SubscriptionPlanPicker({
       </SimpleGrid>
 
       {pending ? (
-        <Paper
-          p="lg"
-          radius={radius.lg}
-          style={{ border: `1px solid ${colors.border}` }}
-        >
+        <SurfaceCard>
           <Stack gap="sm">
-            <Alert color="yellow" title="Đang chờ thanh toán">
-              Sau khi chuyển khoản, trang sẽ tự cập nhật trong 1–3 phút, không
-              cần refresh. Nếu quá 15 phút chưa ACTIVE, liên hệ Admin.
+            <Alert color="yellow" title={t('pendingTitle')}>
+              {t('pendingDesc')}
             </Alert>
 
             <Text size="sm" c="dimmed">
-              Gói đã chọn
+              {t('selectedPlan')}
             </Text>
             <Text fw={600}>
               {planDurationLabel(pending.months)} — {formatVnd(pending.amount)}
             </Text>
 
             <Text size="xs" c="dimmed">
-              Quét QR bằng app ngân hàng — nội dung CK đã điền sẵn mã{' '}
-              <Text span fw={600}>
-                {pending.paymentCode}
-              </Text>
-              .
+              {t('qrScanHint', { paymentCode: pending.paymentCode })}
             </Text>
 
             {pending.qrUrl ? (
               <Image
                 src={pending.qrUrl}
-                alt="QR thanh toán subscription"
+                alt={t('qrAlt')}
                 maw={240}
                 mx="auto"
                 radius="md"
               />
             ) : (
               <Text size="sm" c="red">
-                Chưa cấu hình STK / mã ngân hàng VietQR trên Admin — chỉ dùng
-                được nội dung CK bên dưới hoặc Mark paid.
+                {t('noVietQrConfig')}
               </Text>
             )}
 
@@ -279,7 +273,7 @@ export function SubscriptionPlanPicker({
               <Group justify="space-between" align="flex-end" wrap="nowrap">
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <Text size="xs" c="dimmed">
-                    Số tài khoản
+                    {t('accountNumber')}
                   </Text>
                   <Text fw={600} size="sm" style={{ wordBreak: 'break-all' }}>
                     {pending.accountNumber}
@@ -299,7 +293,7 @@ export function SubscriptionPlanPicker({
                       color="vbnbGreen"
                       onClick={copy}
                     >
-                      {copied ? 'Đã copy' : 'Sao chép'}
+                      {copied ? tCommon('copied') : tCommon('copy')}
                     </Button>
                   )}
                 </CopyButton>
@@ -309,7 +303,7 @@ export function SubscriptionPlanPicker({
             <Group justify="space-between" align="flex-end" wrap="nowrap">
               <div style={{ flex: 1, minWidth: 0 }}>
                 <Text size="xs" c="dimmed">
-                  Số tiền
+                  {t('amount')}
                 </Text>
                 <Text fw={600} size="sm" c="vbnbGreen.6">
                   {formatVnd(pending.amount)}
@@ -323,7 +317,7 @@ export function SubscriptionPlanPicker({
                     color="vbnbGreen"
                     onClick={copy}
                   >
-                    {copied ? 'Đã copy' : 'Sao chép'}
+                    {copied ? tCommon('copied') : tCommon('copy')}
                   </Button>
                 )}
               </CopyButton>
@@ -332,7 +326,7 @@ export function SubscriptionPlanPicker({
             <Group justify="space-between" align="flex-end" wrap="nowrap">
               <div style={{ flex: 1, minWidth: 0 }}>
                 <Text size="xs" c="dimmed">
-                  Nội dung CK (đã có trong QR)
+                  {t('transferMemo')}
                 </Text>
                 <Text fw={600} size="sm" style={{ wordBreak: 'break-all' }}>
                   {pending.paymentCode}
@@ -346,7 +340,7 @@ export function SubscriptionPlanPicker({
                     color="vbnbGreen"
                     onClick={copy}
                   >
-                    {copied ? 'Đã copy' : 'Sao chép'}
+                    {copied ? tCommon('copied') : tCommon('copy')}
                   </Button>
                 )}
               </CopyButton>
@@ -359,11 +353,11 @@ export function SubscriptionPlanPicker({
                 loading={gatewayLoading}
                 onClick={payViaGateway}
               >
-                Thanh toán qua cổng SePay
+                {t('payViaGateway')}
               </Button>
             ) : null}
           </Stack>
-        </Paper>
+        </SurfaceCard>
       ) : null}
     </Stack>
   );

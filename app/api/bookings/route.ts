@@ -8,13 +8,17 @@ import {
   submitToOwner,
 } from '@/lib/engines/booking-service';
 import { assertActiveSubscription } from '@/lib/engines/subscription-access';
+import { getApiRouteContext } from '@/lib/i18n/api-route-context';
+import { translateEngineError } from '@/lib/i18n/engine-error';
 import { fail, ok } from '@/lib/types';
 
-async function requireActiveSale() {
+async function requireActiveSale(
+  t: Awaited<ReturnType<typeof import('@/lib/i18n/api-route-context').getApiRouteContext>>['t']
+) {
   const profile = await getSessionProfile();
   if (!profile || profile.role !== 'SALE') {
     return {
-      error: NextResponse.json(fail('UNAUTHORIZED', 'Sale only'), {
+      error: NextResponse.json(fail('UNAUTHORIZED', t('UNAUTHORIZED.saleOnly')), {
         status: 401,
       }),
     } as const;
@@ -24,10 +28,7 @@ async function requireActiveSale() {
   } catch {
     return {
       error: NextResponse.json(
-        fail(
-          'SUBSCRIPTION_INACTIVE',
-          'Subscription hết hạn — gia hạn để tiếp tục'
-        ),
+        fail('SUBSCRIPTION_INACTIVE', t('SUBSCRIPTION_INACTIVE')),
         { status: 403 }
       ),
     } as const;
@@ -35,8 +36,34 @@ async function requireActiveSale() {
   return { profile } as const;
 }
 
+function bookingCreateMessage(
+  t: Awaited<ReturnType<typeof import('@/lib/i18n/api-route-context').getApiRouteContext>>['t'],
+  result: { error: string; effectiveCost?: number },
+  formatAmount: (n: number) => string
+) {
+  if (result.error === 'BELOW_FLOOR' && 'effectiveCost' in result) {
+    return translateEngineError(t, 'BELOW_FLOOR', {
+      amount: formatAmount(Number(result.effectiveCost)),
+    });
+  }
+  if (result.error === 'OVERLAP') {
+    return t('BOOKING_CREATE_FAILED.overlap');
+  }
+  if (result.error === 'CLOSED') {
+    return t('BOOKING_CREATE_FAILED.closed');
+  }
+  if (result.error === 'GUEST_DUPLICATE') {
+    return t('BOOKING_CREATE_FAILED.guestDuplicate');
+  }
+  if (result.error === 'SUBSCRIPTION_INACTIVE') {
+    return t('SUBSCRIPTION_INACTIVE');
+  }
+  return t('BOOKING_CREATE_FAILED.generic');
+}
+
 export async function POST(request: Request) {
-  const gate = await requireActiveSale();
+  const { t, formatAmount } = await getApiRouteContext();
+  const gate = await requireActiveSale(t);
   if ('error' in gate) return gate.error;
   const { profile } = gate;
 
@@ -51,18 +78,7 @@ export async function POST(request: Request) {
   });
 
   if ('error' in result && result.error) {
-    const message =
-      result.error === 'BELOW_FLOOR' && 'effectiveCost' in result
-        ? `Giá bán dưới floor ${Number(result.effectiveCost).toLocaleString('vi-VN')}`
-            : result.error === 'OVERLAP'
-            ? 'Ngày đã được sale khác confirm — lịch đã khóa'
-            : result.error === 'CLOSED'
-              ? 'Owner đã đóng một hoặc nhiều đêm trong khoảng này'
-              : result.error === 'GUEST_DUPLICATE'
-            ? 'Guest này đã có booking trùng ngày trên asset này'
-            : result.error === 'SUBSCRIPTION_INACTIVE'
-              ? 'Subscription hết hạn — gia hạn để tiếp tục'
-              : String(result.error);
+    const message = bookingCreateMessage(t, result, formatAmount);
     const status = result.error === 'SUBSCRIPTION_INACTIVE' ? 403 : 400;
     return NextResponse.json(fail('BOOKING_CREATE_FAILED', message), {
       status,
@@ -73,7 +89,8 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
-  const gate = await requireActiveSale();
+  const { t, formatAmount } = await getApiRouteContext();
+  const gate = await requireActiveSale(t);
   if ('error' in gate) return gate.error;
   const { profile } = gate;
 
@@ -82,7 +99,6 @@ export async function PATCH(request: Request) {
   const action = String(body.action || '');
 
   if (action === 'submit_to_owner' || action === 'confirm') {
-    // `confirm` kept as alias for older clients — now = submit to owner (no inventory lock)
     const result = await submitToOwner({
       bookingId,
       saleId: profile.id,
@@ -91,16 +107,20 @@ export async function PATCH(request: Request) {
     if ('error' in result && result.error) {
       const message =
         result.error === 'NO_OWNER_EARN'
-          ? 'Chưa có giá gốc — không gửi Owner được'
+          ? t('NO_OWNER_EARN')
           : result.error === 'BELOW_OWNER_PAYOUT' && 'minOwnerPayout' in result
-            ? `Cần xác nhận CK Owner tối thiểu 50% giá gốc (${Number(result.minOwnerPayout).toLocaleString('vi-VN')}) trước khi gửi`
+            ? t('BELOW_OWNER_PAYOUT', {
+                amount: formatAmount(Number(result.minOwnerPayout)),
+              })
             : result.error === 'BELOW_DEPOSIT' && 'minDeposit' in result
-              ? `Cần thu cọc Guest tối thiểu 50% giá bán (${Number(result.minDeposit).toLocaleString('vi-VN')}) trước khi gửi`
+              ? t('BELOW_DEPOSIT', {
+                  amount: formatAmount(Number(result.minDeposit)),
+                })
               : result.error === 'OVERLAP'
-              ? 'Ngày đã bị Sale khác chốt (CONFIRMED) — không gửi được'
-              : result.error === 'CLOSED'
-                ? 'Owner đã đóng đêm này — không gửi được'
-                : String(result.error);
+                ? t('OVERLAP.submitConfirmed')
+                : result.error === 'CLOSED'
+                  ? t('CLOSED.submit')
+                  : String(result.error);
       return NextResponse.json(fail(String(result.error), message), {
         status: 400,
       });
@@ -113,9 +133,10 @@ export async function PATCH(request: Request) {
       goodwillFullRefund: Boolean(body.goodwillFullRefund),
     });
     if ('error' in result && result.error) {
-      return NextResponse.json(fail('CANCEL_FAILED', String(result.error)), {
-        status: 400,
-      });
+      return NextResponse.json(
+        fail('CANCEL_FAILED', t('CANCEL_FAILED')),
+        { status: 400 }
+      );
     }
     return NextResponse.json(
       ok({ booking: result.booking, refund: result.refund })
@@ -131,11 +152,11 @@ export async function PATCH(request: Request) {
     if ('error' in result && result.error) {
       const message =
         result.error === 'AMOUNT_REGRESSION'
-          ? 'Số đã thu mới không được nhỏ hơn số đã ghi'
+          ? t('AMOUNT_REGRESSION.payment')
           : result.error === 'ABOVE_LIST'
-            ? 'Không thu vượt giá bán'
+            ? t('ABOVE_LIST')
             : result.error === 'LOCKED_AFTER_CONFIRM'
-              ? 'Sau khi Owner chốt, phần còn lại khách CK chủ nhà lúc check-in'
+              ? t('LOCKED_AFTER_CONFIRM')
               : String(result.error);
       return NextResponse.json(fail(String(result.error), message), {
         status: 400,
@@ -153,11 +174,11 @@ export async function PATCH(request: Request) {
     if ('error' in result && result.error) {
       const message =
         result.error === 'AMOUNT_REGRESSION'
-          ? 'Số đã CK Owner không được nhỏ hơn số đã ghi'
+          ? t('AMOUNT_REGRESSION.ownerPayout')
           : result.error === 'ABOVE_OWNER_EARN'
-            ? 'Không ghi nhận vượt phần Owner earn'
+            ? t('ABOVE_OWNER_EARN')
             : result.error === 'INVALID_STATUS'
-              ? 'Không ghi nhận CK Owner ở trạng thái này'
+              ? t('INVALID_STATUS.ownerPayout')
               : String(result.error);
       return NextResponse.json(fail(String(result.error), message), {
         status: 400,
@@ -166,7 +187,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json(ok({ booking: result.booking }));
   }
 
-  return NextResponse.json(fail('INVALID_ACTION', 'Unknown action'), {
+  return NextResponse.json(fail('INVALID_ACTION', t('INVALID_ACTION')), {
     status: 400,
   });
 }

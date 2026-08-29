@@ -2,13 +2,11 @@
 
 import { Button, Menu } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import {
-  formatVnd,
-  planDurationLabel,
-  type SubscriptionPlan,
-} from '@/lib/engines/subscription-plans';
+import { useRouter } from '@/lib/i18n/navigation';
+import { useFormat } from '@/lib/i18n/use-format';
+import type { SubscriptionPlan } from '@/lib/engines/subscription-plans';
 
 export function MarkPaidButton({
   profileId,
@@ -17,7 +15,9 @@ export function MarkPaidButton({
   profileId: string;
   plans: SubscriptionPlan[];
 }) {
+  const t = useTranslations('admin.markPaid');
   const router = useRouter();
+  const { formatVnd, planDurationLabel } = useFormat();
   const [loading, setLoading] = useState(false);
 
   async function mark(planId: string) {
@@ -38,7 +38,7 @@ export function MarkPaidButton({
       } else {
         notifications.show({
           color: 'vbnbGreen',
-          message: 'Đã kích hoạt / gia hạn theo gói',
+          message: t('success'),
         });
         router.refresh();
       }
@@ -50,7 +50,7 @@ export function MarkPaidButton({
   if (!plans.length) {
     return (
       <Button size="xs" color="vbnbGreen" disabled>
-        Chưa có gói
+        {t('noPlans')}
       </Button>
     );
   }
@@ -59,11 +59,11 @@ export function MarkPaidButton({
     <Menu shadow="md" width={220}>
       <Menu.Target>
         <Button size="xs" color="vbnbGreen" loading={loading}>
-          Mark paid
+          {t('button')}
         </Button>
       </Menu.Target>
       <Menu.Dropdown>
-        <Menu.Label>Chọn gói kích hoạt</Menu.Label>
+        <Menu.Label>{t('menuLabel')}</Menu.Label>
         {plans.map((p) => (
           <Menu.Item key={p.id} onClick={() => mark(p.id)}>
             {p.label || planDurationLabel(p.months)} — {formatVnd(p.amount)}

@@ -1,6 +1,7 @@
 'use client';
 
 import { Button, Group, NumberInput, Stack, Text } from '@mantine/core';
+import { useTranslations } from 'next-intl';
 import { MAX_ASSET_DISCOUNT_RULES } from '@/lib/engines/membership';
 
 export type AssetDiscountRuleForm = {
@@ -15,6 +16,8 @@ export function OwnerAssetDiscountRulesEditor({
   rules: AssetDiscountRuleForm[];
   onChange: (next: AssetDiscountRuleForm[]) => void;
 }) {
+  const t = useTranslations('owner.discountRules');
+
   function update(i: number, patch: Partial<AssetDiscountRuleForm>) {
     onChange(rules.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   }
@@ -23,18 +26,16 @@ export function OwnerAssetDiscountRulesEditor({
     <Stack gap="sm">
       <div>
         <Text size="sm" fw={500}>
-          Chiết khấu Sale theo căn
+          {t('title')}
         </Text>
         <Text size="xs" c="dimmed">
-          Để trống = 0%. Áp dụng khi Sale check-out trên căn này nhiều hơn mốc
-          (21 lần mới được “trên 20”). Booking đã chốt không đổi. Không có trần
-          Admin — lời/lỗ là của bạn.
+          {t('description')}
         </Text>
       </div>
       {rules.map((r, i) => (
         <Group key={i} gap="sm" align="flex-end" wrap="wrap">
           <NumberInput
-            label="Trên (lần)"
+            label={t('threshold')}
             min={0}
             decimalScale={0}
             value={r.minCheckedOutCount}
@@ -44,7 +45,7 @@ export function OwnerAssetDiscountRulesEditor({
             style={{ flex: 1, minWidth: 120 }}
           />
           <NumberInput
-            label="% giảm cost"
+            label={t('percent')}
             min={0}
             max={100}
             decimalScale={2}
@@ -62,7 +63,7 @@ export function OwnerAssetDiscountRulesEditor({
             size="xs"
             onClick={() => onChange(rules.filter((_, j) => j !== i))}
           >
-            Xóa
+            {t('remove')}
           </Button>
         </Group>
       ))}
@@ -76,7 +77,7 @@ export function OwnerAssetDiscountRulesEditor({
             onChange([...rules, { minCheckedOutCount: 20, costDiscountPercent: 3 }])
           }
         >
-          Thêm mốc
+          {t('add')}
         </Button>
       ) : null}
     </Stack>

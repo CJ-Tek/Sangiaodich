@@ -1,16 +1,13 @@
+'use client';
+
 import { Paper, Stack, Text, Group } from '@mantine/core';
 import { colors, radius } from '@/config/design-tokens';
 import type {
   SaleRatingAggregate,
   SaleRatingComment,
 } from '@/lib/engines/sale-ratings';
-
-function formatAvg(n: number): string {
-  return Number(n).toLocaleString('vi-VN', {
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 2,
-  });
-}
+import { useTranslations } from 'next-intl';
+import { useFormat } from '@/lib/i18n/use-format';
 
 export function SaleRatingsPanel({
   aggregate,
@@ -19,6 +16,10 @@ export function SaleRatingsPanel({
   aggregate: SaleRatingAggregate | null;
   comments: SaleRatingComment[];
 }) {
+  const t = useTranslations('sale.ratings');
+  const { formatDecimal, formatDateTime } = useFormat();
+  const formatAvg = (n: number) =>
+    formatDecimal(n, { minimumFractionDigits: 1, maximumFractionDigits: 2 });
   return (
     <Stack gap="md">
       <Paper
@@ -27,29 +28,29 @@ export function SaleRatingsPanel({
         style={{ border: `1px solid ${colors.border}` }}
       >
         <Text size="sm" c="dimmed">
-          Điểm Owner chấm sau check-out
+          {t('title')}
         </Text>
         {!aggregate || aggregate.ratingCount <= 0 ? (
           <Text size="sm" mt="sm" c="dimmed">
-            Chưa có đánh giá.
+            {t('empty')}
           </Text>
         ) : (
           <>
             <Text size="xl" fw={600} mt={6}>
-              {formatAvg(aggregate.avgOverall)}/10
+              {t('avg', { avg: formatAvg(aggregate.avgOverall) })}
             </Text>
             <Text size="sm" c="dimmed">
-              {aggregate.ratingCount} lượt
+              {t('count', { count: aggregate.ratingCount })}
             </Text>
             <Group gap="lg" mt="sm">
               <Text size="sm">
-                Thanh toán đúng {formatAvg(aggregate.avgPayment)}
+                {t('payment')} {formatAvg(aggregate.avgPayment)}
               </Text>
               <Text size="sm">
-                Xử lý tình huống {formatAvg(aggregate.avgHandling)}
+                {t('handling')} {formatAvg(aggregate.avgHandling)}
               </Text>
               <Text size="sm">
-                Giao tiếp {formatAvg(aggregate.avgCommunication)}
+                {t('communication')} {formatAvg(aggregate.avgCommunication)}
               </Text>
             </Group>
           </>
@@ -61,11 +62,11 @@ export function SaleRatingsPanel({
         style={{ border: `1px solid ${colors.border}` }}
       >
         <Text size="sm" c="dimmed" mb="md">
-          Nhận xét (kèm tên Owner)
+          {t('comments')}
         </Text>
         {!comments.length ? (
           <Text size="sm" c="dimmed">
-            Chưa có nhận xét.
+            {t('noComments')}
           </Text>
         ) : (
           <Stack gap="sm">
@@ -76,7 +77,7 @@ export function SaleRatingsPanel({
                 </Text>
                 <Text size="sm">{c.comment}</Text>
                 <Text size="xs" c="dimmed">
-                  {new Date(c.createdAt).toLocaleString('vi-VN')}
+                  {formatDateTime(c.createdAt)}
                 </Text>
               </div>
             ))}

@@ -1,23 +1,24 @@
 'use client';
 
 import { Group, Select } from '@mantine/core';
-import { useRouter, usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter, usePathname } from '@/lib/i18n/navigation';
 import { currentYearMonth } from '@/lib/dates';
 
-const MONTH_OPTIONS = [
-  { value: '01', label: 'Tháng 1' },
-  { value: '02', label: 'Tháng 2' },
-  { value: '03', label: 'Tháng 3' },
-  { value: '04', label: 'Tháng 4' },
-  { value: '05', label: 'Tháng 5' },
-  { value: '06', label: 'Tháng 6' },
-  { value: '07', label: 'Tháng 7' },
-  { value: '08', label: 'Tháng 8' },
-  { value: '09', label: 'Tháng 9' },
-  { value: '10', label: 'Tháng 10' },
-  { value: '11', label: 'Tháng 11' },
-  { value: '12', label: 'Tháng 12' },
-];
+const MONTH_KEYS = [
+  '01',
+  '02',
+  '03',
+  '04',
+  '05',
+  '06',
+  '07',
+  '08',
+  '09',
+  '10',
+  '11',
+  '12',
+] as const;
 
 function yearOptions(around: number) {
   return [around - 2, around - 1, around, around + 1].map((y) => ({
@@ -27,11 +28,17 @@ function yearOptions(around: number) {
 }
 
 export function SalePeriodFilter({ yearMonth }: { yearMonth: string }) {
+  const t = useTranslations('sale.bookings');
   const router = useRouter();
   const pathname = usePathname();
   const [year, month] = yearMonth.split('-');
   const nowYm = currentYearMonth();
   const nowYear = Number(nowYm.slice(0, 4));
+
+  const monthOptions = MONTH_KEYS.map((key) => ({
+    value: key,
+    label: t(`months.${key}`),
+  }));
 
   function push(nextYear: string, nextMonth: string) {
     const next = `${nextYear}-${nextMonth}`;
@@ -44,8 +51,8 @@ export function SalePeriodFilter({ yearMonth }: { yearMonth: string }) {
   return (
     <Group gap="xs" wrap="nowrap">
       <Select
-        aria-label="Tháng"
-        data={MONTH_OPTIONS}
+        aria-label={t('monthAria')}
+        data={monthOptions}
         value={month}
         w={120}
         allowDeselect={false}
@@ -54,7 +61,7 @@ export function SalePeriodFilter({ yearMonth }: { yearMonth: string }) {
         }}
       />
       <Select
-        aria-label="Năm"
+        aria-label={t('yearAria')}
         data={yearOptions(nowYear)}
         value={year}
         w={100}

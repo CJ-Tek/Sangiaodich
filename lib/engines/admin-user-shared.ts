@@ -42,5 +42,5 @@ export function matchesAdminUserSearch(
 }
 
 export function hardDeleteBlockedMessage(): string {
-  return 'Xóa vĩnh viễn bị chặn theo chính sách hệ thống';
+  return 'HARD_DELETE_DISABLED';
 }

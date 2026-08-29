@@ -5,7 +5,6 @@ import {
   Button,
   Group,
   Pagination,
-  Paper,
   Stack,
   Tabs,
   Text,
@@ -15,27 +14,27 @@ import {
 import { useDebouncedValue } from '@mantine/hooks';
 import { notifications } from '@mantine/notifications';
 import { useEffect, useRef, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { colors, radius } from '@/config/design-tokens';
+import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { bookingStatusColors } from '@/config/booking-status';
 import { MarkPaidButton } from '@/components/admin/MarkPaidButton';
 import { EmptyState } from '@/components/ui/EmptyState';
-import {
-  hardDeleteBlockedMessage,
-  type AdminUserRow,
-} from '@/lib/engines/admin-user-shared';
+import { SurfaceCard } from '@/components/ui/SurfaceCard';
+import { usePathname, useRouter } from '@/lib/i18n/navigation';
+import { useFormat } from '@/lib/i18n/use-format';
+import type { AdminUserRow } from '@/lib/engines/admin-user-shared';
 import type {
   AdminUserTab,
   AdminUsersPage,
 } from '@/lib/engines/admin-user-management';
 import type { SubscriptionPlan } from '@/lib/engines/subscription-plans';
 
-const ROLE_TABS: { value: AdminUserTab; label: string }[] = [
-  { value: 'OWNER', label: 'Owner' },
-  { value: 'SALE', label: 'Sale' },
-  { value: 'GUEST', label: 'Guest' },
-  { value: 'ADMIN', label: 'Admin' },
-  { value: 'TRASH', label: 'Trash' },
+const ROLE_TABS: AdminUserTab[] = [
+  'OWNER',
+  'SALE',
+  'GUEST',
+  'ADMIN',
+  'TRASH',
 ];
 
 async function patchAdmin(body: Record<string, unknown>) {
@@ -65,6 +64,9 @@ function UserCard({
     profileId: string
   ) => Promise<void>;
 }) {
+  const t = useTranslations('admin.users');
+  const tErrors = useTranslations('errors');
+  const { formatDateTime } = useFormat();
   const sub = user.subscription;
   const active = sub?.status === 'ACTIVE';
   const tone = active
@@ -75,11 +77,7 @@ function UserCard({
   const isSelf = user.id === currentAdminId;
 
   return (
-    <Paper
-      p="lg"
-      radius={radius.lg}
-      style={{ border: `1px solid ${colors.border}` }}
-    >
+    <SurfaceCard>
       <Group justify="space-between" wrap="wrap" align="flex-start">
         <div>
           <Text fw={600}>
@@ -93,7 +91,9 @@ function UserCard({
           </Text>
           {mode === 'trash' && user.deleted_at ? (
             <Text size="xs" c="dimmed" mt={6}>
-              Trash từ {new Date(user.deleted_at).toLocaleString('vi-VN')}
+              {t('trashSince', {
+                date: formatDateTime(user.deleted_at),
+              })}
               {user.delete_reason ? ` · ${user.delete_reason}` : ''}
             </Text>
           ) : null}
@@ -109,7 +109,7 @@ function UserCard({
               },
             }}
           >
-            {sub ? `${sub.status} → ${sub.period_end}` : 'No sub'}
+            {sub ? `${sub.status} → ${sub.period_end}` : t('noSub')}
           </Badge>
 
           {mode === 'active' ? (
@@ -127,15 +127,15 @@ function UserCard({
                         onAction('remove_subscription', user.id)
                       }
                     >
-                      Gỡ sub
+                      {t('removeSub')}
                     </Button>
                   ) : null}
                 </>
               )}
               {isSelf ? (
-                <Tooltip label="Không thể đưa chính tài khoản đang đăng nhập vào trash">
+                <Tooltip label={t('cannotTrashSelf')}>
                   <Button size="xs" variant="light" color="red" disabled>
-                    Trash
+                    {t('trash')}
                   </Button>
                 </Tooltip>
               ) : (
@@ -146,7 +146,7 @@ function UserCard({
                   loading={loading}
                   onClick={() => onAction('soft_delete_user', user.id)}
                 >
-                  Trash
+                  {t('trash')}
                 </Button>
               )}
             </>
@@ -158,26 +158,21 @@ function UserCard({
                 loading={loading}
                 onClick={() => onAction('restore_user', user.id)}
               >
-                Khôi phục
+                {t('restore')}
               </Button>
-              <Tooltip label={hardDeleteBlockedMessage()}>
+              <Tooltip label={tErrors('ADMIN_USER.HARD_DELETE_DISABLED')}>
                 <Button size="xs" color="red" variant="outline" disabled>
-                  Xóa vĩnh viễn
+                  {t('hardDelete')}
                 </Button>
               </Tooltip>
             </>
           )}
         </Group>
       </Group>
-    </Paper>
+    </SurfaceCard>
   );
 }
 
-/**
- * Tab, search and page live in the URL: the list is paginated in the database,
- * so the server needs them to build the query. It used to receive every profile
- * and filter in the browser.
- */
 export function AdminUsersPanel({
   users,
   plans,
@@ -189,6 +184,7 @@ export function AdminUsersPanel({
   counts,
   currentAdminId,
 }: AdminUsersPage & { currentAdminId: string }) {
+  const t = useTranslations('admin.users');
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -221,10 +217,10 @@ export function AdminUsersPanel({
   ) {
     const confirmMsg =
       action === 'remove_subscription'
-        ? 'Gỡ subscription ACTIVE của user này?'
+        ? t('confirmRemoveSub')
         : action === 'soft_delete_user'
-          ? 'Đưa user vào trash? (có thể khôi phục sau)'
-          : 'Khôi phục user khỏi trash?';
+          ? t('confirmTrash')
+          : t('confirmRestore');
     if (!window.confirm(confirmMsg)) return;
 
     setBusyId(profileId);
@@ -233,7 +229,7 @@ export function AdminUsersPanel({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Thất bại',
+          message: json.error?.message || t('failed'),
         });
         return;
       }
@@ -241,10 +237,10 @@ export function AdminUsersPanel({
         color: 'vbnbGreen',
         message:
           action === 'remove_subscription'
-            ? 'Đã gỡ subscription'
+            ? t('removedSub')
             : action === 'soft_delete_user'
-              ? 'Đã đưa vào trash'
-              : 'Đã khôi phục',
+              ? t('trashed')
+              : t('restored'),
       });
       router.refresh();
     } finally {
@@ -252,14 +248,13 @@ export function AdminUsersPanel({
     }
   }
 
-  const activeTab = ROLE_TABS.find((t) => t.value === tab) ?? ROLE_TABS[0];
   const mode = tab === 'TRASH' ? 'trash' : 'active';
 
   return (
     <Stack gap="md">
       <TextInput
-        label="Tìm kiếm"
-        placeholder="Tên, SĐT hoặc email..."
+        label={t('searchLabel')}
+        placeholder={t('searchPlaceholder')}
         value={query}
         onChange={(e) => setQuery(e.currentTarget.value)}
         maw={420}
@@ -274,8 +269,8 @@ export function AdminUsersPanel({
       >
         <Tabs.List mb="md">
           {ROLE_TABS.map((roleTab) => (
-            <Tabs.Tab key={roleTab.value} value={roleTab.value}>
-              {roleTab.label} ({counts[roleTab.value]})
+            <Tabs.Tab key={roleTab} value={roleTab}>
+              {t(`tabs.${roleTab}`)} ({counts[roleTab]})
             </Tabs.Tab>
           ))}
         </Tabs.List>
@@ -285,17 +280,17 @@ export function AdminUsersPanel({
             <EmptyState
               title={
                 q
-                  ? `Không tìm thấy “${q}”`
+                  ? t('emptySearch', { query: q })
                   : tab === 'TRASH'
-                    ? 'Trash trống'
-                    : `Chưa có ${activeTab.label}`
+                    ? t('emptyTrash')
+                    : t('emptyRole', { role: t(`tabs.${tab}`) })
               }
               description={
                 q
-                  ? 'Thử từ khóa khác hoặc đổi tab role / Trash.'
+                  ? t('emptySearchHint')
                   : tab === 'TRASH'
-                    ? 'User soft-delete sẽ hiện ở đây để khôi phục.'
-                    : 'User thuộc role này sẽ hiện tại đây.'
+                    ? t('emptyTrashHint')
+                    : t('emptyRoleHint')
               }
             />
           ) : (
@@ -319,7 +314,7 @@ export function AdminUsersPanel({
       {totalPages > 1 ? (
         <Group justify="center" mt="md" gap="md" wrap="wrap">
           <Text size="sm" c="dimmed">
-            {total} user
+            {t('userCount', { count: total })}
           </Text>
           <Pagination
             value={page}

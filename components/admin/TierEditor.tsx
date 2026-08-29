@@ -11,8 +11,10 @@ import {
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { useRouter } from '@/lib/i18n/navigation';
+import { useFormat } from '@/lib/i18n/use-format';
 import { colors, radius } from '@/config/design-tokens';
 
 export type GuestTierRecord = {
@@ -30,15 +32,16 @@ export function MembershipTiersEditor({
   kind: 'guest';
   tiers: GuestTierRecord[];
 }) {
+  const t = useTranslations('admin.membership');
   const router = useRouter();
   const onSaved = () => router.refresh();
 
   return (
     <Stack gap="md">
-      {tiers.map((t) => (
-        <GuestTierRow key={t.id} tier={t} onSaved={onSaved} />
+      {tiers.map((tier) => (
+        <GuestTierRow key={tier.id} tier={tier} onSaved={onSaved} />
       ))}
-      <Divider label="Thêm tier mới" labelPosition="left" />
+      <Divider label={t('addTier')} labelPosition="left" />
       <TierEditor kind={kind} onSaved={onSaved} />
     </Stack>
   );
@@ -55,6 +58,7 @@ export function TierEditor({
   onSaved?: () => void;
   compact?: boolean;
 }) {
+  const t = useTranslations('admin.membership');
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   void kind;
@@ -83,12 +87,12 @@ export function TierEditor({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Lưu tier thất bại',
+          message: json.error?.message || t('saveTierFailed'),
         });
       } else {
         notifications.show({
           color: 'vbnbGreen',
-          message: 'Đã lưu tier',
+          message: t('tierSaved'),
         });
         if (!form.id) {
           setForm({
@@ -105,7 +109,7 @@ export function TierEditor({
     } catch {
       notifications.show({
         color: 'red',
-        message: 'Không kết nối được máy chủ. Thử lại.',
+        message: t('connectionFailed'),
       });
     } finally {
       setLoading(false);
@@ -115,15 +119,17 @@ export function TierEditor({
   return (
     <Stack gap="sm">
       {!compact ? (
-        <Title order={5}>{form.id ? 'Sửa tier' : 'Thêm tier'}</Title>
+        <Title order={5}>
+          {form.id ? t('editTier') : t('addTierTitle')}
+        </Title>
       ) : null}
       <NumberInput
-        label="Sort"
+        label={t('sort')}
         value={form.sort}
         onChange={(v) => setForm((f) => ({ ...f, sort: Number(v) || 0 }))}
       />
       <TextInput
-        label="Label"
+        label={t('labelField')}
         value={form.label}
         onChange={(e) => {
           const label = e.currentTarget.value;
@@ -131,7 +137,7 @@ export function TierEditor({
         }}
       />
       <NumberInput
-        label="Min books"
+        label={t('minBooks')}
         value={form.minBooks}
         onChange={(v) =>
           setForm((f) => ({ ...f, minBooks: Number(v) || 0 }))
@@ -139,7 +145,7 @@ export function TierEditor({
         min={0}
       />
       <NumberInput
-        label="Min GMV"
+        label={t('minGmv')}
         value={form.minGmv}
         onChange={(v) =>
           setForm((f) => ({ ...f, minGmv: Number(v) || 0 }))
@@ -154,7 +160,7 @@ export function TierEditor({
         size={compact ? 'xs' : 'sm'}
         w="fit-content"
       >
-        Lưu tier
+        {t('saveTier')}
       </Button>
     </Stack>
   );
@@ -167,6 +173,9 @@ function GuestTierRow({
   tier: GuestTierRecord;
   onSaved: () => void;
 }) {
+  const t = useTranslations('admin.membership');
+  const { formatNumber } = useFormat();
+
   return (
     <Paper
       p="md"
@@ -174,8 +183,11 @@ function GuestTierRow({
       style={{ border: `1px solid ${colors.border}` }}
     >
       <Text size="xs" c="dimmed" mb="xs">
-        #{tier.sort} · cần {tier.min_books} books +{' '}
-        {Number(tier.min_gmv).toLocaleString('vi-VN')} GMV để lên hạng
+        {t('tierRequirement', {
+          sort: tier.sort,
+          books: tier.min_books,
+          gmv: formatNumber(Number(tier.min_gmv)),
+        })}
       </Text>
       <TierEditor kind="guest" initial={tier} onSaved={onSaved} compact />
     </Paper>

@@ -11,10 +11,12 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
+import { useTranslations } from 'next-intl';
 import { OwnerAssetReviewControls } from '@/components/owner/OwnerAssetReviewControls';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LinkButton } from '@/components/ui/LinkButton';
 import { colors, radius } from '@/config/design-tokens';
+import { useFormat } from '@/lib/i18n/use-format';
 
 const PAGE_SIZE = 10;
 
@@ -43,6 +45,9 @@ export function OwnerAssetsList({
   rows: OwnerAssetListRow[];
   truncated?: boolean;
 }) {
+  const t = useTranslations('owner.assets');
+  const tPropertyTypes = useTranslations('propertyTypes');
+  const { formatNumber } = useFormat();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [shown, setShown] = useState(PAGE_SIZE);
@@ -70,7 +75,7 @@ export function OwnerAssetsList({
     <Stack gap="md">
       <Group gap="xs" wrap="wrap">
         <TextInput
-          placeholder="Tìm theo tên hoặc địa chỉ…"
+          placeholder={t('searchPlaceholder')}
           value={query}
           onChange={(e) => {
             setQuery(e.currentTarget.value);
@@ -86,10 +91,12 @@ export function OwnerAssetsList({
             setShown(PAGE_SIZE);
           }}
           data={[
-            { label: `Tất cả (${rows.length})`, value: 'all' },
-            { label: `Có chiết khấu (${withDiscount})`, value: 'with' },
+            { label: t('filterAll', { count: rows.length }), value: 'all' },
+            { label: t('filterWithDiscount', { count: withDiscount }), value: 'with' },
             {
-              label: `Không chiết khấu (${rows.length - withDiscount})`,
+              label: t('filterNoDiscount', {
+                count: rows.length - withDiscount,
+              }),
               value: 'without',
             },
           ]}
@@ -98,18 +105,18 @@ export function OwnerAssetsList({
 
       {!filtered.length ? (
         <EmptyState
-          title="Không khớp asset"
+          title={t('noMatch')}
           description={
             q || filter !== 'all'
-              ? 'Thử tên, địa chỉ, hoặc đổi bộ lọc chiết khấu.'
-              : 'Tạo listing đầu tiên để gửi duyệt.'
+              ? t('noMatchHint')
+              : t('emptyCreateHint')
           }
         />
       ) : (
         <Stack gap="sm">
           {truncated ? (
             <Text size="sm" c="dimmed">
-              Đang hiện {rows.length} căn gần nhất. Thu hẹp tìm kiếm nếu không thấy căn cũ.
+              {t('showingRecent', { count: rows.length })}
             </Text>
           ) : null}
           {visible.map((a) => {
@@ -132,21 +139,26 @@ export function OwnerAssetsList({
                       onClick={() => setOpenId(a.id)}
                     >
                       {has
-                        ? `Chiết khấu (${a.discountRules.length})`
-                        : 'Chiết khấu'}
+                        ? t('discountCount', { count: a.discountRules.length })
+                        : t('discount')}
                     </Button>
                   }
                 >
                   <div>
                     <Text fw={600}>{a.title}</Text>
                     <Text size="sm" c="dimmed" mt={4}>
-                      {a.propertyType === 'APARTMENT' ? 'Căn hộ' : 'Villa'}
+                      {a.propertyType === 'APARTMENT'
+                        ? tPropertyTypes('APARTMENT')
+                        : tPropertyTypes('VILLA')}
                       {a.location ? ` · ${a.location}` : ''}
-                      {` · ${a.bedrooms} PN · ${a.bathrooms} WC`}
+                      {` · ${t('bedroomsBathrooms', {
+                        bedrooms: a.bedrooms,
+                        bathrooms: a.bathrooms,
+                      })}`}
                     </Text>
                     <Text size="sm" c="dimmed" mt={6}>
-                      Cost WD {a.costWeekday.toLocaleString('vi-VN')} · WE{' '}
-                      {a.costWeekend.toLocaleString('vi-VN')}
+                      {t('costWd')} {formatNumber(a.costWeekday)} · {t('costWe')}{' '}
+                      {formatNumber(a.costWeekend)}
                     </Text>
                   </div>
                 </OwnerAssetReviewControls>
@@ -161,7 +173,7 @@ export function OwnerAssetsList({
               w="fit-content"
               onClick={() => setShown((n) => n + PAGE_SIZE)}
             >
-              Xem thêm {filtered.length - shown} căn
+              {t('showMore', { count: filtered.length - shown })}
             </Button>
           ) : null}
         </Stack>
@@ -170,7 +182,7 @@ export function OwnerAssetsList({
       <Modal
         opened={Boolean(selected)}
         onClose={() => setOpenId(null)}
-        title={selected?.title || 'Chiết khấu'}
+        title={selected?.title || t('discount')}
         centered
       >
         {selected ? (
@@ -183,12 +195,15 @@ export function OwnerAssetsList({
             {selected.discountRules.length ? (
               selected.discountRules.map((r) => (
                 <Text key={r.minCheckedOutCount} size="sm">
-                  Trên {r.minCheckedOutCount} lần → {r.costDiscountPercent}%
+                  {t('tierRule', {
+                    count: r.minCheckedOutCount,
+                    percent: r.costDiscountPercent,
+                  })}
                 </Text>
               ))
             ) : (
               <Text size="sm" c="dimmed">
-                Chưa set — mặc định 0%.
+                {t('noDiscount')}
               </Text>
             )}
             <LinkButton
@@ -196,7 +211,7 @@ export function OwnerAssetsList({
               color="vbnbGreen"
               size="sm"
             >
-              Sửa trên Setup Asset
+              {t('editOnSetup')}
             </LinkButton>
           </Stack>
         ) : null}

@@ -20,8 +20,15 @@ export type GuestBookingListItem = {
   remainderPayee: RemainderPayee;
 };
 
+export type GuestBookingTimelineStepKey =
+  | 'created'
+  | 'confirmed'
+  | 'checkedIn'
+  | 'checkedOut'
+  | 'cancelled';
+
 export type GuestBookingTimelineStep = {
-  label: string;
+  step: GuestBookingTimelineStepKey;
   at: string | null;
 };
 
@@ -121,13 +128,13 @@ export async function loadGuestBookingDetail(
   const status = b.status as string;
 
   const timeline: GuestBookingTimelineStep[] = [
-    { label: 'Tạo booking', at: (b.created_at as string) || null },
-    { label: 'Đã chốt', at: (b.confirmed_at as string) || null },
-    { label: 'Nhận phòng', at: (b.checked_in_at as string) || null },
-    { label: 'Trả phòng', at: (b.checked_out_at as string) || null },
+    { step: 'created', at: (b.created_at as string) || null },
+    { step: 'confirmed', at: (b.confirmed_at as string) || null },
+    { step: 'checkedIn', at: (b.checked_in_at as string) || null },
+    { step: 'checkedOut', at: (b.checked_out_at as string) || null },
   ];
   if (b.cancelled_at) {
-    timeline.push({ label: 'Đã hủy', at: b.cancelled_at as string });
+    timeline.push({ step: 'cancelled', at: b.cancelled_at as string });
   }
 
   return {

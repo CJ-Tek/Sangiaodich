@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
-import { normalizePhone, verifyMockOtp } from '@/lib/auth/otp';
+import { normalizePhone, verifyOtp } from '@/lib/auth/otp';
 import { createPendingSubscription } from '@/lib/engines/subscription-access';
 import { getDefaultPlanAmount } from '@/lib/engines/subscription-payment';
+import { getApiErrorTranslator } from '@/lib/i18n/api-errors';
 import { rateLimit } from '@/lib/kv/rate-limit';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { fail, ok, type UserRole } from '@/lib/types';
@@ -9,6 +10,7 @@ import { fail, ok, type UserRole } from '@/lib/types';
 const REGISTER_ROLES = new Set<UserRole>(['OWNER', 'SALE']);
 
 export async function POST(request: Request) {
+  const t = await getApiErrorTranslator();
   const body = await request.json();
   const email = String(body.email || '')
     .trim()
@@ -21,61 +23,61 @@ export async function POST(request: Request) {
 
   if (!REGISTER_ROLES.has(role)) {
     return NextResponse.json(
-      fail('INVALID', 'Chỉ đăng ký Owner hoặc Sale tại đây'),
+      fail('INVALID', t('INVALID.ownerSaleRegisterOnly')),
       { status: 400 }
     );
   }
   if (!email || !email.includes('@')) {
-    return NextResponse.json(fail('INVALID', 'Email không hợp lệ'), {
+    return NextResponse.json(fail('INVALID', t('INVALID.invalidEmail')), {
       status: 400,
     });
   }
   if (password.length < 8) {
     return NextResponse.json(
-      fail('INVALID', 'Mật khẩu tối thiểu 8 ký tự'),
+      fail('INVALID', t('INVALID.passwordMinLength')),
       { status: 400 }
     );
   }
   if (!fullName) {
-    return NextResponse.json(fail('INVALID', 'Họ tên bắt buộc'), {
+    return NextResponse.json(fail('INVALID', t('INVALID.fullNameRequired')), {
       status: 400,
     });
   }
   if (!phone) {
-    return NextResponse.json(fail('INVALID', 'Số điện thoại không hợp lệ'), {
+    return NextResponse.json(fail('INVALID', t('INVALID.invalidPhone')), {
       status: 400,
     });
   }
   if (!otpCode) {
     return NextResponse.json(
-      fail('INVALID', 'Vui lòng nhập mã OTP đã gửi tới SĐT'),
+      fail('INVALID', t('INVALID.otpRequired')),
       { status: 400 }
     );
   }
   if (body.acceptedTerms !== true) {
     return NextResponse.json(
-      fail('INVALID', 'Vui lòng đồng ý điều khoản sử dụng'),
+      fail('INVALID', t('INVALID.termsRequired')),
       { status: 400 }
     );
   }
 
   const rl = await rateLimit(`register:${email}`, 5, 60 * 60);
   if (!rl.success) {
-    return NextResponse.json(fail('RATE_LIMIT', 'Too many register attempts'), {
+    return NextResponse.json(fail('RATE_LIMIT', t('RATE_LIMIT.register')), {
       status: 429,
     });
   }
 
   const otpRl = await rateLimit(`otp:verify:${phone}`, 10, 60 * 15);
   if (!otpRl.success) {
-    return NextResponse.json(fail('RATE_LIMIT', 'Too many OTP attempts'), {
+    return NextResponse.json(fail('RATE_LIMIT', t('RATE_LIMIT.otpAttempts')), {
       status: 429,
     });
   }
 
-  const verified = await verifyMockOtp(phone, otpCode);
+  const verified = await verifyOtp(phone, otpCode);
   if (!verified.ok) {
-    return NextResponse.json(fail('OTP_INVALID', verified.message), {
+    return NextResponse.json(fail('OTP_INVALID', t('OTP_INVALID')), {
       status: 401,
     });
   }
@@ -89,7 +91,7 @@ export async function POST(request: Request) {
     .maybeSingle();
   if (byEmail) {
     return NextResponse.json(
-      fail('CONFLICT', 'Email đã có tài khoản. Hãy đăng nhập.'),
+      fail('CONFLICT', t('CONFLICT.emailExists')),
       { status: 409 }
     );
   }
@@ -101,7 +103,7 @@ export async function POST(request: Request) {
     .maybeSingle();
   if (byPhone) {
     return NextResponse.json(
-      fail('CONFLICT', 'SĐT đã có tài khoản. Hãy đăng nhập.'),
+      fail('CONFLICT', t('CONFLICT.phoneExists')),
       { status: 409 }
     );
   }
@@ -119,7 +121,10 @@ export async function POST(request: Request) {
 
   if (error || !created.user) {
     return NextResponse.json(
-      fail('USER_CREATE_FAILED', error?.message || 'Cannot create user'),
+      fail(
+        'USER_CREATE_FAILED',
+        error?.message || t('USER_CREATE_FAILED')
+      ),
       { status: 500 }
     );
   }
@@ -134,7 +139,7 @@ export async function POST(request: Request) {
   );
   if (roleSyncError) {
     return NextResponse.json(
-      fail('ROLE_SYNC_FAILED', roleSyncError.message),
+      fail('ROLE_SYNC_FAILED', roleSyncError.message || t('ROLE_SYNC_FAILED')),
       { status: 500 }
     );
   }
@@ -160,7 +165,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       fail(
         'SUB_CREATE_FAILED',
-        e instanceof Error ? e.message : 'Cannot create subscription'
+        e instanceof Error ? e.message : t('SUB_CREATE_FAILED')
       ),
       { status: 500 }
     );

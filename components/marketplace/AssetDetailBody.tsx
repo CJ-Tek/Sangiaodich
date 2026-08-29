@@ -1,7 +1,11 @@
+'use client';
+
 import { Badge, Group, Stack, Text, Title } from '@mantine/core';
+import { useTranslations } from 'next-intl';
 import {
   ASSET_TAG_GROUPS,
   ASSET_TAGS,
+  assetTagGroupLabel,
   assetTagLabel,
   isPropertyType,
   propertyTypeLabel,
@@ -24,6 +28,9 @@ export type AssetDetailData = {
 };
 
 export function AssetDetailInfo({ asset }: { asset: AssetDetailData }) {
+  const t = useTranslations('marketplace.detail');
+  const tTags = useTranslations('assetTags');
+  const tPropertyTypes = useTranslations('propertyTypes');
   const propertyType = isPropertyType(asset.propertyType)
     ? asset.propertyType
     : 'VILLA';
@@ -34,7 +41,7 @@ export function AssetDetailInfo({ asset }: { asset: AssetDetailData }) {
       <div>
         <Group gap="sm" mb={6}>
           <Badge variant="light" color="vbnbGreen">
-            {propertyTypeLabel(propertyType)}
+            {propertyTypeLabel(propertyType, tPropertyTypes)}
           </Badge>
         </Group>
         <Title order={1} fw={600} style={{ letterSpacing: '-0.02em' }}>
@@ -44,7 +51,11 @@ export function AssetDetailInfo({ asset }: { asset: AssetDetailData }) {
           {asset.location}
         </Text>
         <Text size="sm" c="dimmed" mt={4}>
-          {asset.capacity} khách · {asset.bedrooms} PN · {asset.bathrooms} WC
+          {t('capacityMeta', {
+            capacity: asset.capacity,
+            bedrooms: asset.bedrooms,
+            bathrooms: asset.bathrooms,
+          })}
         </Text>
       </div>
       {asset.description ? (
@@ -63,12 +74,12 @@ export function AssetDetailInfo({ asset }: { asset: AssetDetailData }) {
             return (
               <Stack key={group.id} gap={8}>
                 <Text size="sm" fw={600}>
-                  {group.label}
+                  {assetTagGroupLabel(group.id, tTags)}
                 </Text>
                 <Group gap={8}>
                   {inGroup.map((id) => (
                     <Badge key={id} variant="outline" color="gray">
-                      {assetTagLabel(id)}
+                      {assetTagLabel(id, tTags)}
                     </Badge>
                   ))}
                 </Group>

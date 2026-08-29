@@ -13,8 +13,10 @@ import {
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
+import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/i18n/navigation';
+import { useFormat } from '@/lib/i18n/use-format';
 import {
   previewPricing,
   nightCostBreakdown,
@@ -58,6 +60,8 @@ export function CreateBookingForm({
   nightlyCosts?: Record<string, number>;
 }) {
   const router = useRouter();
+  const t = useTranslations('sale.createBooking');
+  const { formatNumber } = useFormat();
   const [step, setStep] = useState(0);
   const [guest, setGuest] = useState<GuestOption | null>(null);
   const guestId = guest?.value ?? null;
@@ -187,7 +191,7 @@ export function CreateBookingForm({
         notifications.show({ color: 'red', message: json.error.message });
         return;
       }
-      notifications.show({ color: 'vbnbGreen', message: 'Đã tạo PENDING booking' });
+      notifications.show({ color: 'vbnbGreen', message: t('created') });
       router.push('/sale/bookings');
       router.refresh();
     } finally {
@@ -226,51 +230,51 @@ export function CreateBookingForm({
         size="sm"
         allowNextStepsSelect={false}
       >
-        <Stepper.Step label="Property" description="Asset" />
-        <Stepper.Step label="Guest" description="Khách" />
-        <Stepper.Step label="Dates" description="CI/CO" />
-        <Stepper.Step label="Price" description="Giá bán" />
-        <Stepper.Step label="Review" description="Xác nhận" />
+        <Stepper.Step label={t('stepProperty')} description={t('stepAsset')} />
+        <Stepper.Step label={t('stepGuest')} description={t('stepGuestVi')} />
+        <Stepper.Step label={t('stepDates')} description={t('stepDatesShort')} />
+        <Stepper.Step label={t('stepPrice')} description={t('stepPriceVi')} />
+        <Stepper.Step label={t('stepReview')} description={t('stepConfirm')} />
       </Stepper>
 
       {step === 0 ? (
         <Paper p="md" radius={radius.lg} style={{ border: `1px solid ${colors.border}` }}>
           <Text size="sm" c="dimmed">
-            Property
+            {t('stepProperty')}
           </Text>
           <Title order={4} fw={600} mt={4}>
-            {assetTitle || 'Selected asset'}
+            {assetTitle || t('selectedAsset')}
           </Title>
           <Group mt="md" gap="xl">
             <div>
               <Text size="xs" c="dimmed">
-                Cost WD
+                {t('costWd')}
                 {quoted.discountPercent > 0
                   ? ` (−${quoted.discountPercent}%)`
                   : ''}
               </Text>
               <Text fw={500}>
-                {quoted.effectiveWeekday.toLocaleString('vi-VN')}
+                {formatNumber(quoted.effectiveWeekday)}
               </Text>
               {quoted.discountPercent > 0 ? (
                 <Text size="xs" c="dimmed" td="line-through">
-                  {costWeekday.toLocaleString('vi-VN')}
+                  {formatNumber(costWeekday)}
                 </Text>
               ) : null}
             </div>
             <div>
               <Text size="xs" c="dimmed">
-                Cost WE
+                {t('costWe')}
                 {quoted.discountPercent > 0
                   ? ` (−${quoted.discountPercent}%)`
                   : ''}
               </Text>
               <Text fw={500}>
-                {quoted.effectiveWeekend.toLocaleString('vi-VN')}
+                {formatNumber(quoted.effectiveWeekend)}
               </Text>
               {quoted.discountPercent > 0 ? (
                 <Text size="xs" c="dimmed" td="line-through">
-                  {costWeekend.toLocaleString('vi-VN')}
+                  {formatNumber(costWeekend)}
                 </Text>
               ) : null}
             </div>
@@ -290,8 +294,8 @@ export function CreateBookingForm({
         <Stack gap="sm">
           <DatePickerInput
             type="range"
-            label="Check-in / Check-out"
-            description="Đỏ = đã khóa. Vàng = chờ Owner (vẫn chọn được)."
+            label={t('checkInOut')}
+            description={t('legendFull')}
             minDate={minDate}
             weekendDays={[]}
             excludeDate={isPastDate}
@@ -314,7 +318,7 @@ export function CreateBookingForm({
                 }}
               />
               <Text size="xs" c="dimmed">
-                Đỏ = đã khóa
+                {t('legendLocked')}
               </Text>
             </Group>
             <Group gap={6}>
@@ -329,7 +333,7 @@ export function CreateBookingForm({
                 }}
               />
               <Text size="xs" c="dimmed">
-                Vàng = chờ Owner
+                {t('legendPending')}
               </Text>
             </Group>
           </Group>
@@ -341,7 +345,7 @@ export function CreateBookingForm({
             confirmedRanges
           ) ? (
             <Text size="sm" c="red">
-              Khoảng ngày trùng booking đã khóa — chọn khoảng khác.
+              {t('overlapError')}
             </Text>
           ) : null}
           {range[0] &&
@@ -356,8 +360,7 @@ export function CreateBookingForm({
             awaitingOwnerRanges
           ) ? (
             <Text size="sm" c="yellow.8">
-              Có đêm đang chờ Owner xác nhận — vẫn tạo được; ai Owner chốt trước
-              sẽ khóa lịch.
+              {t('pendingWarning')}
             </Text>
           ) : null}
         </Stack>
@@ -375,16 +378,16 @@ export function CreateBookingForm({
                 <Group justify="space-between" align="flex-end">
                   <div>
                     <Text size="xs" c="dimmed">
-                      Floor price (giá sàn)
+                      {t('floorPrice')}
                     </Text>
                     <Text fw={700} size="xl">
-                      {preview.effectiveCost.toLocaleString('vi-VN')}
+                      {formatNumber(preview.effectiveCost)}
                     </Text>
                   </div>
                   <Text size="xs" c="dimmed">
-                    {nights.length} đêm · WD{' '}
-                    {quoted.effectiveWeekday.toLocaleString('vi-VN')} / WE{' '}
-                    {quoted.effectiveWeekend.toLocaleString('vi-VN')}
+                    {t('nights', { count: nights.length })} · {t('wd')}{' '}
+                    {formatNumber(quoted.effectiveWeekday)} / {t('we')}{' '}
+                    {formatNumber(quoted.effectiveWeekend)}
                   </Text>
                 </Group>
                 <Divider />
@@ -394,11 +397,11 @@ export function CreateBookingForm({
                       <Text size="sm">
                         {n.date}
                         <Text span size="xs" c="dimmed" ml={8}>
-                          {n.weekend ? 'WE' : 'WD'}
+                          {n.weekend ? t('we') : t('wd')}
                         </Text>
                       </Text>
                       <Text size="sm" fw={500}>
-                        {n.cost.toLocaleString('vi-VN')}
+                        {formatNumber(n.cost)}
                       </Text>
                     </Group>
                   ))}
@@ -407,15 +410,17 @@ export function CreateBookingForm({
             </Paper>
           ) : (
             <Text size="sm" c="dimmed">
-              Chọn ngày ở bước Dates để xem giá sàn theo từng đêm.
+              {t('pickDatesHint')}
             </Text>
           )}
 
           <NumberInput
-            label="Your selling price (tổng stay)"
+            label={t('sellingPrice')}
             description={
               preview
-                ? `Nên ≥ floor ${preview.effectiveCost.toLocaleString('vi-VN')}`
+                ? t('shouldBeFloor', {
+                    amount: formatNumber(preview.effectiveCost),
+                  })
                 : undefined
             }
             value={listPrice}
@@ -427,14 +432,14 @@ export function CreateBookingForm({
           {preview ? (
             <Group justify="space-between">
               <Text size="sm" c="dimmed">
-                Margin
+                {t('margin')}
               </Text>
               <Text
                 size="sm"
                 fw={600}
                 c={preview.saleMargin >= 0 ? 'vbnbGreen.6' : 'red'}
               >
-                {preview.saleMargin.toLocaleString('vi-VN')}
+                {formatNumber(preview.saleMargin)}
               </Text>
             </Group>
           ) : null}
@@ -445,43 +450,45 @@ export function CreateBookingForm({
         <Paper p="md" radius={radius.lg} style={{ border: `1px solid ${colors.border}` }}>
           <Stack gap="sm">
             <Title order={5} fw={600}>
-              Review
+              {t('stepReview')}
             </Title>
             <Text size="sm">
               <Text span c="dimmed">
-                Property:{' '}
+                {t('summaryProperty')}{' '}
               </Text>
               {assetTitle}
             </Text>
             <Text size="sm">
               <Text span c="dimmed">
-                Guest:{' '}
+                {t('summaryGuest')}{' '}
               </Text>
               {guestLabel}
             </Text>
             <Text size="sm">
               <Text span c="dimmed">
-                Dates:{' '}
+                {t('summaryDates')}{' '}
               </Text>
               {range[0]} → {range[1]}
             </Text>
             <Text size="sm">
               <Text span c="dimmed">
-                Floor:{' '}
+                {t('summaryFloor')}{' '}
               </Text>
               {preview
-                ? preview.effectiveCost.toLocaleString('vi-VN')
+                ? formatNumber(preview.effectiveCost)
                 : '—'}
             </Text>
             <Text size="sm">
               <Text span c="dimmed">
-                List price:{' '}
+                {t('summaryListPrice')}{' '}
               </Text>
-              {listPrice.toLocaleString('vi-VN')}
+              {formatNumber(listPrice)}
             </Text>
             {preview ? (
               <Text size="sm" c="vbnbGreen.6" fw={600}>
-                Est. margin {preview.saleMargin.toLocaleString('vi-VN')}
+                {t('estMargin', {
+                  amount: formatNumber(preview.saleMargin),
+                })}
               </Text>
             ) : null}
           </Stack>
@@ -494,7 +501,7 @@ export function CreateBookingForm({
           disabled={step === 0}
           onClick={() => setStep((s) => Math.max(0, s - 1))}
         >
-          Back
+          {t('back')}
         </Button>
         {step < 4 ? (
           <Button
@@ -502,11 +509,11 @@ export function CreateBookingForm({
             disabled={!canNext()}
             onClick={() => setStep((s) => Math.min(4, s + 1))}
           >
-            Continue
+            {t('continue')}
           </Button>
         ) : (
           <Button color="vbnbGreen" loading={loading} onClick={create}>
-            Tạo Booking
+            {t('create')}
           </Button>
         )}
       </Group>

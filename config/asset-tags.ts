@@ -1,5 +1,7 @@
 /** Fixed tags for owner asset listings (vị trí, tiện nghi, đối tượng…). */
 
+import type { useTranslations } from 'next-intl';
+
 export type AssetTagGroupId =
   | 'location'
   | 'space'
@@ -10,83 +12,79 @@ export type AssetTagGroupId =
 
 export type AssetTagDef = {
   id: string;
-  label: string;
   group: AssetTagGroupId;
 };
 
-export const ASSET_TAG_GROUPS: {
-  id: AssetTagGroupId;
-  label: string;
-}[] = [
-  { id: 'location', label: 'Vị trí' },
-  { id: 'space', label: 'Không gian & view' },
-  { id: 'amenities', label: 'Tiện nghi' },
-  { id: 'audience', label: 'Phù hợp với' },
-  { id: 'style', label: 'Phong cách' },
-  { id: 'access', label: 'Tiện lợi' },
+export const ASSET_TAG_GROUPS: { id: AssetTagGroupId }[] = [
+  { id: 'location' },
+  { id: 'space' },
+  { id: 'amenities' },
+  { id: 'audience' },
+  { id: 'style' },
+  { id: 'access' },
 ];
 
 export const ASSET_TAGS: AssetTagDef[] = [
   // Vị trí
-  { id: 'in_center', label: 'Ở trung tâm', group: 'location' },
-  { id: 'near_center', label: 'Gần trung tâm', group: 'location' },
-  { id: 'near_beach', label: 'Gần biển', group: 'location' },
-  { id: 'beachfront', label: 'Sát biển / View biển', group: 'location' },
-  { id: 'near_mountain', label: 'Gần núi / đồi', group: 'location' },
-  { id: 'mountain_view', label: 'View núi / đồi', group: 'location' },
-  { id: 'near_lake', label: 'Gần hồ / sông', group: 'location' },
-  { id: 'near_attraction', label: 'Gần khu vui chơi', group: 'location' },
-  { id: 'near_market', label: 'Gần chợ / siêu thị', group: 'location' },
-  { id: 'near_airport', label: 'Gần sân bay', group: 'location' },
-  { id: 'near_landmark', label: 'Gần điểm du lịch nổi bật', group: 'location' },
-  { id: 'quiet_suburb', label: 'Yên tĩnh / ngoại ô', group: 'location' },
+  { id: 'in_center', group: 'location' },
+  { id: 'near_center', group: 'location' },
+  { id: 'near_beach', group: 'location' },
+  { id: 'beachfront', group: 'location' },
+  { id: 'near_mountain', group: 'location' },
+  { id: 'mountain_view', group: 'location' },
+  { id: 'near_lake', group: 'location' },
+  { id: 'near_attraction', group: 'location' },
+  { id: 'near_market', group: 'location' },
+  { id: 'near_airport', group: 'location' },
+  { id: 'near_landmark', group: 'location' },
+  { id: 'quiet_suburb', group: 'location' },
 
   // Không gian & view
-  { id: 'private_pool', label: 'Hồ bơi riêng', group: 'space' },
-  { id: 'garden', label: 'Sân vườn rộng', group: 'space' },
-  { id: 'bbq', label: 'Sân BBQ', group: 'space' },
-  { id: 'balcony', label: 'Ban công / terrace', group: 'space' },
-  { id: 'sea_view', label: 'View biển', group: 'space' },
-  { id: 'city_view', label: 'View thành phố', group: 'space' },
+  { id: 'private_pool', group: 'space' },
+  { id: 'garden', group: 'space' },
+  { id: 'bbq', group: 'space' },
+  { id: 'balcony', group: 'space' },
+  { id: 'sea_view', group: 'space' },
+  { id: 'city_view', group: 'space' },
 
   // Tiện nghi (thay Amenities tự do)
-  { id: 'wifi', label: 'Wifi', group: 'amenities' },
-  { id: 'tv', label: 'TV', group: 'amenities' },
-  { id: 'sound_system', label: 'Loa / Sound system', group: 'amenities' },
-  { id: 'streaming', label: 'Netflix / máy chiếu', group: 'amenities' },
-  { id: 'air_con', label: 'Máy lạnh', group: 'amenities' },
-  { id: 'heater', label: 'Máy sưởi / lò sưởi', group: 'amenities' },
-  { id: 'washer', label: 'Máy giặt', group: 'amenities' },
-  { id: 'dryer', label: 'Máy sấy', group: 'amenities' },
-  { id: 'kitchen', label: 'Bếp đầy đủ', group: 'amenities' },
-  { id: 'oven_microwave', label: 'Lò nướng / lò vi sóng', group: 'amenities' },
-  { id: 'fridge', label: 'Tủ lạnh', group: 'amenities' },
-  { id: 'coffee', label: 'Ấm đun / máy pha cà phê', group: 'amenities' },
-  { id: 'indoor_grill', label: 'Đồ nướng trong nhà', group: 'amenities' },
-  { id: 'hot_water', label: 'Máy nước nóng', group: 'amenities' },
-  { id: 'bathtub', label: 'Bồn tắm', group: 'amenities' },
-  { id: 'toiletries', label: 'Toiletries / khăn', group: 'amenities' },
-  { id: 'security_cam', label: 'Camera an ninh', group: 'amenities' },
-  { id: 'safe', label: 'Két sắt', group: 'amenities' },
+  { id: 'wifi', group: 'amenities' },
+  { id: 'tv', group: 'amenities' },
+  { id: 'sound_system', group: 'amenities' },
+  { id: 'streaming', group: 'amenities' },
+  { id: 'air_con', group: 'amenities' },
+  { id: 'heater', group: 'amenities' },
+  { id: 'washer', group: 'amenities' },
+  { id: 'dryer', group: 'amenities' },
+  { id: 'kitchen', group: 'amenities' },
+  { id: 'oven_microwave', group: 'amenities' },
+  { id: 'fridge', group: 'amenities' },
+  { id: 'coffee', group: 'amenities' },
+  { id: 'indoor_grill', group: 'amenities' },
+  { id: 'hot_water', group: 'amenities' },
+  { id: 'bathtub', group: 'amenities' },
+  { id: 'toiletries', group: 'amenities' },
+  { id: 'security_cam', group: 'amenities' },
+  { id: 'safe', group: 'amenities' },
 
   // Phù hợp với
-  { id: 'family', label: 'Gia đình có trẻ', group: 'audience' },
-  { id: 'friends', label: 'Nhóm bạn / party', group: 'audience' },
-  { id: 'couple', label: 'Cặp đôi / honeymoon', group: 'audience' },
-  { id: 'team_building', label: 'Team building', group: 'audience' },
-  { id: 'remote_work', label: 'Remote work', group: 'audience' },
-  { id: 'pet_friendly', label: 'Pet friendly', group: 'audience' },
+  { id: 'family', group: 'audience' },
+  { id: 'friends', group: 'audience' },
+  { id: 'couple', group: 'audience' },
+  { id: 'team_building', group: 'audience' },
+  { id: 'remote_work', group: 'audience' },
+  { id: 'pet_friendly', group: 'audience' },
 
   // Phong cách
-  { id: 'luxury', label: 'Sang trọng / luxury', group: 'style' },
-  { id: 'rustic', label: 'Rustic / thiên nhiên', group: 'style' },
-  { id: 'minimal', label: 'Minimal / hiện đại', group: 'style' },
-  { id: 'local_style', label: 'Phong cách địa phương', group: 'style' },
+  { id: 'luxury', group: 'style' },
+  { id: 'rustic', group: 'style' },
+  { id: 'minimal', group: 'style' },
+  { id: 'local_style', group: 'style' },
 
   // Tiện lợi
-  { id: 'parking', label: 'Bãi đậu xe / garage', group: 'access' },
-  { id: 'compound', label: 'Compound / có bảo vệ', group: 'access' },
-  { id: 'self_checkin', label: 'Self check-in', group: 'access' },
+  { id: 'parking', group: 'access' },
+  { id: 'compound', group: 'access' },
+  { id: 'self_checkin', group: 'access' },
 ];
 
 export const ASSET_TAG_IDS = new Set(ASSET_TAGS.map((t) => t.id));
@@ -117,17 +115,23 @@ export function filterValidAssetTags(raw: unknown): string[] {
   return out;
 }
 
-export function assetTagLabel(id: string): string {
-  return ASSET_TAGS.find((t) => t.id === id)?.label ?? id;
+type AssetTagsTranslator = ReturnType<typeof useTranslations<'assetTags'>>;
+
+export function assetTagLabel(id: string, t: AssetTagsTranslator): string {
+  if (!ASSET_TAG_IDS.has(id)) return id;
+  return t(`tags.${id}` as 'tags.in_center');
 }
 
-export function assetTagGroupLabel(groupId: AssetTagGroupId): string {
-  return ASSET_TAG_GROUPS.find((g) => g.id === groupId)?.label ?? groupId;
+export function assetTagGroupLabel(
+  groupId: AssetTagGroupId,
+  t: AssetTagsTranslator
+): string {
+  return t(`groups.${groupId}` as 'groups.location');
 }
 
 export const PROPERTY_TYPES = [
-  { value: 'VILLA' as const, label: 'Villa' },
-  { value: 'APARTMENT' as const, label: 'Căn hộ' },
+  { value: 'VILLA' as const },
+  { value: 'APARTMENT' as const },
 ];
 
 export type PropertyType = (typeof PROPERTY_TYPES)[number]['value'];
@@ -136,8 +140,15 @@ export function isPropertyType(v: unknown): v is PropertyType {
   return v === 'VILLA' || v === 'APARTMENT';
 }
 
-export function propertyTypeLabel(type: PropertyType): string {
-  return PROPERTY_TYPES.find((t) => t.value === type)?.label ?? type;
+type PropertyTypesTranslator = ReturnType<
+  typeof useTranslations<'propertyTypes'>
+>;
+
+export function propertyTypeLabel(
+  type: PropertyType,
+  t: PropertyTypesTranslator
+): string {
+  return t(type);
 }
 
 export const MAX_ASSET_IMAGES = 12;

@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
-import { verifyMockOtp, normalizePhone } from '@/lib/auth/otp';
+import { normalizePhone, verifyOtp } from '@/lib/auth/otp';
+import { getApiErrorTranslator } from '@/lib/i18n/api-errors';
 import { rateLimit } from '@/lib/kv/rate-limit';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { fail, ok } from '@/lib/types';
 
 export async function POST(request: Request) {
+  const t = await getApiErrorTranslator();
   const body = await request.json();
   const phone = normalizePhone(String(body.phone || ''));
   const code = String(body.code || '');
@@ -15,41 +17,41 @@ export async function POST(request: Request) {
   const password = String(body.password || '');
 
   if (!phone) {
-    return NextResponse.json(fail('INVALID_PHONE', 'Số điện thoại không hợp lệ'), {
+    return NextResponse.json(fail('INVALID_PHONE', t('INVALID_PHONE')), {
       status: 400,
     });
   }
 
   if (intent === 'register' && !fullName) {
-    return NextResponse.json(fail('INVALID', 'Họ tên bắt buộc'), {
+    return NextResponse.json(fail('INVALID', t('INVALID.fullNameRequired')), {
       status: 400,
     });
   }
 
   if (intent === 'register' && password.length < 8) {
     return NextResponse.json(
-      fail('INVALID', 'Mật khẩu tối thiểu 8 ký tự'),
+      fail('INVALID', t('INVALID.passwordMinLength')),
       { status: 400 }
     );
   }
 
   if (intent === 'register' && body.acceptedTerms !== true) {
     return NextResponse.json(
-      fail('INVALID', 'Vui lòng đồng ý điều khoản sử dụng'),
+      fail('INVALID', t('INVALID.termsRequired')),
       { status: 400 }
     );
   }
 
   const rl = await rateLimit(`otp:verify:${phone}`, 10, 60 * 15);
   if (!rl.success) {
-    return NextResponse.json(fail('RATE_LIMIT', 'Too many verify attempts'), {
+    return NextResponse.json(fail('RATE_LIMIT', t('RATE_LIMIT.otpVerify')), {
       status: 429,
     });
   }
 
-  const verified = await verifyMockOtp(phone, code);
+  const verified = await verifyOtp(phone, code);
   if (!verified.ok) {
-    return NextResponse.json(fail('OTP_INVALID', verified.message), {
+    return NextResponse.json(fail('OTP_INVALID', t('OTP_INVALID')), {
       status: 401,
     });
   }
@@ -63,7 +65,7 @@ export async function POST(request: Request) {
 
   if (existing && intent === 'register') {
     return NextResponse.json(
-      fail('CONFLICT', 'SĐT đã có tài khoản. Hãy đăng nhập.'),
+      fail('CONFLICT', t('CONFLICT.phoneExists')),
       { status: 409 }
     );
   }
@@ -86,7 +88,10 @@ export async function POST(request: Request) {
     });
     if (error || !created.user) {
       return NextResponse.json(
-        fail('USER_CREATE_FAILED', error?.message || 'Cannot create user'),
+        fail(
+          'USER_CREATE_FAILED',
+          error?.message || t('USER_CREATE_FAILED')
+        ),
         { status: 500 }
       );
     }
@@ -115,7 +120,7 @@ export async function POST(request: Request) {
   }
 
   if (!email) {
-    return NextResponse.json(fail('NO_EMAIL', 'User missing email'), {
+    return NextResponse.json(fail('NO_EMAIL', t('NO_EMAIL')), {
       status: 500,
     });
   }
@@ -128,7 +133,10 @@ export async function POST(request: Request) {
 
   if (linkError || !linkData.properties?.hashed_token) {
     return NextResponse.json(
-      fail('SESSION_FAILED', linkError?.message || 'Cannot create session'),
+      fail(
+        'SESSION_FAILED',
+        linkError?.message || t('SESSION_FAILED')
+      ),
       { status: 500 }
     );
   }
@@ -140,9 +148,10 @@ export async function POST(request: Request) {
   });
 
   if (otpError) {
-    return NextResponse.json(fail('SESSION_FAILED', otpError.message), {
-      status: 500,
-    });
+    return NextResponse.json(
+      fail('SESSION_FAILED', otpError.message || t('SESSION_FAILED')),
+      { status: 500 }
+    );
   }
 
   return NextResponse.json(ok({ phone, role }));

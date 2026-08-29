@@ -13,8 +13,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
 /**
- * This suite creates and deletes real rows, so it only runs against a local
- * Supabase — never against a remote project that happens to be configured.
+ * Skipped on the shared hosted DB because this suite creates and deletes real rows.
  */
 const isLocalSupabase = /(localhost|127\.0\.0\.1)/.test(supabaseUrl);
 const canRun = Boolean(supabaseUrl && serviceRoleKey && isLocalSupabase);

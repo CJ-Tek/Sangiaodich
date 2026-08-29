@@ -11,9 +11,12 @@ import {
   UnstyledButton,
 } from '@mantine/core';
 import dayjs from 'dayjs';
+import { useLocale, useTranslations } from 'next-intl';
 import { bookingStatusColors } from '@/config/booking-status';
 import { colors, radius } from '@/config/design-tokens';
 import { todayDateOnly } from '@/lib/dates';
+import { formatDateTime } from '@/lib/i18n/format';
+import type { AppLocale } from '@/lib/i18n/routing';
 import {
   nightStatus,
   type AssetNightBoard,
@@ -29,6 +32,8 @@ const BOOKED_TONE = {
 const CLOSED_TONE = bookingStatusColors.blocked;
 
 export type CalendarVariant = 'guest' | 'sale' | 'owner';
+
+const WEEKDAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 
 function toneForStatus(
   status: NightStatus,
@@ -52,6 +57,8 @@ export function MarketplaceCalendar({
   /** Guest paints hold as empty (PENDING does not occupy public free/busy). */
   variant?: CalendarVariant;
 }) {
+  const locale = useLocale() as AppLocale;
+  const t = useTranslations('marketplace.calendar');
   const [viewMonth, setViewMonth] = useState(() =>
     dayjs(month).startOf('month')
   );
@@ -67,13 +74,17 @@ export function MarketplaceCalendar({
   ];
 
   const showHold = variant !== 'guest';
+  const monthLabel = formatDateTime(start.toDate(), locale, {
+    month: 'long',
+    year: 'numeric',
+  });
 
   return (
     <Stack gap="md">
       <Group justify="space-between" align="center">
         <Group gap={4} align="center">
           <MonthNavButton
-            label="Tháng trước"
+            label={t('prevMonth')}
             disabled={!canGoPrev}
             onClick={() => setViewMonth((m) => m.subtract(1, 'month'))}
           >
@@ -86,28 +97,28 @@ export function MarketplaceCalendar({
             style={{ letterSpacing: '0.04em', minWidth: '9.5rem' }}
             ta="center"
           >
-            {start.format('MMMM YYYY')}
+            {monthLabel}
           </Title>
           <MonthNavButton
-            label="Tháng sau"
+            label={t('nextMonth')}
             onClick={() => setViewMonth((m) => m.add(1, 'month'))}
           >
             ›
           </MonthNavButton>
         </Group>
         <Group gap="md">
-          <Legend color={bookingStatusColors.available} label="Trống" />
+          <Legend color={bookingStatusColors.available} label={t('legendAvailable')} />
           {showHold ? (
-            <Legend color={bookingStatusColors.hold} label="Đang giữ" />
+            <Legend color={bookingStatusColors.hold} label={t('legendHold')} />
           ) : null}
-          <Legend color={CLOSED_TONE} label="Đóng" />
-          <Legend color={BOOKED_TONE} label="Đã book" />
+          <Legend color={CLOSED_TONE} label={t('legendClosed')} />
+          <Legend color={BOOKED_TONE} label={t('legendBooked')} />
         </Group>
       </Group>
       <SimpleGrid cols={7} spacing={8}>
-        {['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'].map((d) => (
-          <Text key={d} size="xs" ta="center" c="dimmed" fw={500}>
-            {d}
+        {WEEKDAY_KEYS.map((key) => (
+          <Text key={key} size="xs" ta="center" c="dimmed" fw={500}>
+            {t(`weekdays.${key}`)}
           </Text>
         ))}
         {cells.map((day, idx) => {

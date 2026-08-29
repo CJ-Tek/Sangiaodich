@@ -12,25 +12,16 @@ import {
 } from '@mantine/core';
 import { DateTimePicker } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/lib/i18n/navigation';
+import { useMemo, useState } from 'react';
 import type { SavedCustomerRow } from '@/lib/engines/sale-customers';
 
-const CHANNEL_OPTIONS = [
-  { value: 'ZALO', label: 'Zalo' },
-  { value: 'FACEBOOK', label: 'Facebook' },
-  { value: 'PHONE', label: 'Điện thoại' },
-  { value: 'OTHER', label: 'Khác' },
-];
-
-const INTENT_OPTIONS = [
-  { value: 'HOT', label: 'HOT' },
-  { value: 'WARM', label: 'WARM' },
-  { value: 'COLD', label: 'COLD' },
-];
+const CHANNEL_VALUES = ['ZALO', 'FACEBOOK', 'PHONE', 'OTHER'] as const;
+const INTENT_VALUES = ['HOT', 'WARM', 'COLD'] as const;
 
 export function SaveCustomerButton({
-  label = 'Lưu khách',
+  label,
   initial,
   size = 'sm',
   variant = 'filled',
@@ -44,6 +35,7 @@ export function SaveCustomerButton({
   size?: 'xs' | 'sm' | 'md';
   variant?: 'filled' | 'light' | 'default';
 }) {
+  const t = useTranslations('sale.savedCustomer');
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -53,6 +45,23 @@ export function SaveCustomerButton({
   const [intentLevel, setIntentLevel] = useState<string | null>('WARM');
   const [note, setNote] = useState(initial?.note || '');
   const [nextFollowUpAt, setNextFollowUpAt] = useState<Date | null>(null);
+
+  const channelOptions = useMemo(
+    () =>
+      CHANNEL_VALUES.map((value) => ({
+        value,
+        label: t(`channels.${value}`),
+      })),
+    [t]
+  );
+  const intentOptions = useMemo(
+    () =>
+      INTENT_VALUES.map((value) => ({
+        value,
+        label: t(`intents.${value}`),
+      })),
+    [t]
+  );
 
   async function submit() {
     setLoading(true);
@@ -78,7 +87,7 @@ export function SaveCustomerButton({
       }
       notifications.show({
         color: 'vbnbGreen',
-        message: 'Đã lưu khách vào follow-up',
+        message: t('saved'),
       });
       setOpen(false);
       router.refresh();
@@ -100,41 +109,41 @@ export function SaveCustomerButton({
           setOpen(true);
         }}
       >
-        {label}
+        {label ?? t('saveGuest')}
       </Button>
       <Modal
         opened={open}
         onClose={() => !loading && setOpen(false)}
-        title="Lưu khách follow-up"
+        title={t('saveFollowUp')}
         centered
       >
         <Stack gap="sm">
           <TextInput
-            label="Họ tên"
+            label={t('fullName')}
             required
             value={fullName}
             onChange={(e) => setFullName(e.currentTarget.value)}
           />
           <TextInput
-            label="Số điện thoại"
+            label={t('phone')}
             required
             value={phone}
             onChange={(e) => setPhone(e.currentTarget.value)}
           />
           <Select
-            label="Kênh liên hệ"
-            data={CHANNEL_OPTIONS}
+            label={t('channel')}
+            data={channelOptions}
             value={channel}
             onChange={setChannel}
           />
           <Select
-            label="Mức quan tâm"
-            data={INTENT_OPTIONS}
+            label={t('intent')}
+            data={intentOptions}
             value={intentLevel}
             onChange={setIntentLevel}
           />
           <DateTimePicker
-            label="Follow-up tiếp theo"
+            label={t('nextFollowUp')}
             value={nextFollowUpAt}
             onChange={(v) =>
               setNextFollowUpAt(v ? new Date(String(v)) : null)
@@ -142,7 +151,7 @@ export function SaveCustomerButton({
             clearable
           />
           <Textarea
-            label="Ghi chú"
+            label={t('notes')}
             value={note}
             onChange={(e) => setNote(e.currentTarget.value)}
             minRows={2}
@@ -153,7 +162,7 @@ export function SaveCustomerButton({
               disabled={loading}
               onClick={() => setOpen(false)}
             >
-              Đóng
+              {t('close')}
             </Button>
             <Button
               color="vbnbGreen"
@@ -161,7 +170,7 @@ export function SaveCustomerButton({
               disabled={!fullName.trim() || !phone.trim()}
               onClick={submit}
             >
-              Lưu
+              {t('save')}
             </Button>
           </Group>
         </Stack>
@@ -175,6 +184,7 @@ export function SavedCustomerActions({
 }: {
   customer: SavedCustomerRow;
 }) {
+  const t = useTranslations('sale.savedCustomer');
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -189,6 +199,23 @@ export function SavedCustomerActions({
     customer.next_follow_up_at
       ? new Date(customer.next_follow_up_at)
       : null
+  );
+
+  const channelOptions = useMemo(
+    () =>
+      CHANNEL_VALUES.map((value) => ({
+        value,
+        label: t(`channels.${value}`),
+      })),
+    [t]
+  );
+  const intentOptions = useMemo(
+    () =>
+      INTENT_VALUES.map((value) => ({
+        value,
+        label: t(`intents.${value}`),
+      })),
+    [t]
   );
 
   async function patch(body: Record<string, unknown>, okMessage: string) {
@@ -227,7 +254,7 @@ export function SavedCustomerActions({
       }
       notifications.show({
         color: 'vbnbGreen',
-        message: 'Đã đánh dấu chuyển đổi',
+        message: t('notedConverted'),
       });
       router.refresh();
     } finally {
@@ -238,7 +265,7 @@ export function SavedCustomerActions({
   if (customer.status !== 'ACTIVE') {
     return (
       <Text size="sm" c="dimmed">
-        {customer.status === 'CONVERTED' ? 'Đã chuyển đổi' : 'Đã lưu trữ'}
+        {customer.status === 'CONVERTED' ? t('converted') : t('archived')}
       </Text>
     );
   }
@@ -251,9 +278,9 @@ export function SavedCustomerActions({
           variant="light"
           color="vbnbGreen"
           loading={loading}
-          onClick={() => patch({ markContacted: true }, 'Đã ghi nhận liên hệ')}
+          onClick={() => patch({ markContacted: true }, t('notedContact'))}
         >
-          Đã liên hệ
+          {t('contacted')}
         </Button>
         <Button
           size="xs"
@@ -261,7 +288,7 @@ export function SavedCustomerActions({
           loading={loading}
           onClick={() => setEditOpen(true)}
         >
-          Sửa
+          {t('edit')}
         </Button>
         <Button
           size="xs"
@@ -269,7 +296,7 @@ export function SavedCustomerActions({
           loading={loading}
           onClick={convert}
         >
-          Đánh dấu chuyển đổi
+          {t('markConverted')}
         </Button>
         <Button
           size="xs"
@@ -277,44 +304,44 @@ export function SavedCustomerActions({
           variant="light"
           loading={loading}
           onClick={() =>
-            patch({ status: 'ARCHIVED' }, 'Đã lưu trữ khách')
+            patch({ status: 'ARCHIVED' }, t('notedArchived'))
           }
         >
-          Lưu trữ
+          {t('archive')}
         </Button>
       </Group>
 
       <Modal
         opened={editOpen}
         onClose={() => !loading && setEditOpen(false)}
-        title="Cập nhật khách"
+        title={t('updateGuest')}
         centered
       >
         <Stack gap="sm">
           <TextInput
-            label="Họ tên"
+            label={t('fullName')}
             value={fullName}
             onChange={(e) => setFullName(e.currentTarget.value)}
           />
           <TextInput
-            label="Số điện thoại"
+            label={t('phone')}
             value={phone}
             onChange={(e) => setPhone(e.currentTarget.value)}
           />
           <Select
-            label="Kênh"
-            data={CHANNEL_OPTIONS}
+            label={t('channelShort')}
+            data={channelOptions}
             value={channel}
             onChange={setChannel}
           />
           <Select
-            label="Mức quan tâm"
-            data={INTENT_OPTIONS}
+            label={t('intent')}
+            data={intentOptions}
             value={intentLevel}
             onChange={setIntentLevel}
           />
           <DateTimePicker
-            label="Follow-up tiếp theo"
+            label={t('nextFollowUp')}
             value={nextFollowUpAt}
             onChange={(v) =>
               setNextFollowUpAt(v ? new Date(String(v)) : null)
@@ -322,7 +349,7 @@ export function SavedCustomerActions({
             clearable
           />
           <Textarea
-            label="Ghi chú"
+            label={t('notes')}
             value={note}
             onChange={(e) => setNote(e.currentTarget.value)}
             minRows={2}
@@ -333,7 +360,7 @@ export function SavedCustomerActions({
               disabled={loading}
               onClick={() => setEditOpen(false)}
             >
-              Đóng
+              {t('close')}
             </Button>
             <Button
               color="vbnbGreen"
@@ -350,11 +377,11 @@ export function SavedCustomerActions({
                       ? nextFollowUpAt.toISOString()
                       : null,
                   },
-                  'Đã cập nhật'
+                  t('updated')
                 )
               }
             >
-              Lưu
+              {t('save')}
             </Button>
           </Group>
         </Stack>

@@ -81,9 +81,9 @@ export function pickSaleDiscountFromCount(
 }
 
 export function saleDiscountSnapshotLabel(percent: number): string {
-  const p = Number(percent) || 0;
+  const p = Math.round(Number(percent) || 0);
   if (p <= 0) return '0%';
-  return `−${p}% căn này`;
+  return `-${p}%`;
 }
 
 export type GuestProgressState = {

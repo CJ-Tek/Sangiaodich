@@ -2,12 +2,14 @@ import { NextResponse } from 'next/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { createServiceClient } from '@/lib/supabase/server';
 import { isIdDocStoragePath } from '@/lib/profile/id-docs';
+import { getApiRouteContext } from '@/lib/i18n/api-route-context';
 import { fail, ok } from '@/lib/types';
 
 export async function PATCH(request: Request) {
+  const { t } = await getApiRouteContext();
   const profile = await getSessionProfile();
   if (!profile) {
-    return NextResponse.json(fail('UNAUTHORIZED', 'Login required'), {
+    return NextResponse.json(fail('UNAUTHORIZED', t('UNAUTHORIZED.loginRequired')), {
       status: 401,
     });
   }
@@ -20,7 +22,7 @@ export async function PATCH(request: Request) {
   if (body.fullName !== undefined) {
     const fullName = String(body.fullName || '').trim();
     if (!fullName) {
-      return NextResponse.json(fail('INVALID', 'Họ tên bắt buộc'), {
+      return NextResponse.json(fail('INVALID', t('INVALID.fullNameRequired')), {
         status: 400,
       });
     }
@@ -48,7 +50,7 @@ export async function PATCH(request: Request) {
       .replace(/\s+/g, '');
     if (nationalId && !/^\d{9}$|^\d{12}$/.test(nationalId)) {
       return NextResponse.json(
-        fail('INVALID', 'CCCD/CMND phải là 9 hoặc 12 chữ số'),
+        fail('INVALID', t('INVALID.nationalIdFormat')),
         { status: 400 }
       );
     }
@@ -59,14 +61,13 @@ export async function PATCH(request: Request) {
     const v = String(body.nationalIdFrontUrl || '').trim();
     if (v && !isIdDocStoragePath(v) && !/^https?:\/\//i.test(v)) {
       return NextResponse.json(
-        fail('INVALID', 'Ảnh CCCD mặt trước không hợp lệ'),
+        fail('INVALID', t('INVALID.nationalIdFrontInvalid')),
         { status: 400 }
       );
     }
-    // Reject accidental signed URLs — only storage paths for private docs
     if (v && /^https?:\/\//i.test(v)) {
       return NextResponse.json(
-        fail('INVALID', 'Ảnh CCCD phải upload qua hệ thống (không dán link)'),
+        fail('INVALID', t('INVALID.nationalIdFrontUploadOnly')),
         { status: 400 }
       );
     }
@@ -77,13 +78,13 @@ export async function PATCH(request: Request) {
     const v = String(body.nationalIdBackUrl || '').trim();
     if (v && !isIdDocStoragePath(v) && !/^https?:\/\//i.test(v)) {
       return NextResponse.json(
-        fail('INVALID', 'Ảnh CCCD mặt sau không hợp lệ'),
+        fail('INVALID', t('INVALID.nationalIdBackInvalid')),
         { status: 400 }
       );
     }
     if (v && /^https?:\/\//i.test(v)) {
       return NextResponse.json(
-        fail('INVALID', 'Ảnh CCCD phải upload qua hệ thống (không dán link)'),
+        fail('INVALID', t('INVALID.nationalIdBackUploadOnly')),
         { status: 400 }
       );
     }
@@ -101,7 +102,7 @@ export async function PATCH(request: Request) {
   if (wantsPayoutUpdate) {
     if (profile.role !== 'OWNER' && profile.role !== 'SALE') {
       return NextResponse.json(
-        fail('FORBIDDEN', 'Chỉ Owner hoặc Sale cập nhật tài khoản nhận tiền'),
+        fail('FORBIDDEN', t('FORBIDDEN.payoutAccountOwnerSaleOnly')),
         { status: 403 }
       );
     }
@@ -143,7 +144,7 @@ export async function PATCH(request: Request) {
   if (error) {
     if (error.code === '23505') {
       return NextResponse.json(
-        fail('CONFLICT', 'SĐT hoặc CCCD đã được dùng bởi tài khoản khác'),
+        fail('CONFLICT', t('CONFLICT.phoneOrNationalIdTaken')),
         { status: 409 }
       );
     }

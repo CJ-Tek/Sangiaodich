@@ -8,8 +8,8 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 /**
- * Covers the RPCs that took over aggregation from Node. They run against real
- * rows, so — like the SePay suite — only a local Supabase is ever touched.
+ * Covers the RPCs that took over aggregation from Node. Skipped on the shared hosted DB
+ * because they create and delete real rows.
  */
 const isLocalSupabase = /(localhost|127\.0\.0\.1)/.test(supabaseUrl);
 const canRun = Boolean(

@@ -12,6 +12,10 @@ export const landingMedia = {
   ],
 } as const;
 
+/** Shared landing page content width — pair with `className` on layout wrappers. */
+export const containerClassName = 'vbnb-landing-container';
+
+/** @deprecated Prefer `containerClassName` with Mantine `className`. */
 export const landingContainer = {
   maxWidth: 1200,
   marginInline: 'auto',

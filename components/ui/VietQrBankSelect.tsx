@@ -1,6 +1,7 @@
 'use client';
 
 import { Select, Stack, Text, type ComboboxItem, type OptionsFilter } from '@mantine/core';
+import { useTranslations } from 'next-intl';
 import { useMemo } from 'react';
 import {
   findVietQrBank,
@@ -40,14 +41,15 @@ const filterBanks: OptionsFilter = ({ options, search, limit }) => {
 export function VietQrBankSelect({
   value,
   onChange,
-  label = 'Mã NH VietQR',
-  description = 'Chọn ngân hàng để tạo QR động kèm số tiền + nội dung. Gõ tên hoặc mã để tìm.',
+  label,
+  description,
 }: {
   value: string;
   onChange: (bank: VietQrBank | null) => void;
   label?: string;
   description?: string;
 }) {
+  const t = useTranslations('common.vietQr');
   const matched = findVietQrBank(value);
   const selectValue = matched?.bankCode ?? (value.trim() || null);
 
@@ -58,8 +60,8 @@ export function VietQrBankSelect({
 
   return (
     <Select
-      label={label}
-      description={description}
+      label={label ?? t('label')}
+      description={description ?? t('description')}
       placeholder="Vietcombank"
       data={data}
       value={selectValue}
@@ -78,7 +80,7 @@ export function VietQrBankSelect({
       }}
       searchable
       clearable
-      nothingFoundMessage="Không tìm thấy ngân hàng"
+      nothingFoundMessage={t('bankNotFound')}
       filter={filterBanks}
       maxDropdownHeight={280}
       renderOption={({ option }) => {

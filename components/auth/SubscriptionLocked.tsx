@@ -1,7 +1,8 @@
 'use client';
 
 import { Button, Paper, Stack, Text, Title } from '@mantine/core';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/lib/i18n/navigation';
 import { colors, radius } from '@/config/design-tokens';
 
 export function SubscriptionLocked({
@@ -14,12 +15,15 @@ export function SubscriptionLocked({
   phone?: string | null;
   email?: string | null;
 }) {
+  const t = useTranslations('subscriptionLocked');
   const isPending = status === 'PENDING_PAYMENT' || !status;
   const isExpired = status === 'EXPIRED';
   const subHref =
     role === 'SALE'
       ? '/sale/settings?tab=subscription'
       : '/owner/subscription';
+  const profileHref =
+    role === 'SALE' ? '/sale/settings?tab=profile' : '/owner/profile';
 
   return (
     <Stack gap="md" maw={480} mx="auto" mt={48}>
@@ -30,40 +34,29 @@ export function SubscriptionLocked({
       >
         <Stack gap="md">
           <Title order={2} fw={600} style={{ letterSpacing: '-0.02em' }}>
-            {isExpired ? 'Subscription hết hạn' : 'Chờ kích hoạt'}
+            {isExpired ? t('expiredTitle') : t('pendingTitle')}
           </Title>
           <Text c="dimmed" size="sm">
             {isPending
-              ? 'Chọn gói trên trang Subscription, quét QR (nội dung CK đã sẵn) để kích hoạt.'
+              ? t('pendingDesc')
               : isExpired
-                ? 'Kỳ phí đã hết. Chọn gói và thanh toán để mở lại.'
-                : 'Subscription chưa ACTIVE. Vào Subscription để chọn gói.'}
+                ? t('expiredDesc')
+                : t('inactiveDesc')}
           </Text>
           <Text size="sm" fw={500} c="vbnbGreen.6">
-            Trạng thái: {status || 'PENDING_PAYMENT'}
+            {t('statusLabel', { status: status || 'PENDING_PAYMENT' })}
           </Text>
           <Button component={Link} href={subHref} color="vbnbGreen">
-            Chọn gói & thanh toán
+            {t('choosePlan')}
           </Button>
-          {role === 'SALE' ? (
-            <Button
-              component={Link}
-              href="/sale/settings?tab=profile"
-              variant="light"
-              color="gray"
-            >
-              Hồ sơ cá nhân
-            </Button>
-          ) : (
-            <Button
-              component={Link}
-              href="/owner/profile"
-              variant="light"
-              color="gray"
-            >
-              Hồ sơ cá nhân
-            </Button>
-          )}
+          <Button
+            component={Link}
+            href={profileHref}
+            variant="light"
+            color="gray"
+          >
+            {t('profile')}
+          </Button>
         </Stack>
       </Paper>
     </Stack>

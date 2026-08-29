@@ -10,7 +10,8 @@ import {
   Text,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/lib/i18n/navigation';
 import { ExportGuestInvoiceButton } from '@/components/sale/ExportGuestInvoiceButton';
 import {
   guestRemaining,
@@ -27,6 +28,7 @@ import {
   canBuildOwnerVietQr,
   resolveOwnerVietQrBank,
 } from '@/lib/sepay/vietqr';
+import { useFormat } from '@/lib/i18n/use-format';
 
 export function OwnerStayActions({
   bookingId,
@@ -43,7 +45,9 @@ export function OwnerStayActions({
   guestPaidOwner: number;
   payout: OwnerPayoutInfo;
 }) {
+  const t = useTranslations('owner.stayActions');
   const router = useRouter();
+  const { formatNumber } = useFormat();
   const [loading, setLoading] = useState(false);
   const [received, setReceived] = useState(false);
 
@@ -89,13 +93,13 @@ export function OwnerStayActions({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Lỗi',
+          message: json.error?.message || t('error'),
         });
         return;
       }
       notifications.show({
         color: 'vbnbGreen',
-        message: action === 'check_in' ? 'Đã check-in' : 'Đã check-out',
+        message: action === 'check_in' ? t('checkedIn') : t('checkedOut'),
       });
       router.refresh();
     } finally {
@@ -113,7 +117,7 @@ export function OwnerStayActions({
         loading={loading}
         onClick={() => patch('check_out')}
       >
-        Check-out
+        {t('checkOut')}
       </Button>
     );
   }
@@ -125,14 +129,13 @@ export function OwnerStayActions({
       {caseA && remaining > 0 ? (
         <Stack gap="xs">
           <Text size="xs" c="dimmed">
-            Khách còn {remaining.toLocaleString('vi-VN')} — CK STK của bạn lúc
-            nhận phòng
+            {t('guestRemaining', { amount: formatNumber(remaining) })}
           </Text>
           {qrUrl ? (
-            <Image src={qrUrl} alt="QR nhận phần còn lại" maw={200} radius="md" />
+            <Image src={qrUrl} alt={t('qrRemainder')} maw={200} radius="md" />
           ) : (
             <Text size="sm" c="dimmed">
-              Chưa tạo được QR — điền STK trong Profile.
+              {t('qrFailed')}
             </Text>
           )}
           <Text size="sm">
@@ -153,7 +156,7 @@ export function OwnerStayActions({
         <Checkbox
           checked={received}
           onChange={(e) => setReceived(e.currentTarget.checked)}
-          label="Đã nhận CK phần còn lại từ khách"
+          label={t('receivedRemainder')}
           size="sm"
         />
       ) : null}
@@ -167,7 +170,7 @@ export function OwnerStayActions({
           if (caseA && remaining > 0 && !received) {
             notifications.show({
               color: 'yellow',
-              message: 'Xác nhận đã nhận CK phần còn lại trước khi check-in',
+              message: t('confirmRemainder'),
             });
             return;
           }
@@ -178,7 +181,7 @@ export function OwnerStayActions({
           void patch('check_in');
         }}
       >
-        Check-in
+        {t('checkIn')}
       </Button>
     </Stack>
   );

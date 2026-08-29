@@ -11,9 +11,15 @@ import {
   UnstyledButton,
 } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
-import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { useMemo, useState } from 'react';
 import { colors, radius, shadows } from '@/config/design-tokens';
-import { ASSET_TAG_GROUPS, ASSET_TAGS } from '@/config/asset-tags';
+import {
+  ASSET_TAG_GROUPS,
+  ASSET_TAGS,
+  assetTagGroupLabel,
+  assetTagLabel,
+} from '@/config/asset-tags';
 import { hasAdvancedExploreDefaults } from '@/lib/engines/explore-filters';
 import { todayDateOnly } from '@/lib/dates';
 import {
@@ -24,14 +30,6 @@ import {
   IconTag,
   IconUsers,
 } from '@/components/landing/LandingIcons';
-
-const TAG_SELECT_DATA = ASSET_TAG_GROUPS.map((group) => ({
-  group: group.label,
-  items: ASSET_TAGS.filter((t) => t.group === group.id).map((t) => ({
-    value: t.id,
-    label: t.label,
-  })),
-}));
 
 function FieldLabel({
   icon,
@@ -95,6 +93,21 @@ export function VillaSearch({
   /** Where the form submits — the guest dashboard searches its own route. */
   action?: string;
 }) {
+  const t = useTranslations('landing.villaSearch');
+  const tTags = useTranslations('assetTags');
+  const tagSelectData = useMemo(
+    () =>
+      ASSET_TAG_GROUPS.map((group) => ({
+        group: assetTagGroupLabel(group.id, tTags),
+        items: ASSET_TAGS.filter((tag) => tag.group === group.id).map(
+          (tag) => ({
+            value: tag.id,
+            label: assetTagLabel(tag.id, tTags),
+          })
+        ),
+      })),
+    [tTags]
+  );
   const [tags, setTags] = useState<string[]>(defaultTags);
   const [budgetMin, setBudgetMin] = useState<string | number>(
     defaultBudgetMin ?? ''
@@ -164,30 +177,30 @@ export function VillaSearch({
         className="vbnb-villa-search-grid"
       >
         <Box>
-          <FieldLabel icon={<IconMapPin />} label="Địa điểm" />
+          <FieldLabel icon={<IconMapPin />} label={t('locationLabel')} />
           <TextInput
             name="q"
             defaultValue={defaultQ}
             variant="unstyled"
-            placeholder="Bạn muốn đi đâu?"
-            aria-label="Địa điểm"
+            placeholder={t('locationPlaceholder')}
+            aria-label={t('locationAria')}
             styles={{ input: { fontSize: 14, color: colors.textSecondary } }}
           />
         </Box>
         <Box className="vbnb-villa-search-divider">
-          <FieldLabel icon={<IconTag />} label="Thuộc tính" />
+          <FieldLabel icon={<IconTag />} label={t('tagsLabel')} />
           <MultiSelect
-            data={TAG_SELECT_DATA}
+            data={tagSelectData}
             value={tags}
             onChange={setTags}
             variant="unstyled"
-            placeholder="Hồ bơi, wifi, gần biển..."
+            placeholder={t('tagsPlaceholder')}
             searchable
             clearable
             hidePickedOptions
             maxDropdownHeight={280}
             comboboxProps={{ withinPortal: true, zIndex: 300 }}
-            aria-label="Thuộc tính villa"
+            aria-label={t('tagsAria')}
             styles={{
               input: { fontSize: 14, minHeight: 28 },
               pillsList: { gap: 4 },
@@ -203,7 +216,7 @@ export function VillaSearch({
           fw={600}
           style={{ fontSize: 14 }}
         >
-          Tìm kiếm villas
+          {t('submit')}
         </Button>
       </Box>
 
@@ -230,13 +243,13 @@ export function VillaSearch({
         >
           <IconChevronDown size={16} />
         </Box>
-        Tìm kiếm nâng cao
+        {t('advancedToggle')}
       </UnstyledButton>
 
       <Collapse expanded={advanced} keepMounted keepMountedMode="display-none">
         <Box className="vbnb-villa-search-advanced">
           <Box>
-            <FieldLabel icon={<IconCoins />} label="Ngân sách / đêm" />
+            <FieldLabel icon={<IconCoins />} label={t('budgetLabel')} />
             <Box
               style={{
                 display: 'grid',
@@ -253,8 +266,8 @@ export function VillaSearch({
                 decimalScale={0}
                 hideControls
                 variant="unstyled"
-                placeholder="Từ"
-                aria-label="Ngân sách từ"
+                placeholder={t('budgetFrom')}
+                aria-label={t('budgetFromAria')}
                 styles={{ input: { fontSize: 14, color: colors.textSecondary } }}
               />
               <NumberInput
@@ -266,21 +279,21 @@ export function VillaSearch({
                 decimalScale={0}
                 hideControls
                 variant="unstyled"
-                placeholder="Đến"
-                aria-label="Ngân sách đến"
+                placeholder={t('budgetTo')}
+                aria-label={t('budgetToAria')}
                 styles={{ input: { fontSize: 14, color: colors.textSecondary } }}
               />
             </Box>
             <Text size="xs" c="dimmed" mt={4}>
-              Hiện villa dưới mức tối đa. Không hiện giá trên danh sách.
+              {t('budgetHint')}
             </Text>
           </Box>
           <Box>
-            <FieldLabel icon={<IconCalendar />} label="Ngày ở" />
+            <FieldLabel icon={<IconCalendar />} label={t('datesLabel')} />
             <DatePickerInput
               type="range"
               variant="unstyled"
-              placeholder="Nhận phòng – Trả phòng"
+              placeholder={t('datesPlaceholder')}
               valueFormat="DD/MM/YYYY"
               labelSeparator="–"
               minDate={minDate}
@@ -296,12 +309,12 @@ export function VillaSearch({
               }}
               clearable
               popoverProps={{ withinPortal: true, zIndex: 300 }}
-              aria-label="Ngày ở"
+              aria-label={t('datesAria')}
               styles={{ input: { fontSize: 14, color: colors.textSecondary } }}
             />
           </Box>
           <Box>
-            <FieldLabel icon={<IconUsers />} label="Số khách" />
+            <FieldLabel icon={<IconUsers />} label={t('guestsLabel')} />
             <NumberInput
               value={guests}
               onChange={setGuests}
@@ -309,8 +322,8 @@ export function VillaSearch({
               max={50}
               hideControls
               variant="unstyled"
-              placeholder="Sức chứa tối thiểu"
-              aria-label="Số khách"
+              placeholder={t('guestsPlaceholder')}
+              aria-label={t('guestsAria')}
               styles={{ input: { fontSize: 14, color: colors.textSecondary } }}
             />
           </Box>

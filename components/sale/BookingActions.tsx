@@ -11,12 +11,14 @@ import {
   Tooltip,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/lib/i18n/navigation';
 import { useMemo, useState } from 'react';
 import { ExportGuestInvoiceButton } from '@/components/sale/ExportGuestInvoiceButton';
 import { minOwnerDepositToConfirm, minDepositToConfirm } from '@/lib/engines/pricing';
 import { computeCancelRefund } from '@/lib/engines/cancellation';
 import { FIRM_POLICY_SUMMARY } from '@/config/cancellation-policy';
+import { useFormat } from '@/lib/i18n/use-format';
 
 type BookingAction = 'submit_to_owner' | 'cancel';
 
@@ -42,6 +44,8 @@ export function BookingActions({
   salePayoutReady?: boolean;
   simpleUi?: boolean;
 }) {
+  const t = useTranslations('sale.bookingActions');
+  const { formatNumber } = useFormat();
   const router = useRouter();
   const minOwnerPayout = minOwnerDepositToConfirm(ownerEarn);
   const minGuestDeposit = minDepositToConfirm(listPrice);
@@ -57,13 +61,13 @@ export function BookingActions({
       collected >= minGuestDeposit;
   const submitBlockedReason = simpleUi
     ? ownerEarn <= 0
-      ? 'Chưa có giá gốc — không gửi Owner được'
+      ? t('noFloor')
       : ''
     : ownerEarn <= 0
-      ? 'Chưa có giá gốc — không gửi Owner được'
+      ? t('noFloor')
       : collected < minGuestDeposit
-        ? `Cần thu cọc Guest tối thiểu ${minGuestDeposit.toLocaleString('vi-VN')} (50% giá bán)`
-        : `Cần xác nhận CK Owner tối thiểu ${minOwnerPayout.toLocaleString('vi-VN')} (50% giá gốc)`;
+        ? t('needGuestDeposit', { amount: formatNumber(minGuestDeposit) })
+        : t('needOwnerPayout', { amount: formatNumber(minOwnerPayout) });
 
   const refundPreview = useMemo(
     () =>
@@ -109,16 +113,19 @@ export function BookingActions({
         const r = json.data.refund;
         notifications.show({
           color: 'vbnbGreen',
-          message: `Đã hủy · hoàn ${Number(r.refundAmount).toLocaleString('vi-VN')} · giữ ${Number(r.keptAmount).toLocaleString('vi-VN')}`,
+          message: t('cancelledRefund', {
+            refund: formatNumber(Number(r.refundAmount)),
+            kept: formatNumber(Number(r.keptAmount)),
+          }),
         });
       } else {
         const messages: Record<BookingAction, string> = {
-          submit_to_owner: 'Đã gửi Owner — chờ xác nhận (chưa khóa lịch)',
-          cancel: 'Đã hủy booking',
+          submit_to_owner: t('submittedOwner'),
+          cancel: t('cancelled'),
         };
         notifications.show({
           color: 'vbnbGreen',
-          message: messages[action] || 'OK',
+          message: messages[action] || t('ok'),
         });
       }
       setCancelOpen(false);
@@ -138,54 +145,51 @@ export function BookingActions({
           setGoodwill(false);
         }
       }}
-      title="Hủy booking?"
+      title={t('cancelTitle')}
       centered
     >
       <Stack gap="sm">
         <Text size="sm" c="dimmed">
-          Policy {refundPreview.policyCode}: {FIRM_POLICY_SUMMARY}
+          {t('policyLine', {
+            code: refundPreview.policyCode,
+            summary: FIRM_POLICY_SUMMARY,
+          })}
         </Text>
         <Text size="sm">
-          Còn{' '}
-          <Text span fw={600}>
-            {refundPreview.daysUntilCheckIn}
-          </Text>{' '}
-          ngày đến check-in · đã thu{' '}
-          <Text span fw={600}>
-            {refundPreview.amountCollected.toLocaleString('vi-VN')}
-          </Text>
+          {t('daysUntilCheckIn', {
+            days: refundPreview.daysUntilCheckIn,
+            amount: formatNumber(refundPreview.amountCollected),
+          })}
         </Text>
         <Group grow>
           <div>
             <Text size="xs" c="dimmed">
-              Hoàn khách
+              {t('refundGuest')}
             </Text>
             <Text fw={600} c="vbnbGreen.6">
-              {refundPreview.refundAmount.toLocaleString('vi-VN')}
+              {formatNumber(refundPreview.refundAmount)}
             </Text>
           </div>
           <div>
             <Text size="xs" c="dimmed">
-              Giữ lại
+              {t('refundKept')}
             </Text>
-            <Text fw={600}>
-              {refundPreview.keptAmount.toLocaleString('vi-VN')}
-            </Text>
+            <Text fw={600}>{formatNumber(refundPreview.keptAmount)}</Text>
           </div>
           <div>
             <Text size="xs" c="dimmed">
-              % hoàn
+              {t('refundPercent')}
             </Text>
             <Text fw={600}>{refundPreview.refundPercent}%</Text>
           </div>
         </Group>
         <Checkbox
-          label="Goodwill — hoàn 100% cọc (ngoại lệ ngoài policy)"
+          label={t('goodwill')}
           checked={goodwill}
           onChange={(e) => setGoodwill(e.currentTarget.checked)}
         />
         <Text size="xs" c="dimmed">
-          Tiền offline: sale tự chuyển lại khách theo số hoàn. Lịch sẽ được nhả.
+          {t('offlineNote')}
         </Text>
         <Group justify="flex-end" gap="xs">
           <Button
@@ -196,7 +200,7 @@ export function BookingActions({
               setGoodwill(false);
             }}
           >
-            Đóng
+            {t('close')}
           </Button>
           <Button
             color="red"
@@ -205,7 +209,7 @@ export function BookingActions({
               patch('cancel', undefined, { goodwillFullRefund: goodwill })
             }
           >
-            Xác nhận hủy
+            {t('confirmCancel')}
           </Button>
         </Group>
       </Stack>
@@ -222,17 +226,13 @@ export function BookingActions({
         {cancelModal}
         <Stack gap="sm">
           <Group gap="xs" wrap="wrap">
-            <Tooltip
-              label="Ngày chưa khóa — Sale khác vẫn có thể book trùng đến khi Owner confirm"
-              multiline
-              w={260}
-            >
+            <Tooltip label={t('notLockedTooltip')} multiline w={260}>
               <Badge size="sm" variant="light" color="yellow" style={{ cursor: 'help' }}>
-                Chưa khóa lịch
+                {t('notLocked')}
               </Badge>
             </Tooltip>
             <Badge size="sm" variant="light" color="vbnbGreen">
-              Đã gửi Owner
+              {t('sentOwner')}
             </Badge>
           </Group>
           <Group gap="xs" wrap="wrap">
@@ -248,7 +248,7 @@ export function BookingActions({
               loading={loading}
               onClick={() => setCancelOpen(true)}
             >
-              Hủy (hoàn 100% cọc)
+              {t('cancelFullRefund')}
             </Button>
           </Group>
         </Stack>
@@ -269,7 +269,7 @@ export function BookingActions({
               loading={loading}
               onClick={() => setCancelOpen(true)}
             >
-              Cancel
+              {t('cancel')}
             </Button>
           </Group>
         </Stack>
@@ -290,7 +290,7 @@ export function BookingActions({
               disabled={!canSubmit}
               onClick={() => patch('submit_to_owner')}
             >
-              Gửi Owner xác nhận
+              {t('submitOwner')}
             </Button>
           </span>
         </Tooltip>
@@ -306,7 +306,7 @@ export function BookingActions({
           loading={loading}
           onClick={() => setCancelOpen(true)}
         >
-          Cancel
+          {t('cancel')}
         </Button>
       </Group>
     </>

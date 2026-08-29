@@ -12,20 +12,19 @@ import {
   TextInput,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { useRouter } from '@/lib/i18n/navigation';
+import { useFormat } from '@/lib/i18n/use-format';
 import { colors, radius } from '@/config/design-tokens';
-import {
-  formatVnd,
-  planDurationLabel,
-  type SubscriptionPlan,
-} from '@/lib/engines/subscription-plans';
+import type { SubscriptionPlan } from '@/lib/engines/subscription-plans';
 
 export function SubscriptionPlansEditor({
   plans,
 }: {
   plans: SubscriptionPlan[];
 }) {
+  const t = useTranslations('admin.fees');
   const router = useRouter();
   const onSaved = () => router.refresh();
   const owner = plans.filter((p) => p.role === 'OWNER');
@@ -39,11 +38,11 @@ export function SubscriptionPlansEditor({
       </Tabs.List>
 
       <Tabs.Panel value="owner">
-        <PlanRoleSection plans={owner} onSaved={onSaved} />
+        <PlanRoleSection plans={owner} onSaved={onSaved} emptyLabel={t('noPlans')} />
       </Tabs.Panel>
 
       <Tabs.Panel value="sale">
-        <PlanRoleSection plans={sale} onSaved={onSaved} />
+        <PlanRoleSection plans={sale} onSaved={onSaved} emptyLabel={t('noPlans')} />
       </Tabs.Panel>
     </Tabs>
   );
@@ -52,14 +51,16 @@ export function SubscriptionPlansEditor({
 function PlanRoleSection({
   plans,
   onSaved,
+  emptyLabel,
 }: {
   plans: SubscriptionPlan[];
   onSaved: () => void;
+  emptyLabel: string;
 }) {
   if (!plans.length) {
     return (
       <Text size="sm" c="dimmed">
-        Chưa có gói nào.
+        {emptyLabel}
       </Text>
     );
   }
@@ -80,6 +81,8 @@ function PlanRow({
   plan: SubscriptionPlan;
   onSaved: () => void;
 }) {
+  const t = useTranslations('admin.fees');
+  const { formatVnd, planDurationLabel } = useFormat();
   const [amount, setAmount] = useState(plan.amount);
   const [compareAtAmount, setCompareAtAmount] = useState<number | ''>(
     plan.compare_at_amount ?? ''
@@ -119,7 +122,7 @@ function PlanRow({
       } else {
         notifications.show({
           color: 'vbnbGreen',
-          message: `Đã lưu gói ${label}`,
+          message: t('savedPlan', { label }),
         });
         onSaved();
       }
@@ -139,23 +142,26 @@ function PlanRow({
           <Text size="sm" fw={600}>
             {planDurationLabel(plan.months)}
             <Text span size="xs" c="dimmed" fw={400} ml={8}>
-              ({plan.months} tháng · hiện {formatVnd(plan.amount)})
+              {t('planMonthsCurrent', {
+                months: plan.months,
+                amount: formatVnd(plan.amount),
+              })}
             </Text>
           </Text>
           <Switch
-            label="Bật"
+            label={t('planActive')}
             checked={active}
             onChange={(e) => setActive(e.currentTarget.checked)}
           />
         </Group>
         <TextInput
-          label="Nhãn hiển thị"
+          label={t('planLabel')}
           value={label}
           onChange={(e) => setLabel(e.currentTarget.value)}
         />
         <NumberInput
-          label="Giá gói thanh toán (VND)"
-          description="Số tiền CK / SePay phải khớp chính xác."
+          label={t('planAmount')}
+          description={t('planAmountHint')}
           value={amount}
           onChange={(v) => setAmount(Number(v) || 0)}
           thousandSeparator="."
@@ -163,8 +169,8 @@ function PlanRow({
           min={1000}
         />
         <NumberInput
-          label="Giá gốc so sánh (VND)"
-          description="Để trống nếu không giảm giá. Phải lớn hơn giá thanh toán."
+          label={t('planCompareAt')}
+          description={t('planCompareAtHint')}
           value={compareAtAmount}
           onChange={(v) =>
             setCompareAtAmount(v === '' || v == null ? '' : Number(v) || 0)
@@ -176,7 +182,7 @@ function PlanRow({
         />
         {preview ? (
           <Text size="xs" c="vbnbGreen.6" fw={500}>
-            Tag: −{preview}%
+            {t('planDiscountTag', { percent: preview })}
           </Text>
         ) : null}
         <Button
@@ -186,7 +192,7 @@ function PlanRow({
           onClick={save}
           w="fit-content"
         >
-          Lưu gói
+          {t('savePlan')}
         </Button>
       </Stack>
     </Paper>

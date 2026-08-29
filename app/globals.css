@@ -10,6 +10,18 @@
   --vbnb-primary: #536b58;
   --vbnb-primary-dark: #3d5142;
   --vbnb-primary-soft: #eaf0e8;
+  --vbnb-font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --vbnb-font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo,
+    monospace;
+  --vbnb-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --vbnb-shadow-card: 0 1px 3px rgba(22, 22, 22, 0.04),
+    0 1px 2px rgba(83, 107, 88, 0.03);
+  --vbnb-shadow-hover: 0 8px 24px rgba(22, 22, 22, 0.06),
+    0 2px 8px rgba(83, 107, 88, 0.05);
+  --vbnb-content-max: 1200px;
+  --vbnb-content-wide: 1280px;
+  --vbnb-section-y: 56px;
+  --vbnb-section-y-lg: 80px;
 }
 
 html {
@@ -21,7 +33,10 @@ body {
   min-height: 100%;
   background: var(--vbnb-bg);
   color: var(--vbnb-text);
-  font-family: Montserrat, system-ui, -apple-system, sans-serif;
+  font-family: var(--vbnb-font-sans);
+  font-feature-settings: "kern" 1, "liga" 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 * {
@@ -38,12 +53,77 @@ a {
   outline-offset: 2px;
 }
 
+.vbnb-tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+.vbnb-text-balance {
+  text-wrap: balance;
+}
+
+.vbnb-surface-card {
+  background: var(--vbnb-surface);
+  border: 1px solid var(--vbnb-border);
+  border-radius: 14px;
+  box-shadow: var(--vbnb-shadow-card);
+  transition: box-shadow 200ms var(--vbnb-ease), border-color 200ms var(--vbnb-ease);
+}
+
+  .vbnb-surface-card--interactive:hover {
+  box-shadow: var(--vbnb-shadow-hover);
+  border-color: var(--vbnb-border-strong);
+}
+
+/* Desktop role shells — sidebar nav hover (beats Mantine default gray-0). */
+.mantine-AppShell-navbar .vbnb-shell-nav-link {
+  border-radius: 10px;
+  font-weight: 500;
+  color: var(--vbnb-text);
+  transition:
+    background-color 200ms var(--vbnb-ease),
+    color 200ms var(--vbnb-ease);
+}
+
+.mantine-AppShell-navbar .vbnb-shell-nav-link:hover {
+  background-color: var(--vbnb-primary-soft) !important;
+  color: var(--vbnb-primary-dark) !important;
+}
+
+.mantine-AppShell-navbar .vbnb-shell-nav-link[data-active] {
+  background-color: var(--vbnb-primary-soft) !important;
+  color: var(--vbnb-primary-dark) !important;
+  font-weight: 600;
+}
+
+.mantine-AppShell-navbar .vbnb-shell-nav-link[data-active]:hover {
+  background-color: #dfe8dc !important;
+}
+
+.vbnb-surface-flat {
+  background: var(--vbnb-surface);
+  border-top: 1px solid var(--vbnb-border);
+}
+
+.vbnb-landing-container {
+  width: min(var(--vbnb-content-wide), calc(100% - 48px));
+  margin-inline: auto;
+}
+
+.vbnb-landing-section {
+  scroll-margin-top: 88px;
+  padding-block: var(--vbnb-section-y);
+}
+
+.vbnb-landing-section--lg {
+  padding-block: var(--vbnb-section-y-lg);
+}
+
 .vbnb-asset-card:hover img {
   transform: scale(1.02);
 }
 
 .vbnb-asset-card img {
-  transition: transform 250ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: transform 280ms var(--vbnb-ease);
 }
 
 @keyframes vbnb-fade-up {
@@ -67,19 +147,15 @@ a {
 }
 
 .vbnb-landing-fade-up {
-  animation: vbnb-fade-up 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: vbnb-fade-up 700ms var(--vbnb-ease) both;
 }
 
 .vbnb-landing-fade-up-delay {
-  animation: vbnb-fade-up 700ms cubic-bezier(0.22, 1, 0.36, 1) 120ms both;
+  animation: vbnb-fade-up 700ms var(--vbnb-ease) 120ms both;
 }
 
 .vbnb-landing-fade-in {
-  animation: vbnb-fade-in 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.vbnb-landing-section {
-  scroll-margin-top: 88px;
+  animation: vbnb-fade-in 900ms var(--vbnb-ease) both;
 }
 
 .vbnb-landing-hero {
@@ -107,9 +183,23 @@ a {
   display: none;
 }
 
+.vbnb-eyebrow {
+  display: inline-flex;
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--vbnb-primary-soft);
+  color: var(--vbnb-primary-dark);
+  border-radius: 999px;
+  padding: 6px 12px;
+  line-height: 1.4;
+}
+
 @media (min-width: 768px) {
   .vbnb-landing-hero {
-    min-height: clamp(560px, 78vh, 760px);
+    min-height: clamp(560px, 78dvh, 760px);
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 0;
   }
@@ -134,7 +224,7 @@ a {
     inset: 0;
     background: linear-gradient(
       90deg,
-      #fafaf8 0%,
+      var(--vbnb-bg) 0%,
       rgba(250, 250, 248, 0.82) 18%,
       rgba(250, 250, 248, 0) 48%
     );
@@ -160,6 +250,11 @@ a {
   .vbnb-landing-fade-up-delay,
   .vbnb-landing-fade-in {
     animation: none;
+  }
+
+  .vbnb-asset-card img,
+  .vbnb-surface-card {
+    transition: none;
   }
 }
 

@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { Link } from '@/lib/i18n/navigation';
 import { Button, type ButtonProps } from '@mantine/core';
 import type { ReactNode } from 'react';
 

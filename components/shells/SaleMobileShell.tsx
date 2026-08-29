@@ -13,10 +13,11 @@ import {
   Box,
 } from '@mantine/core';
 import { useDisclosure, useMediaQuery } from '@mantine/hooks';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { Link, usePathname } from '@/lib/i18n/navigation';
 import { colors, radius } from '@/config/design-tokens';
 import { LogoutButton } from '@/components/auth/LogoutButton';
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import {
   IconCalendar,
   IconHome,
@@ -27,35 +28,8 @@ import {
 import type { UiMode } from '@/lib/engines/ui-mode';
 import { isSimpleUi } from '@/lib/engines/ui-mode';
 import type { ReactNode } from 'react';
-
-const expertDesktop = [
-  { label: 'Home', href: '/sale' },
-  { label: 'Marketplace', href: '/sale/marketplace' },
-  { label: 'Bookings', href: '/sale/bookings' },
-  { label: 'Customers', href: '/sale/customers' },
-  { label: 'Leads', href: '/sale/leads' },
-  { label: 'Setting', href: '/sale/settings' },
-];
-
-const simpleDesktop = [
-  { label: 'Lịch', href: '/sale/calendar' },
-  { label: 'Chỗ đang giữ', href: '/sale/bookings' },
-  { label: 'Hạng', href: '/sale/settings?tab=membership' },
-];
-
-const expertMobile = [
-  { label: 'Home', href: '/sale', Icon: IconHome },
-  { label: 'Sàn', href: '/sale/marketplace', Icon: IconStore },
-  { label: 'KH', href: '/sale/customers', Icon: IconUsers },
-  { label: 'Bookings', href: '/sale/bookings', Icon: IconCalendar },
-  { label: 'Setting', href: '/sale/settings', Icon: IconSettings },
-];
-
-const simpleMobile = [
-  { label: 'Lịch', href: '/sale/calendar', Icon: IconCalendar },
-  { label: 'Giữ', href: '/sale/bookings', Icon: IconHome },
-  { label: 'Hạng', href: '/sale/settings?tab=membership', Icon: IconSettings },
-];
+import { isNavItemActive } from '@/components/shells/nav-active';
+import { shellNavLinkClass } from '@/components/shells/shell-nav-link-styles';
 
 export function SaleMobileShell({
   children,
@@ -66,17 +40,48 @@ export function SaleMobileShell({
   uiMode?: UiMode;
   headerExtra?: ReactNode;
 }) {
+  const t = useTranslations('sale.nav');
+  const tShell = useTranslations('sale.shell');
   const [opened, { toggle }] = useDisclosure();
   const pathname = usePathname();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const simple = isSimpleUi(uiMode);
+
+  const expertDesktop = [
+    { label: t('home'), href: '/sale' },
+    { label: t('marketplace'), href: '/sale/marketplace' },
+    { label: t('bookings'), href: '/sale/bookings' },
+    { label: t('customers'), href: '/sale/customers' },
+    { label: t('leads'), href: '/sale/leads' },
+    { label: t('settings'), href: '/sale/settings' },
+  ];
+
+  const simpleDesktop = [
+    { label: t('calendar'), href: '/sale/calendar' },
+    { label: t('holds'), href: '/sale/bookings' },
+    { label: t('tier'), href: '/sale/settings?tab=membership' },
+  ];
+
+  const expertMobile = [
+    { label: t('home'), href: '/sale', Icon: IconHome },
+    { label: t('floor'), href: '/sale/marketplace', Icon: IconStore },
+    { label: t('guestsShort'), href: '/sale/customers', Icon: IconUsers },
+    { label: t('bookings'), href: '/sale/bookings', Icon: IconCalendar },
+    { label: t('settings'), href: '/sale/settings', Icon: IconSettings },
+  ];
+
+  const simpleMobile = [
+    { label: t('calendar'), href: '/sale/calendar', Icon: IconCalendar },
+    { label: t('holdShort'), href: '/sale/bookings', Icon: IconHome },
+    { label: t('tier'), href: '/sale/settings?tab=membership', Icon: IconSettings },
+  ];
+
   const desktopItems = simple ? simpleDesktop : expertDesktop;
   const mobileItems = simple ? simpleMobile : expertMobile;
+  const navHrefs = desktopItems.map((item) => item.href);
 
   function isActive(href: string) {
-    const path = href.split('?')[0];
-    if (path === '/sale') return pathname === '/sale';
-    return pathname === path || pathname.startsWith(`${path}/`);
+    return isNavItemActive(pathname, href, navHrefs, ['/sale']);
   }
 
   if (isDesktop) {
@@ -89,19 +94,20 @@ export function SaleMobileShell({
         <AppShell.Header>
           <Group h="100%" px="md" justify="space-between">
             <Group gap="sm">
-              <Title order={3} c="vbnbGreen.6" fw={600}>
+              <Title order={3} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
                 VBNB
               </Title>
               <Text size="sm" c="dimmed">
-                Sale
+                {tShell('roleLabel')}
               </Text>
             </Group>
             <Group gap="md">
+              <LanguageSwitcher compact />
               {headerExtra}
               {simple ? null : (
                 <UnstyledButton component={Link} href="/sale/settings">
                   <Text size="sm" c="dimmed">
-                    Setting
+                    {tShell('setting')}
                   </Text>
                 </UnstyledButton>
               )}
@@ -124,22 +130,11 @@ export function SaleMobileShell({
                 return (
                   <NavLink
                     key={item.href}
+                    className={shellNavLinkClass}
                     component={Link}
                     href={item.href}
                     label={item.label}
                     active={active}
-                    styles={{
-                      root: {
-                        borderRadius: radius.md,
-                        backgroundColor: active
-                          ? colors.primarySoft
-                          : 'transparent',
-                        color: active
-                          ? colors.primaryDark
-                          : colors.textPrimary,
-                        fontWeight: active ? 600 : 500,
-                      },
-                    }}
                   />
                 );
               })}
@@ -163,16 +158,17 @@ export function SaleMobileShell({
         <Group h="100%" px="md" justify="space-between">
           <Group gap="sm">
             <Burger opened={opened} onClick={toggle} size="sm" hiddenFrom="sm" style={{ display: 'none' }} />
-            <Title order={4} c="vbnbGreen.6" fw={600}>
+            <Title order={4} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
               VBNB
             </Title>
           </Group>
           <Group gap="md">
+            <LanguageSwitcher compact />
             {headerExtra}
             {simple ? null : (
               <UnstyledButton component={Link} href="/sale/settings">
                 <Text size="sm" c="dimmed">
-                  Setting
+                  {tShell('setting')}
                 </Text>
               </UnstyledButton>
             )}

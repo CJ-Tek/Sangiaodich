@@ -7,13 +7,13 @@ import {
   Code,
   Group,
   Image,
-  Paper,
   SegmentedControl,
   Stack,
   Text,
   Title,
 } from '@mantine/core';
-import { colors, radius } from '@/config/design-tokens';
+import { useTranslations } from 'next-intl';
+import { SurfaceCard } from '@/components/ui/SurfaceCard';
 import { ownerTransferMemo } from '@/lib/engines/booking-search';
 import { guestRemaining } from '@/lib/engines/guest-balance';
 import {
@@ -30,6 +30,7 @@ import {
 } from '@/lib/sepay/vietqr';
 import type { OwnerPayoutInfo } from '@/lib/owner/payout-info';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
+import { useFormat } from '@/lib/i18n/use-format';
 
 export type GuestInvoiceViewProps = {
   bookingId: string;
@@ -57,6 +58,8 @@ function formatCountdown(ms: number) {
 }
 
 export function GuestInvoiceView(props: GuestInvoiceViewProps) {
+  const t = useTranslations('pay.invoice');
+  const { formatNumber, formatVnd } = useFormat();
   const payee = props.payee === 'OWNER' ? 'OWNER' : 'SALE';
   const amounts = guestInvoiceAmounts({
     listPrice: props.listPrice,
@@ -98,6 +101,7 @@ export function GuestInvoiceView(props: GuestInvoiceViewProps) {
   }, [props.payout, qrAmount, memo]);
 
   const qrUrl = dynamicQr || props.payout.qrImageUrl || null;
+  const payeeLabel = payee === 'OWNER' ? t('payeeOwner') : t('payeeSale');
 
   return (
     <Stack gap="md" maw={480} mx="auto">
@@ -108,102 +112,102 @@ export function GuestInvoiceView(props: GuestInvoiceViewProps) {
         </Text>
         <Text size="sm" mt={4}>
           {payee === 'OWNER'
-            ? 'Chuyển cho chủ nhà lúc nhận phòng'
-            : `Sale: ${props.saleName}${props.salePhone ? ` · ${props.salePhone}` : ''}`}
+            ? t('payOwnerAtCheckIn')
+            : t('saleContact', {
+                name: props.saleName,
+                phone: props.salePhone ? ` · ${props.salePhone}` : '',
+              })}
         </Text>
         <Group gap="xs" mt="sm">
           <Text size="xs" c="dimmed">
-            Mã CK
+            {t('memoLabel')}
           </Text>
           <Code>{memo}</Code>
         </Group>
       </div>
 
       {paidInFull ? (
-        <Alert color="vbnbGreen" title="Đã ghi nhận đủ">
-          {payee === 'OWNER'
-            ? 'Chủ nhà đã ghi nhận đủ phần còn lại cho booking này.'
-            : 'Sale đã xác nhận thu đủ giá bán cho booking này.'}
+        <Alert color="vbnbGreen" title={t('paidFull')}>
+          {payee === 'OWNER' ? t('ownerPaidNote') : t('salePaidNote')}
         </Alert>
       ) : (
         <>
           {!expired ? (
             <Alert
               color={unlocked && payee === 'SALE' ? 'yellow' : 'vbnbGreen'}
-              title={`Còn ${formatCountdown(leftMs)} để chuyển`}
+              title={t('countdown', { time: formatCountdown(leftMs) })}
             >
               {payee === 'OWNER'
-                ? 'Chuyển nốt phần còn lại cho chủ nhà theo QR bên dưới.'
+                ? t('ownerRemainderHint')
                 : unlocked
-                  ? 'Chuyển nhanh để Sale gửi Owner giữ chỗ. Lịch chưa khóa — chậm có thể bị người khác book.'
-                  : 'Phòng đã được xác nhận. Chuyển nốt phần còn lại theo QR bên dưới.'}
+                  ? t('saleDepositHint')
+                  : t('confirmedRemainder')}
             </Alert>
           ) : (
-            <Alert color="red" title="Hết thời gian trên link này">
-              {payee === 'OWNER'
-                ? 'Link đã hết hạn. Liên hệ chủ nhà nếu bạn vừa chuyển khoản.'
-                : unlocked
-                  ? 'Booking này có thể đã bị người khác book. Hãy liên hệ lại Sale hoặc kiểm tra lịch trên trang.'
-                  : 'Link đã hết hạn. Liên hệ Sale nếu bạn vừa chuyển khoản.'}
+            <Alert color="red" title={t('expiredTitle')}>
+              {t('expiredBody')}
+              {unlocked && payee === 'SALE' ? ` ${t('mayBeTaken')}` : null}
               {props.assetSlug ? (
                 <>
                   {' '}
                   <LinkAnchor href={`/a/${props.assetSlug}`} c="vbnbGreen.6">
-                    Xem lịch villa
+                    {t('viewCalendar')}
                   </LinkAnchor>
                 </>
               ) : null}
             </Alert>
           )}
 
-          <Paper
+          <SurfaceCard
             p="md"
-            radius={radius.lg}
             style={{
-              border: `1px solid ${colors.border}`,
               opacity: expired ? 0.72 : 1,
             }}
           >
             <Stack gap="sm">
               {payee === 'SALE' ? (
-              <SegmentedControl
-                value={preset}
-                onChange={(v) => setPreset(v as GuestInvoicePreset)}
-                data={[
-                  {
-                    value: 'deposit',
-                    label: `Chuyển cọc (${amounts.depositChunk.toLocaleString('vi-VN')})`,
-                    disabled: !amounts.canDeposit,
-                  },
-                  {
-                    value: 'full',
-                    label: `Chuyển full (${amounts.remainingFull.toLocaleString('vi-VN')})`,
-                    disabled: !amounts.canFull,
-                  },
-                ]}
-                color="vbnbGreen"
-                fullWidth
-              />
+                <SegmentedControl
+                  value={preset}
+                  onChange={(v) => setPreset(v as GuestInvoicePreset)}
+                  data={[
+                    {
+                      value: 'deposit',
+                      label: t('depositPreset', {
+                        amount: formatNumber(amounts.depositChunk),
+                      }),
+                      disabled: !amounts.canDeposit,
+                    },
+                    {
+                      value: 'full',
+                      label: t('fullPreset', {
+                        amount: formatNumber(amounts.remainingFull),
+                      }),
+                      disabled: !amounts.canFull,
+                    },
+                  ]}
+                  color="vbnbGreen"
+                  fullWidth
+                />
               ) : (
                 <Text size="sm" ta="center" c="dimmed">
-                  Phần còn lại lúc nhận phòng
+                  {t('remainderAtCheckIn')}
                 </Text>
               )}
 
               {qrUrl && qrAmount > 0 ? (
-                <Image src={qrUrl} alt="QR chuyển khoản" maw={220} mx="auto" radius="md" />
+                <Image src={qrUrl} alt={t('qrTitle')} maw={220} mx="auto" radius="md" />
               ) : (
                 <Text size="sm" c="dimmed" ta="center">
-                  Chưa tạo được QR — dùng STK bên dưới và dán mã CK.
+                  {t('qrFailed')}
                 </Text>
               )}
 
               <Text ta="center" fw={600}>
-                {qrAmount.toLocaleString('vi-VN')}đ
+                {formatVnd(qrAmount)}
               </Text>
               <Group justify="center" gap="xs">
                 <Badge variant="light" color="vbnbGreen">
-                  {dynamicQr ? 'VietQR' : 'QR tĩnh'}
+                  {dynamicQr ? t('vietQr') : t('staticQr')}
                 </Badge>
                 <Code>{memo}</Code>
               </Group>
@@ -213,11 +217,10 @@ export function GuestInvoiceView(props: GuestInvoiceViewProps) {
                 {props.payout.accountName ? ` · ${props.payout.accountName}` : ''}
               </Text>
               <Text size="xs" c="dimmed" ta="center">
-                Nội dung CK phải có mã {memo} để{' '}
-                {payee === 'OWNER' ? 'chủ nhà' : 'Sale'} đối soát.
+                {t('memoRequired', { memo, payee: payeeLabel })}
               </Text>
             </Stack>
-          </Paper>
+          </SurfaceCard>
         </>
       )}
     </Stack>

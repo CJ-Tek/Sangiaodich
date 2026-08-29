@@ -1,26 +1,30 @@
-import { Badge, Group, Paper, Stack, Text } from '@mantine/core';
+'use client';
+
+import { Badge, Group, Stack, Text } from '@mantine/core';
+import { useTranslations } from 'next-intl';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
 import { SaveCustomerButton } from '@/components/sale/SavedCustomerActions';
-import { colors, radius } from '@/config/design-tokens';
+import { SurfaceCard } from '@/components/ui/SurfaceCard';
+import { colors } from '@/config/design-tokens';
 import type { SaleLead } from '@/lib/engines/sale-leads';
 
-function timeAgo(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Just now';
-  if (mins < 60) return `${mins} min ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return new Date(iso).toLocaleDateString('vi-VN');
-}
-
 export function LeadCard({ lead }: { lead: SaleLead }) {
+  const t = useTranslations('sale.leads');
+
+  function timeAgo(iso: string) {
+    const diff = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return t('justNow');
+    if (mins < 60) return t('minsAgo', { mins });
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return t('hoursAgo', { hours });
+    return new Date(iso).toLocaleDateString('vi-VN');
+  }
+
   return (
-    <Paper
-      p="lg"
-      radius={radius.lg}
+    <SurfaceCard
       style={{
-        border: `1px solid ${lead.unread ? colors.success : colors.border}`,
+        borderColor: lead.unread ? colors.success : undefined,
       }}
     >
       <Group justify="space-between" align="flex-start" wrap="wrap">
@@ -31,7 +35,7 @@ export function LeadCard({ lead }: { lead: SaleLead }) {
             </Text>
             {lead.unread ? (
               <Badge color="vbnbGreen" variant="light" size="sm">
-                New
+                {t('newBadge')}
               </Badge>
             ) : null}
           </Group>
@@ -47,16 +51,18 @@ export function LeadCard({ lead }: { lead: SaleLead }) {
             size="sm"
             c="vbnbGreen.6"
           >
-            View property
+            {t('viewProperty')}
           </LinkAnchor>
           <SaveCustomerButton
-            label="Lưu vào follow-up"
+            label={t('saveFollowUp')}
             size="xs"
             variant="light"
             initial={{
               fullName: lead.guestName || '',
               phone: lead.guestPhone || '',
-              note: lead.assetTitle ? `Lead từ ${lead.assetTitle}` : undefined,
+              note: lead.assetTitle
+                ? t('leadFrom', { asset: lead.assetTitle })
+                : undefined,
             }}
           />
         </Stack>
@@ -64,6 +70,6 @@ export function LeadCard({ lead }: { lead: SaleLead }) {
           {timeAgo(lead.createdAt)}
         </Text>
       </Group>
-    </Paper>
+    </SurfaceCard>
   );
 }

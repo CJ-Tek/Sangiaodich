@@ -2,7 +2,7 @@
 
 import { Box, Button, Image, Stack, Text, UnstyledButton } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import Link from 'next/link';
+import { Link } from '@/lib/i18n/navigation';
 import type { MouseEvent } from 'react';
 import { colors, radius } from '@/config/design-tokens';
 import type { NightBoardColumn } from '@/lib/engines/night-board-display';

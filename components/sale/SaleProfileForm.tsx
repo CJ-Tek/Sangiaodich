@@ -13,7 +13,8 @@ import {
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/lib/i18n/navigation';
 import { useState } from 'react';
 import { colors, radius } from '@/config/design-tokens';
 
@@ -38,6 +39,7 @@ export function SaleProfileForm({
   initial: SaleProfileFormValues;
 }) {
   const router = useRouter();
+  const t = useTranslations('sale.profile');
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState<UploadKind | null>(null);
   const [form, setForm] = useState(initial);
@@ -63,7 +65,7 @@ export function SaleProfileForm({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Upload thất bại',
+          message: json.error?.message || t('uploadFailed'),
         });
         return;
       }
@@ -82,7 +84,7 @@ export function SaleProfileForm({
         setForm((f) => ({ ...f, nationalIdBackUrl: storedUrl }));
         setBackPreview(previewUrl);
       }
-      notifications.show({ color: 'vbnbGreen', message: 'Đã tải ảnh lên' });
+      notifications.show({ color: 'vbnbGreen', message: t('avatarUploaded') });
     } finally {
       setUploading(null);
     }
@@ -108,11 +110,11 @@ export function SaleProfileForm({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Không lưu được',
+          message: json.error?.message || t('saveFailed'),
         });
         return;
       }
-      notifications.show({ color: 'vbnbGreen', message: 'Đã cập nhật hồ sơ' });
+      notifications.show({ color: 'vbnbGreen', message: t('saved') });
       router.refresh();
     } finally {
       setLoading(false);
@@ -138,17 +140,16 @@ export function SaleProfileForm({
           </Avatar>
           <div style={{ flex: 1 }}>
             <Title order={4} fw={600}>
-              Thông tin cá nhân
+              {t('personalInfo')}
             </Title>
             <Text size="sm" c="dimmed" mt={4}>
-              Họ tên, ảnh đại diện, liên hệ và CCCD dùng khi làm việc với
-              owner/guest.
+              {t('personalDesc')}
             </Text>
           </div>
         </Group>
 
         <TextInput
-          label="Họ và tên"
+          label={t('fullName')}
           required
           value={form.fullName}
           onChange={(e) =>
@@ -158,10 +159,10 @@ export function SaleProfileForm({
 
         <div>
           <Text size="sm" fw={500} mb={4}>
-            Avatar
+            {t('avatar')}
           </Text>
           <Text size="xs" c="dimmed" mb={8}>
-            Upload từ thiết bị (JPG/PNG/WebP, tối đa 2MB) hoặc dán link URL.
+            {t('avatarHint')}
           </Text>
           <Group gap="sm" mb="sm">
             <FileButton
@@ -177,7 +178,7 @@ export function SaleProfileForm({
                   loading={uploading === 'avatar'}
                   size="sm"
                 >
-                  Chọn ảnh
+                  {t('chooseAvatar')}
                 </Button>
               )}
             </FileButton>
@@ -188,13 +189,13 @@ export function SaleProfileForm({
                 size="sm"
                 onClick={() => setForm({ ...form, avatarUrl: '' })}
               >
-                Xóa ảnh
+                {t('removeAvatar')}
               </Button>
             ) : null}
           </Group>
           <TextInput
-            label="Avatar URL"
-            description="Tùy chọn — dán link nếu không upload file."
+            label={t('avatarUrl')}
+            description={t('avatarUrlHint')}
             value={form.avatarUrl}
             onChange={(e) =>
               setForm({ ...form, avatarUrl: e.currentTarget.value })
@@ -204,21 +205,21 @@ export function SaleProfileForm({
         </div>
 
         <TextInput
-          label="Số điện thoại"
+          label={t('phone')}
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.currentTarget.value })}
           placeholder="+84..."
         />
         <TextInput
-          label="Email"
+          label={t('email')}
           type="email"
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.currentTarget.value })}
         />
 
         <TextInput
-          label="Số căn cước công dân (CCCD/CMND)"
-          description="9 hoặc 12 chữ số"
+          label={t('nationalId')}
+          description={t('nationalIdHint')}
           value={form.nationalId}
           onChange={(e) =>
             setForm({ ...form, nationalId: e.currentTarget.value })
@@ -228,20 +229,20 @@ export function SaleProfileForm({
 
         <div>
           <Text size="sm" fw={500} mb={4}>
-            Ảnh CCCD
+            {t('idPhotos')}
           </Text>
           <Text size="xs" c="dimmed" mb="sm">
-            Upload 2 mặt (JPG/PNG/WebP, tối đa 5MB). Chỉ bạn và admin xem được.
+            {t('idPhotosHint')}
           </Text>
           <Group align="flex-start" grow preventGrowOverflow={false}>
             <Stack gap="xs" style={{ flex: 1, minWidth: 140 }}>
               <Text size="xs" c="dimmed">
-                Mặt trước
+                {t('idFront')}
               </Text>
               {frontPreview ? (
                 <Image
                   src={frontPreview}
-                  alt="CCCD mặt trước"
+                  alt={t('idFrontAlt')}
                   radius="md"
                   h={120}
                   fit="cover"
@@ -269,19 +270,19 @@ export function SaleProfileForm({
                     size="xs"
                     loading={uploading === 'national_id_front'}
                   >
-                    Chọn mặt trước
+                    {t('chooseFront')}
                   </Button>
                 )}
               </FileButton>
             </Stack>
             <Stack gap="xs" style={{ flex: 1, minWidth: 140 }}>
               <Text size="xs" c="dimmed">
-                Mặt sau
+                {t('idBack')}
               </Text>
               {backPreview ? (
                 <Image
                   src={backPreview}
-                  alt="CCCD mặt sau"
+                  alt={t('idBackAlt')}
                   radius="md"
                   h={120}
                   fit="cover"
@@ -309,7 +310,7 @@ export function SaleProfileForm({
                     size="xs"
                     loading={uploading === 'national_id_back'}
                   >
-                    Chọn mặt sau
+                    {t('chooseBack')}
                   </Button>
                 )}
               </FileButton>
@@ -318,7 +319,7 @@ export function SaleProfileForm({
         </div>
 
         <Button color="vbnbGreen" loading={loading} onClick={save}>
-          Lưu hồ sơ
+          {t('save')}
         </Button>
       </Stack>
     </Paper>

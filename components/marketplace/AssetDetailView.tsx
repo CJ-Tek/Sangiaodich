@@ -1,4 +1,5 @@
 import { SimpleGrid, Stack, Title, Paper } from '@mantine/core';
+import { getTranslations } from 'next-intl/server';
 import { MarketplaceCalendar } from '@/components/marketplace/MarketplaceCalendar';
 import { AssetCtas } from '@/components/marketplace/AssetCtas';
 import {
@@ -9,7 +10,7 @@ import { colors, radius } from '@/config/design-tokens';
 import type { AssetDetailRecord } from '@/lib/engines/asset-detail';
 
 /** Gallery, info, availability and CTAs — same layout for public and guest. */
-export function AssetDetailView({
+export async function AssetDetailView({
   asset,
   isLoggedInGuest,
   leadIntent,
@@ -19,6 +20,8 @@ export function AssetDetailView({
   /** Guest arrived back here after logging in from the contact CTA. */
   leadIntent?: boolean;
 }) {
+  const t = await getTranslations('marketplace.detail');
+
   return (
     <Stack gap={40} pb={100}>
       <AssetDetailGallery title={asset.title} images={asset.images} />
@@ -47,7 +50,7 @@ export function AssetDetailView({
             style={{ border: `1px solid ${colors.border}` }}
           >
             <Title order={4} fw={600} mb="md">
-              Availability
+              {t('availability')}
             </Title>
             <MarketplaceCalendar
               month={new Date()}

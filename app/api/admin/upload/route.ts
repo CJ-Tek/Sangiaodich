@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { createServiceClient } from '@/lib/supabase/server';
+import { getApiRouteContext } from '@/lib/i18n/api-route-context';
 import { fail, ok } from '@/lib/types';
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -12,11 +13,11 @@ function extForMime(mime: string): string {
   return 'jpg';
 }
 
-/** Admin-only: upload public platform assets (e.g. payment QR). */
 export async function POST(request: Request) {
+  const { t } = await getApiRouteContext();
   const profile = await getSessionProfile();
   if (!profile || profile.role !== 'ADMIN') {
-    return NextResponse.json(fail('UNAUTHORIZED', 'Admin only'), {
+    return NextResponse.json(fail('UNAUTHORIZED', t('UNAUTHORIZED.adminOnly')), {
       status: 401,
     });
   }
@@ -26,28 +27,27 @@ export async function POST(request: Request) {
   const file = form.get('file');
 
   if (kind !== 'payment_qr') {
-    return NextResponse.json(
-      fail('INVALID', 'kind phải là payment_qr'),
-      { status: 400 }
-    );
+    return NextResponse.json(fail('INVALID', t('INVALID.kindPaymentQr')), {
+      status: 400,
+    });
   }
 
   if (!(file instanceof File)) {
-    return NextResponse.json(fail('INVALID', 'Thiếu file'), { status: 400 });
+    return NextResponse.json(fail('INVALID', t('INVALID.missingFile')), {
+      status: 400,
+    });
   }
 
   if (!ALLOWED_MIME.has(file.type)) {
-    return NextResponse.json(
-      fail('INVALID', 'Chỉ chấp nhận JPG, PNG hoặc WebP'),
-      { status: 400 }
-    );
+    return NextResponse.json(fail('INVALID', t('INVALID.imageTypeOnly')), {
+      status: 400,
+    });
   }
 
   if (file.size > MAX_BYTES) {
-    return NextResponse.json(
-      fail('INVALID', 'File quá lớn (tối đa 3MB)'),
-      { status: 400 }
-    );
+    return NextResponse.json(fail('INVALID', t('INVALID.fileTooLarge3Mb')), {
+      status: 400,
+    });
   }
 
   const ext = extForMime(file.type);
@@ -55,7 +55,6 @@ export async function POST(request: Request) {
   const admin = createServiceClient();
   const buffer = Buffer.from(await file.arrayBuffer());
 
-  // Remove other extensions so only one QR object remains
   for (const oldExt of ['jpg', 'jpeg', 'png', 'webp']) {
     if (oldExt === ext) continue;
     await admin.storage.from('avatars').remove([`platform/payment-qr.${oldExt}`]);

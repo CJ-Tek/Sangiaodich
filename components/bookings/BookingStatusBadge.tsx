@@ -1,9 +1,12 @@
 'use client';
 
 import { Badge } from '@mantine/core';
-import { bookingStatusColors, bookingStatusLabels } from '@/config/booking-status';
+import { useTranslations } from 'next-intl';
+import { bookingStatusColors } from '@/config/booking-status';
+import { getBookingStatusLabel } from '@/lib/i18n/booking-status';
 
 export function BookingStatusBadge({ status }: { status: string }) {
+  const t = useTranslations('bookingStatus');
   const key =
     status === 'CONFIRMED' || status === 'CHECKED_IN'
       ? 'confirmed'
@@ -28,7 +31,7 @@ export function BookingStatusBadge({ status }: { status: string }) {
         },
       }}
     >
-      {bookingStatusLabels[status] || status}
+      {getBookingStatusLabel(status, t)}
     </Badge>
   );
 }

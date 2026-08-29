@@ -45,14 +45,16 @@ export const bookingStatusColors = {
 
 export type BookingStatusKey = keyof typeof bookingStatusColors;
 
-export const bookingStatusLabels: Record<string, string> = {
-  PENDING: 'Chờ Sale gửi Owner',
-  AWAITING_OWNER: 'Chờ Owner xác nhận',
-  CONFIRMED: 'Đã xác nhận',
-  CHECKED_IN: 'Đã check-in',
-  CHECKED_OUT: 'Đã check-out',
-  CANCELLED: 'Đã hủy',
-  available: 'Trống',
-  confirmed: 'Đã book',
-  selected: 'Đã chọn',
-};
+export const bookingStatusKeys = [
+  'PENDING',
+  'AWAITING_OWNER',
+  'CONFIRMED',
+  'CHECKED_IN',
+  'CHECKED_OUT',
+  'CANCELLED',
+  'available',
+  'confirmed',
+  'selected',
+] as const;
+
+export type BookingStatusLabelKey = typeof bookingStatusKeys[number];

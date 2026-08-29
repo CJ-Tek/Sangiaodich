@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { getSessionProfile } from '@/lib/auth/session';
-import { assertActiveSubscription } from '@/lib/engines/subscription-access';
 import {
   convertSavedCustomer,
   createSavedCustomer,
@@ -9,13 +8,20 @@ import {
   updateSavedCustomer,
   type SavedCustomerStatus,
 } from '@/lib/engines/sale-customers';
+import { getApiRouteContext } from '@/lib/i18n/api-route-context';
+import { translateEngineError } from '@/lib/i18n/engine-error';
 import { fail, ok } from '@/lib/types';
 
-async function requireActiveSale() {
+async function requireActiveSale(
+  t: Awaited<ReturnType<typeof import('@/lib/i18n/api-route-context').getApiRouteContext>>['t']
+) {
+  const { assertActiveSubscription } = await import(
+    '@/lib/engines/subscription-access'
+  );
   const profile = await getSessionProfile();
   if (!profile || profile.role !== 'SALE') {
     return {
-      error: NextResponse.json(fail('UNAUTHORIZED', 'Sale only'), {
+      error: NextResponse.json(fail('UNAUTHORIZED', t('UNAUTHORIZED.saleOnly')), {
         status: 401,
       }),
     } as const;
@@ -25,10 +31,7 @@ async function requireActiveSale() {
   } catch {
     return {
       error: NextResponse.json(
-        fail(
-          'SUBSCRIPTION_INACTIVE',
-          'Subscription hết hạn — gia hạn để tiếp tục'
-        ),
+        fail('SUBSCRIPTION_INACTIVE', t('SUBSCRIPTION_INACTIVE')),
         { status: 403 }
       ),
     } as const;
@@ -37,7 +40,8 @@ async function requireActiveSale() {
 }
 
 export async function GET(request: Request) {
-  const gate = await requireActiveSale();
+  const { t } = await getApiRouteContext();
+  const gate = await requireActiveSale(t);
   if ('error' in gate) return gate.error;
   const { profile } = gate;
 
@@ -61,7 +65,7 @@ export async function GET(request: Request) {
     offset,
   });
   if ('error' in result && result.error) {
-    return NextResponse.json(fail('LIST_FAILED', String(result.error)), {
+    return NextResponse.json(fail('LIST_FAILED', t('LIST_FAILED')), {
       status: 400,
     });
   }
@@ -69,7 +73,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const gate = await requireActiveSale();
+  const { t } = await getApiRouteContext();
+  const gate = await requireActiveSale(t);
   if ('error' in gate) return gate.error;
   const { profile } = gate;
 
@@ -83,17 +88,10 @@ export async function POST(request: Request) {
       bookingId: body.bookingId ? String(body.bookingId) : null,
     });
     if ('error' in result && result.error) {
-      const message =
-        result.error === 'NOT_FOUND'
-          ? 'Không tìm thấy khách đã lưu'
-          : result.error === 'BOOKING_NOT_FOUND'
-            ? 'Booking không thuộc sale này'
-            : result.error === 'BOOKING_NOT_CLOSED'
-              ? 'Chỉ gắn booking đã chốt'
-              : String(result.error);
-      return NextResponse.json(fail(String(result.error), message), {
-        status: 400,
-      });
+      return NextResponse.json(
+        fail(String(result.error), translateEngineError(t, result.error)),
+        { status: 400 }
+      );
     }
     return NextResponse.json(ok({ customer: result.customer }));
   }
@@ -112,39 +110,36 @@ export async function POST(request: Request) {
   });
 
   if ('error' in result && result.error) {
-    const message =
-      result.error === 'INVALID_PHONE'
-        ? 'Số điện thoại không hợp lệ'
-        : result.error === 'INVALID_NAME'
-          ? 'Tên khách bắt buộc'
-          : result.error === 'DUPLICATE_PHONE'
-            ? 'Đã lưu SĐT này — mở bản ghi cũ để cập nhật'
-            : String(result.error);
-    return NextResponse.json(fail(String(result.error), message), {
-      status: 400,
-    });
+    return NextResponse.json(
+      fail(String(result.error), translateEngineError(t, result.error)),
+      { status: 400 }
+    );
   }
   return NextResponse.json(ok({ customer: result.customer }));
 }
 
 export async function PATCH(request: Request) {
-  const gate = await requireActiveSale();
+  const { t } = await getApiRouteContext();
+  const gate = await requireActiveSale(t);
   if ('error' in gate) return gate.error;
   const { profile } = gate;
 
   const body = await request.json().catch(() => ({}));
   const id = String(body.id || '');
   if (!id) {
-    return NextResponse.json(fail('INVALID', 'id required'), { status: 400 });
+    return NextResponse.json(fail('INVALID', t('INVALID.idRequired')), {
+      status: 400,
+    });
   }
 
   let status: SavedCustomerStatus | undefined;
   if (body.status != null) {
     const parsed = parseSavedStatus(body.status);
     if (!parsed) {
-      return NextResponse.json(fail('INVALID_STATUS', 'status không hợp lệ'), {
-        status: 400,
-      });
+      return NextResponse.json(
+        fail('INVALID_STATUS', t('INVALID_STATUS.generic')),
+        { status: 400 }
+      );
     }
     status = parsed;
   }
@@ -169,15 +164,9 @@ export async function PATCH(request: Request) {
 
   if ('error' in result && result.error) {
     const message =
-      result.error === 'NOT_FOUND'
-        ? 'Không tìm thấy khách đã lưu'
-        : result.error === 'INVALID_PHONE'
-          ? 'Số điện thoại không hợp lệ'
-          : result.error === 'INVALID_NAME'
-            ? 'Tên khách bắt buộc'
-            : result.error === 'DUPLICATE_PHONE'
-              ? 'SĐT đã tồn tại ở bản ghi ACTIVE khác'
-              : String(result.error);
+      result.error === 'DUPLICATE_PHONE'
+        ? t('CONFLICT.duplicatePhoneActive')
+        : translateEngineError(t, result.error);
     return NextResponse.json(fail(String(result.error), message), {
       status: 400,
     });

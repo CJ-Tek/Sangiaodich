@@ -13,10 +13,11 @@ import {
   Box,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link, usePathname } from '@/lib/i18n/navigation';
 import { colors, radius } from '@/config/design-tokens';
+import { shellNavLinkClass } from '@/components/shells/shell-nav-link-styles';
 import { LogoutButton } from '@/components/auth/LogoutButton';
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import type { ReactNode } from 'react';
 
 export type NavItem = {
@@ -89,7 +90,7 @@ export function DesktopRoleShell({
               hiddenFrom="sm"
               size="sm"
             />
-            <Title order={3} c="vbnbGreen.6" fw={600}>
+            <Title order={3} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
               VBNB
             </Title>
             <Text size="sm" c="dimmed">
@@ -97,6 +98,7 @@ export function DesktopRoleShell({
             </Text>
           </Group>
           <Group gap="md">
+            <LanguageSwitcher compact />
             {headerExtra}
             {accountHref ? (
               <UnstyledButton component={Link} href={accountHref}>
@@ -138,22 +140,11 @@ export function DesktopRoleShell({
                   return (
                     <NavLink
                       key={item.href}
+                      className={shellNavLinkClass}
                       component={Link}
                       href={item.href}
                       label={item.label}
                       active={active}
-                      styles={{
-                        root: {
-                          borderRadius: radius.md,
-                          backgroundColor: active
-                            ? colors.primarySoft
-                            : 'transparent',
-                          color: active
-                            ? colors.primaryDark
-                            : colors.textPrimary,
-                          fontWeight: active ? 600 : 500,
-                        },
-                      }}
                     />
                   );
                 })}

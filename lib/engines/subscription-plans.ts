@@ -19,15 +19,20 @@ export type PlanDiscount = {
   percent: number;
 };
 
-/** Display label for plan duration — 12 months → "1 năm". */
-export function planDurationLabel(months: number): string {
-  if (months === 12) return '1 năm';
-  if (months === 1) return '1 tháng';
-  return `${months} tháng`;
+import {
+  formatVnd as formatVndLocale,
+  planDurationLabel as planDurationLabelLocale,
+} from '@/lib/i18n/format';
+import type { AppLocale } from '@/lib/i18n/routing';
+
+/** @deprecated Pass locale — use `planDurationLabel(months, locale)` from `@/lib/i18n/format`. */
+export function planDurationLabel(months: number, locale: AppLocale = 'vi'): string {
+  return planDurationLabelLocale(months, locale);
 }
 
-export function formatVnd(amount: number): string {
-  return `${amount.toLocaleString('vi-VN')}đ`;
+/** @deprecated Pass locale — use `formatVnd(amount, locale)` from `@/lib/i18n/format`. */
+export function formatVnd(amount: number, locale: AppLocale = 'vi'): string {
+  return formatVndLocale(amount, locale);
 }
 
 /** Marketing discount when compare_at_amount > amount. */

@@ -1,4 +1,5 @@
 import { Group, Text } from '@mantine/core';
+import { getTranslations } from 'next-intl/server';
 import { colors } from '@/config/design-tokens';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
 
@@ -6,7 +7,9 @@ import { LinkAnchor } from '@/components/ui/LinkAnchor';
  * Shown to anonymous visitors only. One line, no fill — villas are the point
  * of the page. No perk promises, since guest tiers do not grant any.
  */
-export function GuestSignupStrip() {
+export async function GuestSignupStrip() {
+  const t = await getTranslations('marketplace.signup');
+
   return (
     <Group
       justify="space-between"
@@ -20,7 +23,7 @@ export function GuestSignupStrip() {
       }}
     >
       <Text size="sm" c={colors.textSecondary}>
-        Tạo tài khoản để sale chốt booking và bạn theo dõi được lịch sử.
+        {t('text')}
       </Text>
       <LinkAnchor
         href="/login?mode=register&role=GUEST"
@@ -31,7 +34,7 @@ export function GuestSignupStrip() {
         py={6}
         display="inline-block"
       >
-        Tạo tài khoản →
+        {t('cta')}
       </LinkAnchor>
     </Group>
   );

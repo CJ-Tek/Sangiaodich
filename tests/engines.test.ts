@@ -59,6 +59,7 @@ import {
   saleOwnerPayoutSatisfied,
 } from '@/lib/engines/guest-balance';
 import { normalizePhone } from '@/lib/auth/otp';
+import { formatPhoneForZalo } from '@/lib/zalo/phone';
 import {
   parseChannel,
   parseIntent,
@@ -279,7 +280,7 @@ describe('membership', () => {
     expect(pickSaleDiscountFromCount(20, saleTiers)).toBe(0);
     expect(pickSaleDiscountFromCount(21, saleTiers)).toBe(3);
     expect(pickSaleTierFromCount(21, saleTiers)?.id).toBe('1');
-    expect(saleDiscountSnapshotLabel(3)).toBe('−3% căn này');
+    expect(saleDiscountSnapshotLabel(3)).toBe('-3%');
   });
 
   it('unlocks 5% only when checkout count is strictly greater than 50', () => {
@@ -697,8 +698,13 @@ describe('guest invoice amounts', () => {
 describe('sale saved customer parsers', () => {
   it('normalizes VN phone numbers', () => {
     expect(normalizePhone('0901234567')).toBe('+84901234567');
+    expect(normalizePhone('901234567')).toBe('+84901234567');
+    expect(normalizePhone('84901234567')).toBe('+84901234567');
     expect(normalizePhone('+84 901 234 567')).toBe('+84901234567');
+    expect(normalizePhone('0961990739')).toBe('+84961990739');
     expect(normalizePhone('12')).toBeNull();
+    expect(normalizePhone('+961990739')).toBeNull();
+    expect(formatPhoneForZalo('+84901234567')).toBe('84901234567');
   });
 
   it('parses channel / intent / status safely', () => {
@@ -830,7 +836,7 @@ describe('admin user management helpers', () => {
     } catch (e) {
       expect(e).toBeInstanceOf(AdminUserError);
       expect((e as AdminUserError).code).toBe('HARD_DELETE_DISABLED');
-      expect((e as AdminUserError).message).toBe(hardDeleteBlockedMessage());
+      expect((e as AdminUserError).message).toBe('HARD_DELETE_DISABLED');
     }
   });
 });

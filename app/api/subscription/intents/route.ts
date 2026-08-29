@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getSessionProfile } from '@/lib/auth/session';
+import { getApiRouteContext } from '@/lib/i18n/api-route-context';
 import { fail, ok } from '@/lib/types';
 import {
   createPaymentIntent,
@@ -8,13 +9,14 @@ import {
 } from '@/lib/engines/subscription-payment';
 import type { SubscriptionPlanRole } from '@/lib/engines/subscription-plans';
 
-/** `?intentId=` polls a single intent while the checkout screen waits for money-in. */
 export async function GET(request: Request) {
+  const { t } = await getApiRouteContext();
   const profile = await getSessionProfile();
   if (!profile || (profile.role !== 'OWNER' && profile.role !== 'SALE')) {
-    return NextResponse.json(fail('UNAUTHORIZED', 'Owner/Sale only'), {
-      status: 401,
-    });
+    return NextResponse.json(
+      fail('UNAUTHORIZED', t('UNAUTHORIZED.ownerSaleOnly')),
+      { status: 401 }
+    );
   }
 
   const intentId = new URL(request.url).searchParams.get('intentId');
@@ -31,17 +33,19 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const { t } = await getApiRouteContext();
   const profile = await getSessionProfile();
   if (!profile || (profile.role !== 'OWNER' && profile.role !== 'SALE')) {
-    return NextResponse.json(fail('UNAUTHORIZED', 'Owner/Sale only'), {
-      status: 401,
-    });
+    return NextResponse.json(
+      fail('UNAUTHORIZED', t('UNAUTHORIZED.ownerSaleOnly')),
+      { status: 401 }
+    );
   }
 
   const body = await request.json().catch(() => ({}));
   const planId = String(body.planId || '');
   if (!planId) {
-    return NextResponse.json(fail('INVALID', 'planId required'), {
+    return NextResponse.json(fail('INVALID', t('planIdRequired')), {
       status: 400,
     });
   }
@@ -54,9 +58,15 @@ export async function POST(request: Request) {
     });
     return NextResponse.json(ok(intent));
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'CREATE_FAILED';
+    const code = e instanceof Error ? e.message : 'CREATE_FAILED';
+    const message =
+      code === 'PLAN_NOT_FOUND'
+        ? t('INVALID.planNotFound')
+        : code === 'PLAN_ROLE_MISMATCH'
+          ? t('INVALID.planRoleMismatch')
+          : t('CREATE_FAILED');
     const status =
-      msg === 'PLAN_NOT_FOUND' || msg === 'PLAN_ROLE_MISMATCH' ? 400 : 500;
-    return NextResponse.json(fail(msg, msg), { status });
+      code === 'PLAN_NOT_FOUND' || code === 'PLAN_ROLE_MISMATCH' ? 400 : 500;
+    return NextResponse.json(fail(code, message), { status });
   }
 }

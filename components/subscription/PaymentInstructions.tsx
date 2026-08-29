@@ -1,12 +1,14 @@
 'use client';
 
-import { Button, Group, Image, Paper, Stack, Text, CopyButton } from '@mantine/core';
+import { Button, Group, Image, Stack, Text, CopyButton } from '@mantine/core';
+import { useTranslations } from 'next-intl';
 import {
   buildTransferContent,
   hasPaymentInfo,
   type PlatformPaymentInfo,
 } from '@/lib/platform/payment-info';
-import { colors, radius } from '@/config/design-tokens';
+import { SurfaceCard } from '@/components/ui/SurfaceCard';
+import { useFormat } from '@/lib/i18n/use-format';
 
 export function PaymentInstructions({
   payment,
@@ -21,37 +23,32 @@ export function PaymentInstructions({
   email?: string | null;
   compact?: boolean;
 }) {
+  const t = useTranslations('subscription.paymentInstructions');
+  const tCommon = useTranslations('common');
+  const { formatVnd } = useFormat();
+
   if (!hasPaymentInfo(payment)) {
     return (
-      <Paper
-        p={compact ? 'md' : 'lg'}
-        radius={radius.lg}
-        style={{ border: `1px solid ${colors.border}` }}
-      >
+      <SurfaceCard p={compact ? 'md' : 'lg'}>
         <Text size="sm" c="dimmed">
-          Chưa có thông tin chuyển khoản — liên hệ Admin để được hướng dẫn
-          thanh toán.
+          {t('noPaymentInfo')}
         </Text>
-      </Paper>
+      </SurfaceCard>
     );
   }
 
   const transferContent = buildTransferContent({ phone, email });
 
   return (
-    <Paper
-      p={compact ? 'md' : 'lg'}
-      radius={radius.lg}
-      style={{ border: `1px solid ${colors.border}` }}
-    >
+    <SurfaceCard p={compact ? 'md' : 'lg'}>
       <Stack gap={compact ? 'xs' : 'sm'}>
         <Text size="sm" c="dimmed">
-          Chuyển khoản offline
+          {t('offlineTransfer')}
         </Text>
         {payment.bankName ? (
           <div>
             <Text size="xs" c="dimmed">
-              Ngân hàng
+              {t('bank')}
             </Text>
             <Text fw={600} size="sm">
               {payment.bankName}
@@ -61,7 +58,7 @@ export function PaymentInstructions({
         {payment.accountName ? (
           <div>
             <Text size="xs" c="dimmed">
-              Chủ tài khoản
+              {t('accountName')}
             </Text>
             <Text fw={600} size="sm">
               {payment.accountName}
@@ -72,7 +69,7 @@ export function PaymentInstructions({
           <Group justify="space-between" align="flex-end" wrap="nowrap">
             <div style={{ flex: 1, minWidth: 0 }}>
               <Text size="xs" c="dimmed">
-                Số tài khoản
+                {t('accountNumber')}
               </Text>
               <Text fw={600} size="sm" style={{ wordBreak: 'break-all' }}>
                 {payment.accountNumber}
@@ -81,7 +78,7 @@ export function PaymentInstructions({
             <CopyButton value={payment.accountNumber}>
               {({ copied, copy }) => (
                 <Button size="xs" variant="light" color="vbnbGreen" onClick={copy}>
-                  {copied ? 'Đã copy' : 'Sao chép'}
+                  {copied ? tCommon('copied') : tCommon('copy')}
                 </Button>
               )}
             </CopyButton>
@@ -90,17 +87,17 @@ export function PaymentInstructions({
         {typeof amount === 'number' ? (
           <div>
             <Text size="xs" c="dimmed">
-              Số tiền / tháng
+              {t('amountPerMonth')}
             </Text>
             <Text fw={600} size="sm" c="vbnbGreen.6">
-              {amount.toLocaleString('vi-VN')}đ
+              {formatVnd(amount)}
             </Text>
           </div>
         ) : null}
         <Group justify="space-between" align="flex-end" wrap="nowrap">
           <div style={{ flex: 1, minWidth: 0 }}>
             <Text size="xs" c="dimmed">
-              Nội dung chuyển khoản
+              {t('transferContent')}
             </Text>
             <Text fw={600} size="sm" style={{ wordBreak: 'break-all' }}>
               {transferContent}
@@ -109,7 +106,7 @@ export function PaymentInstructions({
           <CopyButton value={transferContent}>
             {({ copied, copy }) => (
               <Button size="xs" variant="light" color="vbnbGreen" onClick={copy}>
-                {copied ? 'Đã copy' : 'Sao chép'}
+                {copied ? tCommon('copied') : tCommon('copy')}
               </Button>
             )}
           </CopyButton>
@@ -121,7 +118,7 @@ export function PaymentInstructions({
         ) : null}
         {payment.contact ? (
           <Text size="sm">
-            Liên hệ:{' '}
+            {t('contact')}{' '}
             <Text span fw={500}>
               {payment.contact}
             </Text>
@@ -130,13 +127,13 @@ export function PaymentInstructions({
         {!compact && payment.qrImageUrl ? (
           <Image
             src={payment.qrImageUrl}
-            alt="QR thanh toán"
+            alt={t('qrAlt')}
             maw={200}
             radius="md"
             mt="xs"
           />
         ) : null}
       </Stack>
-    </Paper>
+    </SurfaceCard>
   );
 }

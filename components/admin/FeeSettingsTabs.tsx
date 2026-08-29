@@ -1,8 +1,9 @@
 'use client';
 
 import { Tabs } from '@mantine/core';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
+import { useRouter } from '@/lib/i18n/navigation';
 import {
   parseFeeSettingTab,
   type FeeSettingTab,
@@ -17,6 +18,7 @@ export function FeeSettingsTabs({
   subscription: ReactNode;
   payout: ReactNode;
 }) {
+  const t = useTranslations('admin.fees');
   const router = useRouter();
 
   return (
@@ -29,8 +31,8 @@ export function FeeSettingsTabs({
       color="vbnbGreen"
     >
       <Tabs.List mb="md" style={{ flexWrap: 'wrap' }}>
-        <Tabs.Tab value="subscription">Gói subscription</Tabs.Tab>
-        <Tabs.Tab value="payout">Tài khoản nhận tiền</Tabs.Tab>
+        <Tabs.Tab value="subscription">{t('tabs.subscription')}</Tabs.Tab>
+        <Tabs.Tab value="payout">{t('tabs.payout')}</Tabs.Tab>
       </Tabs.List>
       <Tabs.Panel value="subscription">{subscription}</Tabs.Panel>
       <Tabs.Panel value="payout">{payout}</Tabs.Panel>

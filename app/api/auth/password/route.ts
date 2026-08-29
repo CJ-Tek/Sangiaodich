@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { normalizePhone } from '@/lib/auth/otp';
+import { getApiErrorTranslator } from '@/lib/i18n/api-errors';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 import { fail, ok } from '@/lib/types';
 
 /** Email or phone + password. Phone lookup works for every role. */
 export async function POST(request: Request) {
+  const t = await getApiErrorTranslator();
   const body = await request.json();
   const password = String(body.password || '');
   const identifier = String(
@@ -12,13 +14,13 @@ export async function POST(request: Request) {
   ).trim();
 
   if (!password) {
-    return NextResponse.json(fail('INVALID', 'Mật khẩu bắt buộc'), {
+    return NextResponse.json(fail('INVALID', t('INVALID.passwordRequired')), {
       status: 400,
     });
   }
   if (!identifier) {
     return NextResponse.json(
-      fail('INVALID', 'Email hoặc số điện thoại bắt buộc'),
+      fail('INVALID', t('INVALID.identifierRequired')),
       { status: 400 }
     );
   }
@@ -28,7 +30,7 @@ export async function POST(request: Request) {
   if (!identifier.includes('@')) {
     const phone = normalizePhone(identifier);
     if (!phone) {
-      return NextResponse.json(fail('INVALID', 'Số điện thoại không hợp lệ'), {
+      return NextResponse.json(fail('INVALID', t('INVALID.invalidPhone')), {
         status: 400,
       });
     }
@@ -42,7 +44,7 @@ export async function POST(request: Request) {
 
     if (!byPhone?.email) {
       return NextResponse.json(
-        fail('AUTH_FAILED', 'SĐT hoặc mật khẩu không đúng'),
+        fail('AUTH_FAILED', t('AUTH_FAILED.wrongCredentials')),
         { status: 401 }
       );
     }
@@ -63,9 +65,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       fail(
         unreachable ? 'AUTH_UNREACHABLE' : 'AUTH_FAILED',
-        unreachable
-          ? 'Không kết nối được máy chủ xác thực. Chạy lại npm run local.'
-          : raw
+        unreachable ? t('AUTH_UNREACHABLE') : t('AUTH_FAILED.wrongCredentials')
       ),
       { status: unreachable ? 503 : 401 }
     );

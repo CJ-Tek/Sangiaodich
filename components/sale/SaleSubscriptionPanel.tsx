@@ -1,10 +1,11 @@
 import { Paper, Text, Stack } from '@mantine/core';
+import { getTranslations } from 'next-intl/server';
 import { colors, radius } from '@/config/design-tokens';
 import { SubscriptionPlanPicker } from '@/components/subscription/SubscriptionPlanPicker';
 import type { PendingCheckout } from '@/components/subscription/SubscriptionPlanPicker';
 import type { SubscriptionPlan } from '@/lib/engines/subscription-plans';
 
-export function SaleSubscriptionPanel({
+export async function SaleSubscriptionPanel({
   status,
   periodStart,
   periodEnd,
@@ -21,6 +22,8 @@ export function SaleSubscriptionPanel({
   pending: PendingCheckout | null;
   gatewayEnabled: boolean;
 }) {
+  const t = await getTranslations('sale.subscription');
+
   return (
     <Stack gap="md" maw={640}>
       <Paper
@@ -31,27 +34,25 @@ export function SaleSubscriptionPanel({
         {status ? (
           <Stack gap="xs">
             <Text size="sm" c="dimmed">
-              Status
+              {t('status')}
             </Text>
             <Text fw={600} c={active ? 'vbnbGreen.6' : undefined}>
               {status}
             </Text>
             <Text size="sm" c="dimmed">
-              Kỳ hiện tại
+              {t('currentPeriod')}
             </Text>
             <Text size="sm" fw={500}>
               {periodStart} → {periodEnd}
             </Text>
             {active ? (
               <Text size="sm" c="dimmed" mt="xs">
-                Gói mới sẽ được cộng thêm vào hạn {periodEnd}.
+                {t('extendNote', { periodEnd: periodEnd ?? '' })}
               </Text>
             ) : null}
           </Stack>
         ) : (
-          <Text c="dimmed">
-            Chưa có kỳ thanh toán. Chọn gói bên dưới và quét QR để kích hoạt.
-          </Text>
+          <Text c="dimmed">{t('noPeriod')}</Text>
         )}
       </Paper>
 

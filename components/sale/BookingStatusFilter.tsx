@@ -1,7 +1,8 @@
 'use client';
 
 import { SegmentedControl } from '@mantine/core';
-import { useRouter, usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter, usePathname } from '@/lib/i18n/navigation';
 
 export type BookingFilterStatus =
   | 'ALL'
@@ -12,23 +13,24 @@ export type BookingFilterStatus =
   | 'CHECKED_OUT'
   | 'CANCELLED';
 
-const OPTIONS: { value: BookingFilterStatus; label: string }[] = [
-  { value: 'ALL', label: 'Tất cả' },
-  { value: 'PENDING', label: 'Chờ gửi' },
-  { value: 'AWAITING_OWNER', label: 'Chờ Owner' },
-  { value: 'CONFIRMED', label: 'Đã xác nhận' },
-  { value: 'CHECKED_IN', label: 'Đã check-in' },
-  { value: 'CHECKED_OUT', label: 'Đã check-out' },
-  { value: 'CANCELLED', label: 'Đã hủy' },
-];
-
 export function BookingStatusFilter({
   value,
 }: {
   value: BookingFilterStatus;
 }) {
+  const t = useTranslations('sale.bookings');
   const router = useRouter();
   const pathname = usePathname();
+
+  const options: { value: BookingFilterStatus; label: string }[] = [
+    { value: 'ALL', label: t('filterAll') },
+    { value: 'PENDING', label: t('filterPending') },
+    { value: 'AWAITING_OWNER', label: t('filterAwaitingOwner') },
+    { value: 'CONFIRMED', label: t('filterConfirmed') },
+    { value: 'CHECKED_IN', label: t('filterCheckedIn') },
+    { value: 'CHECKED_OUT', label: t('filterCheckedOut') },
+    { value: 'CANCELLED', label: t('filterCancelled') },
+  ];
 
   return (
     <div
@@ -41,7 +43,7 @@ export function BookingStatusFilter({
       <SegmentedControl
         color="vbnbGreen"
         value={value}
-        data={OPTIONS}
+        data={options}
         styles={{
           root: { width: 'max-content' },
           control: { flexShrink: 0 },

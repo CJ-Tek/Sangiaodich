@@ -1,51 +1,54 @@
-import { Box, Group, SimpleGrid, Title } from '@mantine/core';
+'use client';
+
+import { Box, Group, SimpleGrid, Stack, Title } from '@mantine/core';
+import { useTranslations } from 'next-intl';
+import { colors, spacing, typography } from '@/config/design-tokens';
+import { containerClassName } from '@/components/landing/landing-media';
 import { AssetCard, type AssetCardData } from '@/components/marketplace/AssetCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LinkButton } from '@/components/ui/LinkButton';
-import { landingContainer } from '@/components/landing/landing-media';
 
 export function FeaturedStays({ assets }: { assets: AssetCardData[] }) {
+  const t = useTranslations('landing.featured');
+
   return (
-    <Box
-      component="section"
-      aria-labelledby="featured-heading"
-      style={{
-        ...landingContainer,
-        paddingTop: 'clamp(48px, 8vw, 96px)',
-        paddingBottom: 'clamp(48px, 8vw, 96px)',
-      }}
-    >
-      <Group justify="space-between" align="baseline" mb="xl">
+    <Box component="section" aria-labelledby="featured-heading" className="vbnb-landing-section">
+      <Stack gap={spacing['3xl']} className={containerClassName}>
+        <Group justify="space-between" align="baseline">
         <Title
           id="featured-heading"
           order={2}
-          fw={700}
+          fw={typography.title.fontWeight}
+          className="vbnb-text-balance"
           style={{
-            fontSize: 'clamp(1.5rem, 3vw, 2.1rem)',
-            letterSpacing: '-0.03em',
+            fontSize: typography.title.fontSize,
+            letterSpacing: typography.title.letterSpacing,
+            lineHeight: typography.title.lineHeight,
+            color: colors.textPrimary,
           }}
         >
-          Villa nổi bật
+          {t('title')}
         </Title>
         <LinkButton href="/marketplace" variant="subtle" color="vbnbGreen">
-          Khám phá tất cả
+          {t('viewAll')}
         </LinkButton>
-      </Group>
+        </Group>
 
-      {!assets.length ? (
+        {!assets.length ? (
         <EmptyState
-          title="Chưa có listing"
-          description="Asset ACTIVE sẽ xuất hiện tại đây sau khi admin duyệt."
-          actionLabel="Đăng nhập"
+          title={t('emptyTitle')}
+          description={t('emptyDescription')}
+          actionLabel={t('emptyAction')}
           href="/login"
         />
-      ) : (
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xl">
-          {assets.map((asset) => (
-            <AssetCard key={asset.id} asset={asset} />
-          ))}
-        </SimpleGrid>
-      )}
+        ) : (
+          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xl">
+            {assets.map((asset) => (
+              <AssetCard key={asset.id} asset={asset} />
+            ))}
+          </SimpleGrid>
+        )}
+      </Stack>
     </Box>
   );
 }

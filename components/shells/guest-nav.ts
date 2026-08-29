@@ -6,8 +6,14 @@ import {
   IconUser,
 } from '@/components/shells/NavIcons';
 
+export type GuestNavLabelKey =
+  | 'home'
+  | 'explore'
+  | 'bookings'
+  | 'profile';
+
 export type GuestNavItem = {
-  label: string;
+  labelKey: GuestNavLabelKey;
   /** Dashboard route, used once the guest is signed in. */
   href: string;
   Icon: ComponentType<{ color: string }>;
@@ -24,15 +30,15 @@ export type GuestNavItem = {
  * `isLoggedIn` checks across pages.
  */
 export const guestNav: GuestNavItem[] = [
-  { label: 'Trang chủ', href: '/me', Icon: IconHome },
+  { labelKey: 'home', href: '/me', Icon: IconHome },
   {
-    label: 'Khám phá',
+    labelKey: 'explore',
     href: '/me/explore',
     Icon: IconCompass,
     publicHref: '/marketplace',
   },
-  { label: 'Booking', href: '/me/bookings', Icon: IconCalendar },
-  { label: 'Tài khoản', href: '/me/profile', Icon: IconUser },
+  { labelKey: 'bookings', href: '/me/bookings', Icon: IconCalendar },
+  { labelKey: 'profile', href: '/me/profile', Icon: IconUser },
 ];
 
 /** Where a nav item should point for the current auth state. */

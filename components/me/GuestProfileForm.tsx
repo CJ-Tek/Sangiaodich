@@ -12,7 +12,8 @@ import {
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/lib/i18n/navigation';
 import { useState } from 'react';
 import { colors, radius } from '@/config/design-tokens';
 
@@ -28,6 +29,7 @@ export function GuestProfileForm({
 }: {
   initial: GuestProfileFormValues;
 }) {
+  const t = useTranslations('guest.profile');
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -45,13 +47,13 @@ export function GuestProfileForm({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Upload thất bại',
+          message: json.error?.message || t('uploadFailed'),
         });
         return;
       }
       const { previewUrl } = json.data as { previewUrl: string };
       setForm((f) => ({ ...f, avatarUrl: previewUrl }));
-      notifications.show({ color: 'vbnbGreen', message: 'Đã tải ảnh lên' });
+      notifications.show({ color: 'vbnbGreen', message: t('uploadSuccess') });
     } finally {
       setUploading(false);
     }
@@ -73,11 +75,11 @@ export function GuestProfileForm({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Không lưu được',
+          message: json.error?.message || t('saveFailed'),
         });
         return;
       }
-      notifications.show({ color: 'vbnbGreen', message: 'Đã cập nhật hồ sơ' });
+      notifications.show({ color: 'vbnbGreen', message: t('saveSuccess') });
       router.refresh();
     } finally {
       setLoading(false);
@@ -103,16 +105,16 @@ export function GuestProfileForm({
           </Avatar>
           <div style={{ flex: 1 }}>
             <Title order={4} fw={600}>
-              Thông tin cá nhân
+              {t('personalInfo')}
             </Title>
             <Text size="sm" c="dimmed" mt={4}>
-              Tên và ảnh đại diện hiển thị với sale phụ trách booking của bạn.
+              {t('personalInfoDesc')}
             </Text>
           </div>
         </Group>
 
         <TextInput
-          label="Họ và tên"
+          label={t('fullName')}
           required
           value={form.fullName}
           onChange={(e) =>
@@ -122,10 +124,10 @@ export function GuestProfileForm({
 
         <div>
           <Text size="sm" fw={500} mb={4}>
-            Ảnh đại diện
+            {t('avatar')}
           </Text>
           <Text size="xs" c="dimmed" mb={8}>
-            Upload từ thiết bị (JPG/PNG/WebP, tối đa 2MB) hoặc dán link URL.
+            {t('avatarHint')}
           </Text>
           <Group gap="sm" mb="sm">
             <FileButton
@@ -141,7 +143,7 @@ export function GuestProfileForm({
                   loading={uploading}
                   size="sm"
                 >
-                  Chọn ảnh
+                  {t('choosePhoto')}
                 </Button>
               )}
             </FileButton>
@@ -152,13 +154,13 @@ export function GuestProfileForm({
                 size="sm"
                 onClick={() => setForm({ ...form, avatarUrl: '' })}
               >
-                Xóa ảnh
+                {t('removePhoto')}
               </Button>
             ) : null}
           </Group>
           <TextInput
-            label="Avatar URL"
-            description="Tùy chọn — dán link nếu không upload file."
+            label={t('avatarUrl')}
+            description={t('avatarUrlDesc')}
             value={form.avatarUrl}
             onChange={(e) =>
               setForm({ ...form, avatarUrl: e.currentTarget.value })
@@ -168,22 +170,22 @@ export function GuestProfileForm({
         </div>
 
         <TextInput
-          label="Số điện thoại"
-          description="Là danh tính đăng nhập OTP nên không đổi ở đây. Cần đổi thì liên hệ hỗ trợ."
+          label={t('phone')}
+          description={t('phoneDesc')}
           value={form.phone}
           readOnly
           disabled
         />
         <TextInput
-          label="Email"
+          label={t('email')}
           type="email"
-          description="Tùy chọn — dùng để nhận thông tin booking."
+          description={t('emailDesc')}
           value={form.email}
           onChange={(e) => setForm({ ...form, email: e.currentTarget.value })}
         />
 
         <Button color="vbnbGreen" loading={loading} onClick={save}>
-          Lưu hồ sơ
+          {t('save')}
         </Button>
       </Stack>
     </Paper>

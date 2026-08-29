@@ -9,6 +9,7 @@ import {
   Text,
   TextInput,
 } from '@mantine/core';
+import { useTranslations } from 'next-intl';
 import { useMemo, useState } from 'react';
 import { colors, radius } from '@/config/design-tokens';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -22,15 +23,7 @@ import type {
   ClosedCustomerCard,
   SavedCustomerRow,
 } from '@/lib/engines/sale-customers';
-
-function formatMoney(n: number) {
-  return n.toLocaleString('vi-VN');
-}
-
-function timeLabel(iso: string | null) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleString('vi-VN');
-}
+import { useFormat } from '@/lib/i18n/use-format';
 
 export function SaleCustomersTabs({
   closed,
@@ -43,6 +36,8 @@ export function SaleCustomersTabs({
   cancelled: CancelledCustomerCard[];
   defaultTab: 'closed' | 'saved' | 'cancelled';
 }) {
+  const t = useTranslations('sale.customers');
+  const { formatNumber, formatDateTime } = useFormat();
   const [query, setQuery] = useState('');
 
   const filteredClosed = useMemo(
@@ -73,8 +68,8 @@ export function SaleCustomersTabs({
     <Stack gap="md">
       <Group justify="space-between" align="flex-end" wrap="wrap" gap="sm">
         <TextInput
-          label="Tìm kiếm"
-          placeholder="Tên hoặc số điện thoại..."
+          label={t('searchLabel')}
+          placeholder={t('searchPlaceholder')}
           value={query}
           onChange={(e) => setQuery(e.currentTarget.value)}
           style={{ flex: 1, minWidth: 220 }}
@@ -85,26 +80,28 @@ export function SaleCustomersTabs({
       <Tabs defaultValue={defaultTab} color="vbnbGreen">
         <Tabs.List mb="md">
           <Tabs.Tab value="closed">
-            Đã chốt ({filteredClosed.length})
+            {t('tabClosed', { count: filteredClosed.length })}
           </Tabs.Tab>
-          <Tabs.Tab value="saved">Đã lưu ({filteredSaved.length})</Tabs.Tab>
+          <Tabs.Tab value="saved">
+            {t('tabSaved', { count: filteredSaved.length })}
+          </Tabs.Tab>
           <Tabs.Tab value="cancelled">
-            Đã hủy ({filteredCancelled.length})
+            {t('tabCancelled', { count: filteredCancelled.length })}
           </Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="closed">
           {!closed.length ? (
             <EmptyState
-              title="Chưa có khách đã chốt"
-              description="Khi bạn confirm booking, khách sẽ hiện ở đây với tier và tổng chi net."
-              actionLabel="Open bookings"
+              title={t('emptyClosedTitle')}
+              description={t('emptyClosedDesc')}
+              actionLabel={t('openBookings')}
               href="/sale/bookings"
             />
           ) : !filteredClosed.length ? (
             <EmptyState
-              title={q ? `Không tìm thấy “${q}”` : 'Không có kết quả'}
-              description="Thử tên hoặc số điện thoại khác — khách có thể còn ở tab Đã lưu / Đã hủy."
+              title={q ? t('notFoundQuery', { query: q }) : t('noResults')}
+              description={t('notFoundHint')}
             />
           ) : (
             <Stack gap="sm">
@@ -135,18 +132,22 @@ export function SaleCustomersTabs({
                     </Stack>
                     <Stack gap={2} align="flex-end">
                       <Text size="xs" c="dimmed">
-                        Tổng chi (net)
+                        {t('totalSpend')}
                       </Text>
-                      <Text fw={600}>{formatMoney(c.totalPaidNet)}</Text>
+                      <Text fw={600}>{formatNumber(c.totalPaidNet)}</Text>
                       <Text size="xs" c="dimmed">
-                        {c.bookingCount} booking
+                        {t('bookingCount', { count: c.bookingCount })}
                       </Text>
                     </Stack>
                   </Group>
                   <Text size="sm" mt="md">
                     {c.atMaxTier
-                      ? 'Đã ở hạng cao nhất.'
-                      : `Còn ${c.remainingBooks} booking · ${formatMoney(c.remainingGmv || 0)} để lên ${c.nextTierLabel}`}
+                      ? t('tierMax')
+                      : t('tierProgress', {
+                          bookings: c.remainingBooks ?? 0,
+                          amount: formatNumber(c.remainingGmv || 0),
+                          tier: c.nextTierLabel ?? '',
+                        })}
                   </Text>
                 </Paper>
               ))}
@@ -157,13 +158,13 @@ export function SaleCustomersTabs({
         <Tabs.Panel value="saved">
           {!saved.length ? (
             <EmptyState
-              title="Chưa lưu khách follow-up"
-              description="Lưu khách đã liên hệ ngoài hệ thống để nhắc follow-up sau."
+              title={t('emptySavedTitle')}
+              description={t('emptySavedDesc')}
             />
           ) : !filteredSaved.length ? (
             <EmptyState
-              title={q ? `Không tìm thấy “${q}”` : 'Không có kết quả'}
-              description="Thử tên hoặc số điện thoại khác — khách có thể còn ở tab Đã chốt / Đã hủy."
+              title={q ? t('notFoundQuery', { query: q }) : t('noResults')}
+              description={t('notFoundHint')}
             />
           ) : (
             <Stack gap="sm">
@@ -219,9 +220,16 @@ export function SaleCustomersTabs({
                       <Text size="xs" c="dimmed">
                         Follow-up
                       </Text>
-                      <Text size="sm">{timeLabel(c.next_follow_up_at)}</Text>
+                      <Text size="sm">
+                        {c.next_follow_up_at
+                          ? formatDateTime(c.next_follow_up_at)
+                          : '—'}
+                      </Text>
                       <Text size="xs" c="dimmed">
-                        Liên hệ gần nhất: {timeLabel(c.last_contact_at)}
+                        Liên hệ gần nhất:{' '}
+                        {c.last_contact_at
+                          ? formatDateTime(c.last_contact_at)
+                          : '—'}
                       </Text>
                     </Stack>
                   </Group>
@@ -240,13 +248,13 @@ export function SaleCustomersTabs({
         <Tabs.Panel value="cancelled">
           {!cancelled.length ? (
             <EmptyState
-              title="Chưa có khách hủy"
-              description="Booking CANCELLED sẽ hiện ở đây để bạn follow lại sau."
+              title={t('emptyCancelledTitle')}
+              description={t('emptyCancelledDesc')}
             />
           ) : !filteredCancelled.length ? (
             <EmptyState
-              title={q ? `Không tìm thấy “${q}”` : 'Không có kết quả'}
-              description="Thử tên hoặc số điện thoại khác — khách có thể còn ở tab Đã chốt / Đã lưu."
+              title={q ? t('notFoundQuery', { query: q }) : t('noResults')}
+              description={t('notFoundHint')}
             />
           ) : (
             <Stack gap="sm">
@@ -270,31 +278,39 @@ export function SaleCustomersTabs({
                         {c.phone}
                       </Text>
                       <Text size="sm" mt={4}>
-                        {c.lastAssetTitle || 'Booking'}
+                        {c.lastAssetTitle || t('bookingLabel')}
                         {' · '}
-                        {c.cancelCount} lần hủy
+                        {t('cancelCount', { count: c.cancelCount })}
                       </Text>
                     </Stack>
                     <Stack gap={2} align="flex-end">
                       <Text size="xs" c="dimmed">
-                        Hủy gần nhất
+                        {t('lastCancelled')}
                       </Text>
-                      <Text size="sm">{timeLabel(c.lastCancelledAt)}</Text>
+                      <Text size="sm">
+                        {c.lastCancelledAt
+                          ? formatDateTime(c.lastCancelledAt)
+                          : '—'}
+                      </Text>
                       <Text size="xs" c="dimmed">
-                        Hoàn {formatMoney(c.lastRefundAmount)} · giữ{' '}
-                        {formatMoney(c.lastKeptAmount)}
+                        {t('refundShort', {
+                          refund: formatNumber(c.lastRefundAmount),
+                          kept: formatNumber(c.lastKeptAmount),
+                        })}
                       </Text>
                     </Stack>
                   </Group>
                   <Group mt="md">
                     <SaveCustomerButton
-                      label="Lưu để follow-up"
+                      label={t('saveFollowUp')}
                       size="xs"
                       variant="light"
                       initial={{
                         fullName: c.fullName,
                         phone: c.phone,
-                        note: `Khách hủy trước đó (${c.lastAssetTitle || 'booking'})`,
+                        note: t('cancelledAsset', {
+                          asset: c.lastAssetTitle || 'booking',
+                        }),
                       }}
                     />
                   </Group>

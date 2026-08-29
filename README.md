@@ -9,49 +9,52 @@ Spec: [VBNB_MASTER_PROMPT.md](./VBNB_MASTER_PROMPT.md) · UI: [VBNB_UI_UX_PROMPT
 ## Prerequisites
 
 - Node 20+
-- Docker Desktop (for Supabase local)
-- Ports **54321–54329** free (configured in `supabase/config.toml`; stay below Windows WinNAT excluded ranges)
+- Hosted Supabase project (same DB for local dev and production)
+- `.env.local` with Supabase URL + keys (see `.env.example`)
 
 ## Quick start (Windows)
 
-1. Bật **Docker Desktop**
-2. Chạy một lệnh:
+1. Copy env file and add keys from Supabase dashboard → Project Settings → API:
+
+```powershell
+copy .env.example .env.local
+# edit .env.local — paste anon key + service role key
+```
+
+2. Start dev server:
 
 ```powershell
 npm run local
+# or: npm run dev
 ```
 
-Script `scripts/run-local.ps1` sẽ: kiểm tra Docker → `supabase start` (nếu chưa) → ghi `.env.local` từ keys local → `next dev`.
+`npm run local` starts Next.js only. It **does not** start Docker and **does not**
+overwrite `.env.local`.
 
 ```powershell
-npm run local:reset   # kèm db reset + seed
 .\scripts\run-local.ps1 -Port 3001
-.\scripts\run-local.ps1 -SkipSupabase   # chỉ Next (đã có DB)
 ```
 
 App: http://localhost:3000  
-Studio / API: xem output script (ports **54321+** trong `supabase/config.toml`)
+Database: hosted Supabase (`NEXT_PUBLIC_SUPABASE_URL` in `.env.local`)
 
-Reset DB + seed thủ công:
+**Do not run `npm run db:reset`** — it wipes the shared database.
+
+Link CLI to hosted project (once per machine, for `db:push` / `db:status`):
 
 ```bash
-npm run db:reset
+npm run db:link -- --project-ref bidhzgcdlxjzsxhbxarl
 ```
 
-## Seed accounts
+## Dev accounts
 
-Password for all email logins: `password123`  
-Mock OTP code: `000000`
+There are no Docker seed users on the hosted database. Create accounts via `/login` (register
+Owner/Sale) or Supabase Auth dashboard.
 
-| Role | Email | Phone |
-|------|-------|-------|
-| ADMIN | admin@vbnb.local | +840000000001 |
-| OWNER | owner@vbnb.local | +840000000002 |
-| SALE (ACTIVE) | sale@vbnb.local | +840000000003 |
-| SALE (EXPIRED) | sale-expired@vbnb.local | +840000000013 |
-| GUEST | guest@vbnb.local | +840000000004 |
+Mock OTP code (when `MOCK_OTP_CODE=000000` in `.env.local`): `000000`
 
-Login: `/login` — tab **Email (seed)** hoặc **Phone OTP**.
+Optional Docker seed users (`supabase/seed.sql`) exist only if you run a **local** Supabase
+stack for migration authoring — not used in the default dev flow.
 
 ## Scripts
 
@@ -60,18 +63,19 @@ Login: `/login` — tab **Email (seed)** hoặc **Phone OTP**.
 | `npm run dev` | Next.js dev server |
 | `npm run build` | Production build |
 | `npm test` | Vitest engine unit tests |
-| `npm run db:start` / `db:reset` / `db:stop` | Supabase local |
+| `npm run db:link` / `db:push` / `db:status` | Hosted Supabase migrations |
+| `npm run db:start` / `db:reset` / `db:stop` | Optional local Docker stack (migration authoring only — **never** reset shared DB) |
 
 ## Env
 
-See `.env.example`. Note that `npm run local` **overwrites** `.env.local` with local Supabase
-keys, so it is not a place to keep production values — those belong in the Vercel dashboard.
+See `.env.example`. Put hosted Supabase keys in `.env.local` — the file is **never**
+auto-overwritten. Vercel needs the same Supabase vars plus production-only secrets.
 
 - **Vercel KV**: set `KV_REST_API_*` for production rate limits (required in production — missing KV fails closed with 429). Local falls back to in-memory.
 - **Cron / webhooks**: `CRON_SECRET` is required (no default). Production also requires `SEPAY_WEBHOOK_SECRET` (HMAC) and `SEPAY_IPN_SECRET`.
 - Cron: `GET /api/cron/expire-subscriptions` with `Authorization: Bearer $CRON_SECRET` (also in `vercel.json` daily).
 - SePay: `POST /api/webhooks/sepay` (bank) and `POST /api/webhooks/sepay/ipn` (gateway). The `VB********` code is read from `code`, falling back to a scan of the raw transfer content. Deliveries that could not be activated stay unprocessed and are listed at `/admin/payments`.
-- Auth: public email signup is disabled locally (`enable_signup = false`); users are created via service-role APIs. Roles come from `app_metadata`, not `user_metadata`.
+- Auth: register Owner/Sale at `/login`; roles come from `app_metadata`, not `user_metadata`.
 
 ## Key product rules
 
@@ -93,8 +97,8 @@ Do **not** advertise “100k concurrent API/DB” without measured results on a 
 
 ## Deploy
 
-**Production is live** on hosted Supabase + Vercel (project `sangiaodich`). Everything under
-[Quick start](#quick-start-windows) above describes the **local** stack only.
+**Production is live** on hosted Supabase + Vercel (project `sangiaodich`). Local dev uses
+the **same** hosted database via `.env.local`.
 
 `git push` to `main` triggers a Vercel production build; other branches get preview URLs.
 Migrations are **not** part of that build — apply them first:

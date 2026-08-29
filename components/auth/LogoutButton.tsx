@@ -1,8 +1,13 @@
 'use client';
 
 import { Button } from '@mantine/core';
+import { useTranslations } from 'next-intl';
+import { useRouter } from '@/lib/i18n/navigation';
 
 export function LogoutButton({ fullWidth }: { fullWidth?: boolean }) {
+  const t = useTranslations('common');
+  const router = useRouter();
+
   return (
     <Button
       color="red"
@@ -11,10 +16,10 @@ export function LogoutButton({ fullWidth }: { fullWidth?: boolean }) {
       size="sm"
       onClick={async () => {
         await fetch('/api/auth/logout', { method: 'POST' });
-        window.location.href = '/login';
+        router.push('/login');
       }}
     >
-      Đăng xuất
+      {t('logout')}
     </Button>
   );
 }

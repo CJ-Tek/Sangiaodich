@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from 'react';
 import {
-  Paper,
   Stack,
   Text,
   Group,
@@ -15,9 +14,11 @@ import {
   Button,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { colors, radius } from '@/config/design-tokens';
+import { useTranslations } from 'next-intl';
+import { useFormat } from '@/lib/i18n/use-format';
 import { BookingStatusBadge } from '@/components/bookings/BookingStatusBadge';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { SurfaceCard } from '@/components/ui/SurfaceCard';
 import {
   matchesOwnerSettlementSearch,
   ownerTransferMemo,
@@ -64,10 +65,6 @@ export type OwnerSettlementRow = {
 
 type PayoutFilter = 'all' | 'none' | 'partial' | 'full';
 
-function formatVnd(n: number) {
-  return n.toLocaleString('vi-VN');
-}
-
 function saleDutyStatus(r: OwnerSettlementRow): Exclude<PayoutFilter, 'all'> {
   if (
     saleOwnerPayoutSatisfied({
@@ -85,12 +82,6 @@ function saleDutyStatus(r: OwnerSettlementRow): Exclude<PayoutFilter, 'all'> {
   });
 }
 
-const PAYOUT_BADGE = {
-  none: { label: 'Chưa CK', color: 'red' as const },
-  partial: { label: 'CK một phần', color: 'yellow' as const },
-  full: { label: 'Đã đủ CK', color: 'vbnbGreen' as const },
-};
-
 export function OwnerSettlementsList({
   rows,
   payout,
@@ -98,6 +89,15 @@ export function OwnerSettlementsList({
   rows: OwnerSettlementRow[];
   payout: OwnerPayoutInfo;
 }) {
+  const t = useTranslations('owner.settlements');
+  const { formatNumber, formatDateTime } = useFormat();
+
+  const PAYOUT_BADGE = {
+    none: { label: t('notPaid'), color: 'red' as const },
+    partial: { label: t('partial'), color: 'yellow' as const },
+    full: { label: t('paidFull'), color: 'vbnbGreen' as const },
+  };
+
   const [query, setQuery] = useState('');
   const [payoutFilter, setPayoutFilter] = useState<PayoutFilter>('all');
 
@@ -134,17 +134,17 @@ export function OwnerSettlementsList({
         value={payoutFilter}
         onChange={(v) => setPayoutFilter(v as PayoutFilter)}
         data={[
-          { label: `Tất cả (${counts.all})`, value: 'all' },
-          { label: `Chưa (${counts.none})`, value: 'none' },
-          { label: `Một phần (${counts.partial})`, value: 'partial' },
-          { label: `Đủ (${counts.full})`, value: 'full' },
+          { label: t('filterAll', { count: counts.all }), value: 'all' },
+          { label: t('filterNone', { count: counts.none }), value: 'none' },
+          { label: t('filterPartial', { count: counts.partial }), value: 'partial' },
+          { label: t('filterFull', { count: counts.full }), value: 'full' },
         ]}
         color="vbnbGreen"
         fullWidth
       />
       <TextInput
-        label="Tìm kiếm"
-        placeholder="Mã CK VBNB…, tên sale, SĐT, villa..."
+        label={t('searchLabel')}
+        placeholder={t('searchPlaceholder')}
         value={query}
         onChange={(e) => setQuery(e.currentTarget.value)}
         style={{ maxWidth: 420 }}
@@ -153,17 +153,17 @@ export function OwnerSettlementsList({
         <EmptyState
           title={
             q || payoutFilter !== 'all'
-              ? 'Không tìm thấy settlement'
-              : 'Chưa có booking đã chốt'
+              ? t('notFound')
+              : t('emptyTitle')
           }
           description={
             q
-              ? 'Thử mã CK (VBNB…), tên sale, SĐT (0 hoặc 84), hoặc tên villa.'
+              ? t('notFoundHint')
               : payoutFilter !== 'all'
-                ? 'Không có booking trong nhóm CK này.'
-                : 'Khi bạn xác nhận booking trên Chờ xác nhận, giao dịch sẽ hiện tại đây.'
+                ? t('emptyFilter')
+                : t('emptyDesc')
           }
-          actionLabel={q || payoutFilter !== 'all' ? undefined : 'Xem assets'}
+          actionLabel={q || payoutFilter !== 'all' ? undefined : t('viewAssets')}
           href={q || payoutFilter !== 'all' ? undefined : '/owner/assets'}
         />
       ) : (
@@ -182,12 +182,7 @@ export function OwnerSettlementsList({
             const memo = ownerTransferMemo(b.id);
 
             return (
-              <Paper
-                key={b.id}
-                p="lg"
-                radius={radius.lg}
-                style={{ border: `1px solid ${colors.border}` }}
-              >
+              <SurfaceCard key={b.id}>
                 <Group
                   justify="space-between"
                   align="flex-start"
@@ -195,14 +190,14 @@ export function OwnerSettlementsList({
                   mb="md"
                 >
                   <div>
-                    <Text fw={600}>{b.villaTitle || 'Asset'}</Text>
+                    <Text fw={600}>{b.villaTitle || t('assetFallback')}</Text>
                     <Text size="sm" c="dimmed" mt={4}>
                       {b.check_in} → {b.check_out}
                       {b.location ? ` · ${b.location}` : ''}
                     </Text>
                     <Group gap="xs" mt={6} align="center">
                       <Text size="xs" c="dimmed">
-                        Mã CK
+                        {t('memo')}
                       </Text>
                       <Code>{memo}</Code>
                       <Button
@@ -213,12 +208,12 @@ export function OwnerSettlementsList({
                           void navigator.clipboard.writeText(memo);
                           notifications.show({
                             color: 'vbnbGreen',
-                            message: 'Đã copy mã CK',
+                            message: t('copiedMemo'),
                             autoClose: 1400,
                           });
                         }}
                       >
-                        Copy
+                        {t('copy')}
                       </Button>
                     </Group>
                     <Group gap="sm" mt={8} wrap="nowrap">
@@ -233,7 +228,7 @@ export function OwnerSettlementsList({
                       <div>
                         <Group gap="xs" wrap="wrap" align="center">
                           <Text size="sm" fw={500}>
-                            {b.saleName || 'Sale không xác định'}
+                            {b.saleName || t('saleUnknown')}
                           </Text>
                           <SalePublicRatingCard
                             aggregate={b.ratingAggregate}
@@ -258,23 +253,23 @@ export function OwnerSettlementsList({
                 <SimpleGrid cols={{ base: 2, sm: 3 }} spacing="md">
                   <div>
                     <Text size="xs" c="dimmed">
-                      Sale cần gửi bạn
+                      {t('saleNeedsSend')}
                     </Text>
                     <Text size="sm" fw={600} c="vbnbGreen.6">
-                      {formatVnd(b.ownerEarn)}
+                      {formatNumber(b.ownerEarn)}
                     </Text>
                   </div>
                   <div>
                     <Text size="xs" c="dimmed">
-                      Sale đã CK
+                      {t('salePaid')}
                     </Text>
                     <Text size="sm" fw={500}>
-                      {formatVnd(b.ownerPaid)}
+                      {formatNumber(b.ownerPaid)}
                     </Text>
                   </div>
                   <div>
                     <Text size="xs" c="dimmed">
-                      {caseA && saleDone ? 'Sale (50% cost)' : 'Còn thiếu'}
+                      {caseA && saleDone ? t('saleCostHalf') : t('remaining')}
                     </Text>
                     <Text
                       size="sm"
@@ -282,15 +277,15 @@ export function OwnerSettlementsList({
                       c={saleDone ? 'vbnbGreen.6' : remaining > 0 ? 'red' : 'vbnbGreen.6'}
                     >
                       {caseA && saleDone
-                        ? 'Đã xong — khách CK nốt lúc CI'
-                        : formatVnd(remaining)}
+                        ? t('doneGuestPays')
+                        : formatNumber(remaining)}
                     </Text>
                   </div>
                 </SimpleGrid>
                 {b.ownerPaidAt ? (
                   <Text size="xs" c="dimmed" mt="sm">
-                    Sale ghi nhận CK:{' '}
-                    {new Date(b.ownerPaidAt).toLocaleString('vi-VN')}
+                    {t('saleRecordedAt')}{' '}
+                    {formatDateTime(b.ownerPaidAt)}
                   </Text>
                 ) : null}
                 <Stack gap="sm" mt="md">
@@ -309,7 +304,7 @@ export function OwnerSettlementsList({
                   />
                 ) : null}
                 </Stack>
-              </Paper>
+              </SurfaceCard>
             );
           })}
         </Stack>

@@ -1,7 +1,10 @@
-import { Group, Paper, Stack, Text } from '@mantine/core';
+'use client';
+
+import { Group, Stack, Text } from '@mantine/core';
+import { useTranslations } from 'next-intl';
 import { BookingStatusBadge } from '@/components/bookings/BookingStatusBadge';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
-import { colors, radius } from '@/config/design-tokens';
+import { SurfaceCard } from '@/components/ui/SurfaceCard';
 import type { GuestUpcomingBooking } from '@/lib/engines/guest-overview';
 
 export function GuestUpcomingCard({
@@ -9,21 +12,19 @@ export function GuestUpcomingCard({
 }: {
   upcoming: GuestUpcomingBooking | null;
 }) {
+  const t = useTranslations('guest.upcoming');
+
   return (
-    <Paper
-      p="lg"
-      radius={radius.lg}
-      style={{ border: `1px solid ${colors.border}` }}
-    >
+    <SurfaceCard>
       <Stack gap="xs">
         <Text size="sm" c="dimmed">
-          Chuyến sắp tới
+          {t('title')}
         </Text>
         {!upcoming ? (
           <>
-            <Text size="sm">Chưa có chuyến nào.</Text>
+            <Text size="sm">{t('empty')}</Text>
             <LinkAnchor href="/me/explore" size="sm" c="vbnbGreen.6">
-              Khám phá villa
+              {t('explore')}
             </LinkAnchor>
           </>
         ) : (
@@ -42,11 +43,11 @@ export function GuestUpcomingCard({
               size="sm"
               c="vbnbGreen.6"
             >
-              Xem chi tiết
+              {t('viewDetail')}
             </LinkAnchor>
           </>
         )}
       </Stack>
-    </Paper>
+    </SurfaceCard>
   );
 }

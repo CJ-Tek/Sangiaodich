@@ -2,8 +2,9 @@
 
 import { Button } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/lib/i18n/navigation';
 
 export function ExportGuestInvoiceButton({
   bookingId,
@@ -16,6 +17,7 @@ export function ExportGuestInvoiceButton({
   remaining: number;
   settingsHref?: string;
 }) {
+  const t = useTranslations('sale.exportInvoice');
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -25,7 +27,7 @@ export function ExportGuestInvoiceButton({
     if (!salePayoutReady) {
       notifications.show({
         color: 'yellow',
-        message: 'Cần cấu hình STK nhận tiền trước khi xuất invoice',
+        message: t('needPayout'),
       });
       router.push(settingsHref);
       return;
@@ -41,7 +43,7 @@ export function ExportGuestInvoiceButton({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Không xuất được invoice',
+          message: json.error?.message || t('failed'),
         });
         return;
       }
@@ -49,7 +51,7 @@ export function ExportGuestInvoiceButton({
       await navigator.clipboard.writeText(url);
       notifications.show({
         color: 'vbnbGreen',
-        message: 'Đã copy link invoice (15 phút)',
+        message: t('copied'),
         autoClose: 2500,
       });
     } finally {
@@ -65,7 +67,7 @@ export function ExportGuestInvoiceButton({
       loading={loading}
       onClick={exportInvoice}
     >
-      Xuất invoice
+      {t('export')}
     </Button>
   );
 }

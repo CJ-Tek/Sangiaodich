@@ -1,10 +1,12 @@
 'use client';
 
 import { Badge, Box, Group, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
-import { colors, radius, shadows } from '@/config/design-tokens';
-import { landingContainer } from '@/components/landing/landing-media';
+import { colors, radius, shadows, spacing, typography } from '@/config/design-tokens';
 import { LinkButton } from '@/components/ui/LinkButton';
+import { SectionShell } from '@/components/ui/SectionShell';
+import { SurfaceCard } from '@/components/ui/SurfaceCard';
 import {
   formatVnd,
   planDiscount,
@@ -21,136 +23,129 @@ export function PricingSection({
   ownerPlans: SubscriptionPlan[];
   salePlans: SubscriptionPlan[];
 }) {
+  const t = useTranslations('landing.pricing');
   const [tab, setTab] = useState<RoleTab>('OWNER');
   const plans = tab === 'OWNER' ? ownerPlans : salePlans;
   const ctaHref =
     tab === 'OWNER'
       ? '/login?mode=register&role=OWNER'
       : '/login?mode=register&role=SALE';
-  const ctaLabel =
-    tab === 'OWNER' ? 'Đăng ký Chủ villa' : 'Đăng ký Sale';
+  const ctaLabel = tab === 'OWNER' ? t('ctaOwner') : t('ctaSale');
 
   return (
-    <Box
-      id="pricing"
-      component="section"
-      className="vbnb-landing-section"
-      aria-labelledby="pricing-heading"
-      style={{
-        ...landingContainer,
-        paddingTop: 'clamp(64px, 10vw, 120px)',
-        paddingBottom: 'clamp(64px, 10vw, 120px)',
-      }}
-    >
-      <Stack gap={8} align="center" mb={28}>
-        <Text
-          fw={600}
-          c="vbnbGreen.6"
-          style={{ fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}
-        >
-          Bảng giá
-        </Text>
-        <Title
-          id="pricing-heading"
-          order={2}
-          ta="center"
-          fw={700}
-          style={{
-            fontSize: 'clamp(1.75rem, 3.4vw, 2.5rem)',
-            letterSpacing: '-0.03em',
-            lineHeight: 1.15,
-          }}
-        >
-          Rõ ràng từ đầu.
-        </Title>
-        <Text ta="center" c={colors.textSecondary} maw={480} style={{ lineHeight: 1.65 }}>
-          Phí để vào sàn VBNB. Gói càng dài, ưu đãi càng nhiều.
-        </Text>
-      </Stack>
+    <SectionShell id="pricing" large>
+      <Stack gap={spacing['3xl']} align="center">
+        <Stack gap="sm" align="center" maw={480}>
+          <span className="vbnb-eyebrow">{t('eyebrow')}</span>
+          <Title
+            id="pricing-heading"
+            order={2}
+            ta="center"
+            fw={typography.title.fontWeight}
+            className="vbnb-text-balance"
+            style={{
+              fontSize: typography.title.fontSize,
+              letterSpacing: typography.title.letterSpacing,
+              lineHeight: typography.title.lineHeight,
+              color: colors.textPrimary,
+            }}
+          >
+            {t('title')}
+          </Title>
+          <Text
+            ta="center"
+            c={colors.textSecondary}
+            style={{ lineHeight: typography.body.lineHeight }}
+          >
+            {t('subtitle')}
+          </Text>
+        </Stack>
 
-      <Group justify="center" mb={32}>
-        <Box
-          role="tablist"
-          aria-label="Chọn vai trò"
-          style={{
-            display: 'inline-flex',
-            background: colors.surfaceMuted,
-            borderRadius: radius.lg,
-            padding: 4,
-            border: `1px solid ${colors.border}`,
-          }}
-        >
-          {(
-            [
-              { id: 'OWNER' as const, label: 'Chủ villa' },
-              { id: 'SALE' as const, label: 'Sale' },
-            ] as const
-          ).map((item) => {
-            const active = tab === item.id;
-            return (
-              <Box
-                key={item.id}
-                component="button"
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setTab(item.id)}
-                style={{
-                  border: 0,
-                  cursor: 'pointer',
-                  background: active ? colors.surface : 'transparent',
-                  color: active ? colors.primaryDark : colors.textSecondary,
-                  fontWeight: active ? 600 : 500,
-                  fontSize: 14,
-                  fontFamily: 'inherit',
-                  padding: '10px 22px',
-                  borderRadius: radius.md,
-                  boxShadow: active ? shadows.card : 'none',
-                }}
-              >
-                {item.label}
-              </Box>
-            );
-          })}
-        </Box>
-      </Group>
+        <Group justify="center">
+          <Box
+            role="tablist"
+            aria-label={t('roleTabAria')}
+            style={{
+              display: 'inline-flex',
+              background: colors.surfaceMuted,
+              borderRadius: radius.lg,
+              padding: spacing.xs,
+              border: `1px solid ${colors.border}`,
+            }}
+          >
+            {(
+              [
+                { id: 'OWNER' as const, label: t('ownerTab') },
+                { id: 'SALE' as const, label: t('saleTab') },
+              ] as const
+            ).map((item) => {
+              const active = tab === item.id;
+              return (
+                <Box
+                  key={item.id}
+                  component="button"
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setTab(item.id)}
+                  style={{
+                    border: 0,
+                    cursor: 'pointer',
+                    background: active ? colors.surface : 'transparent',
+                    color: active ? colors.primaryDark : colors.textSecondary,
+                    fontWeight: active ? 600 : 500,
+                    fontSize: typography.body.fontSize,
+                    fontFamily: 'inherit',
+                    padding: `${spacing.sm + 2}px ${spacing.xl}px`,
+                    borderRadius: radius.md,
+                    boxShadow: active ? shadows.card : 'none',
+                  }}
+                >
+                  {item.label}
+                </Box>
+              );
+            })}
+          </Box>
+        </Group>
 
-      {!plans.length ? (
-        <Text ta="center" c={colors.textMuted} size="sm">
-          Chưa có gói {tab === 'OWNER' ? 'Chủ villa' : 'Sale'} đang bật.
-        </Text>
-      ) : (
-        <SimpleGrid cols={{ base: 1, sm: 2, md: 4 }} spacing="md">
-          {plans.map((plan) => (
-            <PlanCard key={plan.id} plan={plan} />
-          ))}
-        </SimpleGrid>
-      )}
+        {!plans.length ? (
+          <Text ta="center" c={colors.textMuted} size="sm">
+            {tab === 'OWNER' ? t('emptyOwner') : t('emptySale')}
+          </Text>
+        ) : (
+          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md" w="100%">
+            {plans.map((plan, index) => (
+              <PlanCard key={plan.id} plan={plan} featured={index === 1 && plans.length > 2} />
+            ))}
+          </SimpleGrid>
+        )}
 
-      <Group justify="center" mt={32}>
         <LinkButton href={ctaHref} color="vbnbGreen" h={46} px={22} fw={600}>
           {ctaLabel}
         </LinkButton>
-      </Group>
-    </Box>
+      </Stack>
+    </SectionShell>
   );
 }
 
-function PlanCard({ plan }: { plan: SubscriptionPlan }) {
+function PlanCard({ plan, featured }: { plan: SubscriptionPlan; featured?: boolean }) {
   const discount = planDiscount(plan);
   const title = plan.label || planDurationLabel(plan.months);
 
   return (
-    <Box
+    <SurfaceCard
+      p="lg"
       style={{
-        background: colors.surface,
-        border: `1px solid ${colors.border}`,
-        borderRadius: radius.xl,
-        padding: 20,
         minHeight: 168,
+        ...(featured
+          ? {
+              borderColor: colors.primary,
+              boxShadow: shadows.cardHover,
+            }
+          : {}),
       }}
     >
-      <Stack gap={8}>
+      <Stack gap="sm">
         <Text size="sm" fw={600}>
           {title}
         </Text>
@@ -159,15 +154,24 @@ function PlanCard({ plan }: { plan: SubscriptionPlan }) {
             −{discount.percent}%
           </Badge>
         ) : null}
-        <Text fw={700} c="vbnbGreen.6" style={{ fontSize: 22, letterSpacing: '-0.02em' }}>
+        <Text
+          fw={typography.data.fontWeight}
+          c="vbnbGreen.6"
+          className="vbnb-tabular-nums"
+          style={{
+            fontSize: typography.data.fontSize,
+            letterSpacing: typography.data.letterSpacing,
+            lineHeight: typography.data.lineHeight,
+          }}
+        >
           {formatVnd(plan.amount)}
         </Text>
         {discount ? (
-          <Text size="xs" c="dimmed" td="line-through">
+          <Text size="xs" c="dimmed" td="line-through" className="vbnb-tabular-nums">
             {formatVnd(discount.compareAt)}
           </Text>
         ) : null}
       </Stack>
-    </Box>
+    </SurfaceCard>
   );
 }

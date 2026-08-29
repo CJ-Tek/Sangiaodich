@@ -2,6 +2,7 @@
 
 import { Loader, Select } from '@mantine/core';
 import { useDebouncedValue } from '@mantine/hooks';
+import { useTranslations } from 'next-intl';
 import { useEffect, useMemo, useState } from 'react';
 import type { GuestOption } from '@/lib/engines/sale-guest-search';
 
@@ -21,10 +22,9 @@ export function GuestPicker({
   onChange: (guest: GuestOption | null) => void;
   suggestions: GuestOption[];
 }) {
+  const t = useTranslations('sale.guestPicker');
   const [search, setSearch] = useState('');
   const [debouncedSearch] = useDebouncedValue(search, 300);
-  // Answered query travels with its rows, so both "is this stale" and "is a
-  // request in flight" are derived rather than tracked in their own state.
   const [answer, setAnswer] = useState<{
     query: string;
     options: GuestOption[];
@@ -45,16 +45,12 @@ export function GuestPicker({
       .then((res) => res.json())
       .then((json) => setAnswer({ query: q, options: json?.data?.guests || [] }))
       .catch(() => {
-        // Aborted by the next keystroke, or the request failed — either way the
-        // previous rows stay on screen instead of blanking the field.
         setAnswer((prev) => ({ ...prev, query: q }));
       });
 
     return () => controller.abort();
   }, [debouncedSearch]);
 
-  // The selected guest must stay in the list or Mantine renders a blank field
-  // once the search that produced it is replaced.
   const data = useMemo(() => {
     const results = searching ? answer.options : [];
     const byValue = new Map<string, GuestOption>();
@@ -66,8 +62,8 @@ export function GuestPicker({
 
   return (
     <Select
-      label="Guest"
-      description="Gõ tên hoặc SĐT để tìm guest trên hệ thống"
+      label={t('label')}
+      description={t('hint')}
       data={data}
       value={value?.value ?? null}
       onChange={(next, option) =>
@@ -79,8 +75,8 @@ export function GuestPicker({
       rightSection={loading ? <Loader size="xs" /> : undefined}
       nothingFoundMessage={
         search.trim().length < MIN_SEARCH_LENGTH
-          ? `Gõ ít nhất ${MIN_SEARCH_LENGTH} ký tự`
-          : 'Không có guest'
+          ? t('minChars', { count: MIN_SEARCH_LENGTH })
+          : t('empty')
       }
       filter={({ options }) => options}
     />

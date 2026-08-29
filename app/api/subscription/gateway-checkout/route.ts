@@ -1,28 +1,23 @@
 import { NextResponse } from 'next/server';
 import { getSessionProfile } from '@/lib/auth/session';
+import { getApiRouteContext } from '@/lib/i18n/api-route-context';
 import { fail, ok } from '@/lib/types';
 
-/**
- * Build SePay Payment Gateway checkout form fields when merchant env is set.
- * Client posts the returned fields to checkoutUrl.
- * Env: SEPAY_MERCHANT_ID, SEPAY_MERCHANT_SECRET_KEY, SEPAY_PG_ENV=sandbox|production
- */
 export async function POST(request: Request) {
+  const { t } = await getApiRouteContext();
   const profile = await getSessionProfile();
   if (!profile || (profile.role !== 'OWNER' && profile.role !== 'SALE')) {
-    return NextResponse.json(fail('UNAUTHORIZED', 'Owner/Sale only'), {
-      status: 401,
-    });
+    return NextResponse.json(
+      fail('UNAUTHORIZED', t('UNAUTHORIZED.ownerSaleOnly')),
+      { status: 401 }
+    );
   }
 
   const merchantId = process.env.SEPAY_MERCHANT_ID || '';
   const secretKey = process.env.SEPAY_MERCHANT_SECRET_KEY || '';
   if (!merchantId || !secretKey) {
     return NextResponse.json(
-      fail(
-        'GATEWAY_NOT_CONFIGURED',
-        'Chưa cấu hình SePay Payment Gateway (SEPAY_MERCHANT_ID / SECRET)'
-      ),
+      fail('GATEWAY_NOT_CONFIGURED', t('GATEWAY_NOT_CONFIGURED')),
       { status: 503 }
     );
   }
@@ -31,9 +26,10 @@ export async function POST(request: Request) {
   const paymentCode = String(body.paymentCode || '').toUpperCase();
   const amount = Number(body.amount || 0);
   if (!paymentCode || !amount) {
-    return NextResponse.json(fail('INVALID', 'paymentCode and amount required'), {
-      status: 400,
-    });
+    return NextResponse.json(
+      fail('INVALID', t('INVALID.paymentCodeAndAmountRequired')),
+      { status: 400 }
+    );
   }
 
   try {
@@ -74,7 +70,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(ok({ checkoutUrl, fields }));
   } catch (e) {
-    const msg = e instanceof Error ? e.message : 'GATEWAY_ERROR';
+    const msg = e instanceof Error ? e.message : t('GATEWAY_ERROR');
     return NextResponse.json(fail('GATEWAY_ERROR', msg), { status: 500 });
   }
 }

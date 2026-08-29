@@ -1,17 +1,13 @@
+'use client';
+
 import { Divider, Group, Paper, Stack, Text, Title } from '@mantine/core';
+import { useLocale, useTranslations } from 'next-intl';
 import { BookingStatusBadge } from '@/components/bookings/BookingStatusBadge';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
 import { colors, radius } from '@/config/design-tokens';
+import { formatCurrency, formatDateTime } from '@/lib/i18n/format';
+import type { AppLocale } from '@/lib/i18n/routing';
 import type { GuestBookingDetail } from '@/lib/engines/guest-bookings';
-
-function money(n: number) {
-  return `${Number(n || 0).toLocaleString('vi-VN')} ₫`;
-}
-
-function moment(iso: string | null) {
-  if (!iso) return null;
-  return new Date(iso).toLocaleString('vi-VN');
-}
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -43,6 +39,19 @@ export function GuestBookingDetailCard({
 }: {
   booking: GuestBookingDetail;
 }) {
+  const locale = useLocale() as AppLocale;
+  const t = useTranslations('guest.bookingDetail');
+  const tTimeline = useTranslations('membership.guestTimeline');
+
+  function money(n: number) {
+    return formatCurrency(Number(n || 0), locale);
+  }
+
+  function moment(iso: string | null) {
+    if (!iso) return null;
+    return formatDateTime(iso, locale);
+  }
+
   return (
     <Stack gap="md">
       <Card>
@@ -62,7 +71,7 @@ export function GuestBookingDetailCard({
                 mt={6}
                 display="inline-block"
               >
-                Xem villa
+                {t('viewVilla')}
               </LinkAnchor>
             ) : null}
           </div>
@@ -73,27 +82,30 @@ export function GuestBookingDetailCard({
       <Card>
         <Stack gap="xs">
           <Text fw={600} size="sm">
-            Thanh toán
+            {t('payment')}
           </Text>
-          <Row label="Giá booking" value={money(booking.listPrice)} />
-          <Row label="Đã thanh toán (Sale)" value={money(booking.amountCollected)} />
+          <Row label={t('listPrice')} value={money(booking.listPrice)} />
+          <Row
+            label={t('collectedSale')}
+            value={money(booking.amountCollected)}
+          />
           {booking.guestPaidOwner > 0 ? (
             <Row
-              label="Đã thanh toán (chủ nhà)"
+              label={t('collectedOwner')}
               value={money(booking.guestPaidOwner)}
             />
           ) : null}
           <Divider my={4} />
-          <Row label="Còn lại" value={money(booking.remaining)} />
+          <Row label={t('remaining')} value={money(booking.remaining)} />
           {booking.refundAmount > 0 ? (
-            <Row label="Đã hoàn" value={money(booking.refundAmount)} />
+            <Row label={t('refunded')} value={money(booking.refundAmount)} />
           ) : null}
           <Text size="xs" c="dimmed" mt={4}>
             {booking.remainderPayee === 'OWNER'
-              ? 'Phần còn lại chuyển cho chủ nhà lúc nhận phòng. Chủ nhà ghi nhận khi check-in.'
+              ? t('remainderOwnerNote')
               : booking.remaining > 0
-                ? 'Thanh toán offline qua sale phụ trách. Số liệu trên do sale ghi nhận khi nhận tiền.'
-                : 'Đã thanh toán đủ giá bán.'}
+                ? t('remainderSaleNote')
+                : t('paidFullNote')}
           </Text>
         </Stack>
       </Card>
@@ -101,13 +113,13 @@ export function GuestBookingDetailCard({
       <Card>
         <Stack gap="xs">
           <Text fw={600} size="sm">
-            Tiến trình
+            {t('timeline')}
           </Text>
           {booking.timeline.map((step) => (
             <Row
-              key={step.label}
-              label={step.label}
-              value={moment(step.at) || 'Chưa'}
+              key={step.step}
+              label={tTimeline(step.step)}
+              value={moment(step.at) || t('notYet')}
             />
           ))}
         </Stack>
@@ -116,16 +128,16 @@ export function GuestBookingDetailCard({
       <Card>
         <Stack gap="xs">
           <Text fw={600} size="sm">
-            Sale phụ trách
+            {t('saleContact')}
           </Text>
           {booking.saleName || booking.salePhone ? (
             <>
-              <Row label="Tên" value={booking.saleName || '—'} />
-              <Row label="SĐT" value={booking.salePhone || '—'} />
+              <Row label={t('saleName')} value={booking.saleName || '—'} />
+              <Row label={t('salePhone')} value={booking.salePhone || '—'} />
             </>
           ) : (
             <Text size="sm" c="dimmed">
-              Chưa có thông tin sale.
+              {t('noSaleInfo')}
             </Text>
           )}
         </Stack>

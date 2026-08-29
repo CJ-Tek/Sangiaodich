@@ -11,12 +11,14 @@ import {
   Textarea,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { useRouter } from '@/lib/i18n/navigation';
 import { VietQrBankSelect } from '@/components/ui/VietQrBankSelect';
 import type { PlatformPaymentInfo } from '@/lib/platform/payment-info';
 
 export function FeeSettingsForm({ payment }: { payment: PlatformPaymentInfo }) {
+  const t = useTranslations('admin.fees');
   const router = useRouter();
   const [bankName, setBankName] = useState(payment.bankName);
   const [accountName, setAccountName] = useState(payment.accountName);
@@ -43,12 +45,12 @@ export function FeeSettingsForm({ payment }: { payment: PlatformPaymentInfo }) {
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Upload thất bại',
+          message: json.error?.message || t('uploadFailed'),
         });
         return;
       }
       setQrImageUrl(json.data.previewUrl as string);
-      notifications.show({ color: 'vbnbGreen', message: 'Đã tải QR lên' });
+      notifications.show({ color: 'vbnbGreen', message: t('qrUploaded') });
     } finally {
       setUploading(false);
     }
@@ -77,7 +79,7 @@ export function FeeSettingsForm({ payment }: { payment: PlatformPaymentInfo }) {
       } else {
         notifications.show({
           color: 'vbnbGreen',
-          message: 'Đã lưu thông tin thanh toán',
+          message: t('paymentSaved'),
         });
         router.refresh();
       }
@@ -89,18 +91,17 @@ export function FeeSettingsForm({ payment }: { payment: PlatformPaymentInfo }) {
   return (
     <Stack>
       <Text size="sm" c="dimmed">
-        Owner/Sale thấy thông tin này trên trang Subscription khi chờ kích
-        hoạt hoặc gia hạn. Giá gói chỉnh ở tab Gói subscription.
+        {t('paymentHint')}
       </Text>
       <TextInput
-        label="Ngân hàng"
+        label={t('bankName')}
         value={bankName}
         onChange={(e) => setBankName(e.currentTarget.value)}
         placeholder="Vietcombank"
       />
       <VietQrBankSelect
-        label="Mã ngân hàng VietQR"
-        description="Chọn ngân hàng để tạo QR động. Nếu trống sẽ lấy tên Ngân hàng ở trên. Gõ tên hoặc mã để tìm."
+        label={t('vietqrBank')}
+        description={t('vietqrBankHint')}
         value={vietqrBank}
         onChange={(bank) => {
           setVietqrBank(bank?.bankShortName ?? '');
@@ -108,13 +109,13 @@ export function FeeSettingsForm({ payment }: { payment: PlatformPaymentInfo }) {
         }}
       />
       <TextInput
-        label="Chủ tài khoản"
+        label={t('accountName')}
         value={accountName}
         onChange={(e) => setAccountName(e.currentTarget.value)}
         placeholder="CONG TY VBNB"
       />
       <TextInput
-        label="Số tài khoản"
+        label={t('accountNumber')}
         value={accountNumber}
         onChange={(e) => setAccountNumber(e.currentTarget.value)}
         placeholder="0123456789"
@@ -122,15 +123,15 @@ export function FeeSettingsForm({ payment }: { payment: PlatformPaymentInfo }) {
 
       <div>
         <Text size="sm" fw={500} mb={4}>
-          Ảnh QR thanh toán
+          {t('qrImage')}
         </Text>
         <Text size="xs" c="dimmed" mb={8}>
-          Upload từ thiết bị (JPG/PNG/WebP, tối đa 3MB) hoặc dán link URL.
+          {t('qrImageHint')}
         </Text>
         {qrImageUrl ? (
           <Image
             src={qrImageUrl}
-            alt="QR thanh toán"
+            alt={t('qrAlt')}
             maw={180}
             radius="md"
             mb="sm"
@@ -150,7 +151,7 @@ export function FeeSettingsForm({ payment }: { payment: PlatformPaymentInfo }) {
                 size="sm"
                 loading={uploading}
               >
-                Chọn ảnh QR
+                {t('chooseQr')}
               </Button>
             )}
           </FileButton>
@@ -161,13 +162,13 @@ export function FeeSettingsForm({ payment }: { payment: PlatformPaymentInfo }) {
               size="sm"
               onClick={() => setQrImageUrl('')}
             >
-              Xóa QR
+              {t('removeQr')}
             </Button>
           ) : null}
         </Group>
         <TextInput
-          label="QR image URL"
-          description="Tùy chọn — dán link nếu không upload file."
+          label={t('qrUrl')}
+          description={t('qrUrlHint')}
           value={qrImageUrl}
           onChange={(e) => setQrImageUrl(e.currentTarget.value)}
           placeholder="https://..."
@@ -175,21 +176,21 @@ export function FeeSettingsForm({ payment }: { payment: PlatformPaymentInfo }) {
       </div>
 
       <Textarea
-        label="Ghi chú hướng dẫn"
-        description="VD: Sau khi CK, nhắn Admin kèm ảnh biên lai."
+        label={t('transferNote')}
+        description={t('transferNoteHint')}
         value={transferNote}
         onChange={(e) => setTransferNote(e.currentTarget.value)}
         minRows={2}
       />
       <TextInput
-        label="Liên hệ hỗ trợ"
-        description="Zalo / SĐT Admin"
+        label={t('contact')}
+        description={t('contactHint')}
         value={contact}
         onChange={(e) => setContact(e.currentTarget.value)}
         placeholder="Zalo 09xx..."
       />
       <Button color="vbnbGreen" loading={loading} onClick={save}>
-        Lưu
+        {t('save')}
       </Button>
     </Stack>
   );
