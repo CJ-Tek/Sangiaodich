@@ -18,7 +18,9 @@
     "db:status": "npx supabase migration list --linked",
     "ship:fast": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/ship.ps1 -Mode Fast",
     "ship:solid": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/ship.ps1 -Mode Solid",
-    "ship:all": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/ship.ps1 -Mode All"
+    "ship:all": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/ship.ps1 -Mode All",
+    "deploy:prod": "npx vercel --prod --yes",
+    "deploy:preview": "npx vercel --yes"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
