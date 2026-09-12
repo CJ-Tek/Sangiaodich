@@ -35,7 +35,7 @@ export default async function OwnerLayout({
 
   return (
     <OwnerMobileShell
-      uiMode={profile?.uiMode ?? 'expert'}
+      uiMode={profile?.uiMode ?? 'simple'}
       headerExtra={
         profile ? (
           <UiModeToggle

@@ -146,12 +146,14 @@ describe('board range and ui mode', () => {
     expect(parseBoardFrom('2026-09-01', '2026-08-28')).toBe('2026-09-01');
   });
 
-  it('defaults unknown ui_mode to expert', () => {
+  it('defaults unknown ui_mode to simple', () => {
     expect(parseUiMode('simple')).toBe('simple');
     expect(parseUiMode('expert')).toBe('expert');
-    expect(parseUiMode('nope')).toBe('expert');
+    expect(parseUiMode('nope')).toBe('simple');
+    expect(parseUiMode(null)).toBe('simple');
     expect(isSimpleUi('simple')).toBe(true);
     expect(isSimpleUi('expert')).toBe(false);
+    expect(isSimpleUi(null)).toBe(true);
   });
 
   it('hides the payout settings tab in simple mode', () => {

@@ -33,7 +33,7 @@ export default async function SaleLayout({
 
   return (
     <SaleMobileShell
-      uiMode={profile?.uiMode ?? 'expert'}
+      uiMode={profile?.uiMode ?? 'simple'}
       headerExtra={
         profile && (profile.role === 'SALE') ? (
           <UiModeToggle
