@@ -1,4 +1,5 @@
-import { Box, Button, Group, Stack, Text, TextInput } from '@mantine/core';
+import { Box, Stack, Text } from '@mantine/core';
+import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 import { getSessionProfile } from '@/lib/auth/session';
@@ -6,50 +7,67 @@ import { dateOnlyAddDays, todayDateOnly } from '@/lib/dates';
 import { loadAssetNightBoards } from '@/lib/engines/asset-night-board';
 import {
   listNightsFrom,
+  NIGHT_BOARD_WINDOW,
   parseBoardFrom,
 } from '@/lib/engines/night-board-range';
-import { matchesAssetSearch } from '@/lib/engines/asset-search';
+import {
+  matchesNightBoardFilters,
+  nightBoardFilterParams,
+  nightBoardFiltersActive,
+  parseNightBoardFilters,
+  sortNightBoardAssets,
+} from '@/lib/engines/night-board-filters';
 import { loadRatingsByBookingIds } from '@/lib/engines/sale-ratings';
 import type { SaleRatingRecord } from '@/lib/engines/sale-ratings';
 import { NightBoardGrid } from '@/components/inventory/NightBoardGrid';
 import { NightBoardFromPicker } from '@/components/inventory/NightBoardFromPicker';
+import { NightBoardSearch } from '@/components/inventory/NightBoardSearch';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LinkButton } from '@/components/ui/LinkButton';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { colors, radius } from '@/config/design-tokens';
 import type { NightBoardColumn } from '@/lib/engines/night-board-display';
 
-function firstParam(value?: string | string[]): string | undefined {
-  if (Array.isArray(value)) return value[0];
-  return value;
-}
-
 export default async function OwnerCalendarPage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; q?: string | string[] }>;
+  searchParams: Promise<{
+    from?: string;
+    q?: string | string[];
+    city?: string | string[];
+    type?: string | string[];
+    priceMin?: string | string[];
+    priceMax?: string | string[];
+    beds?: string | string[];
+    sort?: string | string[];
+  }>;
 }) {
-  const { from: fromParam, q: qParam } = await searchParams;
-  const q = firstParam(qParam)?.trim() || '';
+  const params = await searchParams;
+  const filters = parseNightBoardFilters(params);
+  const filtersOn = nightBoardFiltersActive(filters);
+  const t = await getTranslations('owner.calendar');
   const profile = await getSessionProfile();
   const admin = await createClient();
-  const from = parseBoardFrom(fromParam);
+  const from = parseBoardFrom(params.from);
   const today = todayDateOnly();
-  const dates = listNightsFrom(from, 21);
+  const dates = listNightsFrom(from, NIGHT_BOARD_WINDOW);
   const to = dateOnlyAddDays(dates[dates.length - 1] ?? from, 1);
 
   const { data: assets } = await admin
     .from('assets')
     .select(
-      'id, title, slug, location, capacity, bedrooms, bathrooms, asset_costs(cost_weekday, cost_weekend), asset_images(url, sort_order)'
+      'id, title, slug, location, property_type, capacity, bedrooms, bathrooms, asset_costs(cost_weekday, cost_weekend), asset_images(url, sort_order)'
     )
     .eq('owner_id', profile!.id)
     .eq('status', 'ACTIVE')
     .order('title', { ascending: true })
     .limit(LIST_VIEW_LIMIT);
 
-  const rows = (assets || []).filter((asset) =>
-    q ? matchesAssetSearch(q, asset) : true
+  const rows = sortNightBoardAssets(
+    (assets || []).filter((asset) =>
+      matchesNightBoardFilters(asset, filters)
+    ),
+    filters.sort
   );
   const boards = await loadAssetNightBoards(
     rows.map((a) => a.id),
@@ -93,19 +111,16 @@ export default async function OwnerCalendarPage({
   });
 
   return (
-    <Stack gap="md">
+    <Stack gap="md" style={{ minWidth: 0, maxWidth: '100%' }}>
       <PageHeader
-        title="Lịch"
+        title={t('title')}
         action={
           <LinkButton href="/owner/assets/new" color="vbnbGreen" size="sm">
-            Thêm căn
+            {t('addAsset')}
           </LinkButton>
         }
       />
       <Box
-        component="form"
-        method="get"
-        action="/owner/calendar"
         style={{
           background: colors.surface,
           border: `1px solid ${colors.border}`,
@@ -113,35 +128,29 @@ export default async function OwnerCalendarPage({
           padding: 16,
         }}
       >
-        {from !== today ? (
-          <input type="hidden" name="from" value={from} />
-        ) : null}
-        <Group align="flex-end" gap="sm" wrap="wrap">
-          <TextInput
-            name="q"
-            label="Search villas"
-            placeholder="Tên, địa điểm, hoặc mã villa…"
-            defaultValue={q}
-            style={{ flex: 1, minWidth: 200 }}
-          />
-          <Button type="submit" color="vbnbGreen">
-            Search
-          </Button>
-        </Group>
+        <NightBoardSearch
+          href="/owner/calendar"
+          from={from}
+          today={today}
+          initial={filters}
+          searchLabel={t('searchVillas')}
+          searchPlaceholder={t('searchPlaceholder')}
+        />
       </Box>
       <NightBoardFromPicker
         from={from}
         href="/owner/calendar"
-        extraParams={{ q: q || undefined }}
+        nightCount={NIGHT_BOARD_WINDOW}
+        extraParams={nightBoardFilterParams(filters)}
       />
       {!columns.length ? (
-        q ? (
-          <Text c="dimmed">Không tìm thấy villa</Text>
+        filtersOn ? (
+          <Text c="dimmed">{t('emptyTitle')}</Text>
         ) : (
           <EmptyState
-            title="Chưa có căn ACTIVE"
-            description="Tạo listing để hiện trên lịch và gửi duyệt lên sàn."
-            actionLabel="Thêm căn"
+            title={t('emptyNoAssets')}
+            description={t('emptyDesc')}
+            actionLabel={t('addAsset')}
             href="/owner/assets/new"
           />
         )

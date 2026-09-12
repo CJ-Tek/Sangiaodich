@@ -1,5 +1,8 @@
 import { dateOnlyAddDays, todayDateOnly } from '@/lib/dates';
 
+/** Default night-board window (owner + sale calendars). */
+export const NIGHT_BOARD_WINDOW = 10;
+
 /** Inclusive list of YYYY-MM-DD nights starting at `from` (length = count). */
 export function listNightsFrom(from: string, count: number): string[] {
   const n = Math.min(Math.max(count, 1), 62);

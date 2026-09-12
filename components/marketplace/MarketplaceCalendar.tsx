@@ -29,7 +29,11 @@ const BOOKED_TONE = {
   border: '#E8D0D0',
 } as const;
 
-const CLOSED_TONE = bookingStatusColors.blocked;
+const CLOSED_TONE = {
+  bg: '#6B6E68',
+  text: '#FFFFFF',
+  border: '#4A4D48',
+} as const;
 
 export type CalendarVariant = 'guest' | 'sale' | 'owner';
 

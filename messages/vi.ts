@@ -774,7 +774,33 @@ const messages = {
     "collectedOwner": "Đã CK Owner",
     "costNightTitle": "Giá đêm (cost Owner)",
     "night": "Đêm",
-    "costInput": "Cost (VND). Để trống rồi lưu = dùng WD/WE"
+    "costInput": "Cost (VND). Để trống rồi lưu = dùng WD/WE",
+    "fromPicker": {
+      "fromLabel": "Từ ngày",
+      "prev": "Trước",
+      "next": "Sau",
+      "today": "Hôm nay",
+      "rangeHint": "{start} → {end} ({count} đêm)"
+    },
+    "boardFilters": {
+      "type": "Loại căn",
+      "typeAll": "Tất cả loại",
+      "city": "Tỉnh / thành",
+      "cityAll": "Tất cả tỉnh / thành",
+      "priceMin": "Cost WD từ",
+      "priceMax": "Cost WD đến",
+      "bedrooms": "Phòng ngủ tối thiểu",
+      "bedroomsAny": "Tất cả",
+      "sort": "Sắp xếp",
+      "sortDefault": "Mặc định",
+      "sortTitleAsc": "Tên A → Z",
+      "sortTitleDesc": "Tên Z → A",
+      "sortPriceAsc": "Cost WD thấp → cao",
+      "sortPriceDesc": "Cost WD cao → thấp",
+      "sortBedsAsc": "Phòng ngủ ít → nhiều",
+      "sortBedsDesc": "Phòng ngủ nhiều → ít",
+      "reset": "Xóa bộ lọc"
+    }
   },
   "admin": {
     "layout": {

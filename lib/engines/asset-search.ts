@@ -1,3 +1,5 @@
+import { foldVn } from '@/lib/search/vn-fold';
+
 /** Mã villa gửi Guest → Sale (6 hex cuối UUID — seed local khác nhau ở đuôi). */
 export function assetPublicCode(assetId: string): string {
   const compact = assetId.replace(/-/g, '').toLowerCase();
@@ -5,7 +7,7 @@ export function assetPublicCode(assetId: string): string {
 }
 
 function normalizeQuery(q: string): string {
-  return q.trim().toLowerCase().replace(/\s+/g, '');
+  return foldVn(q).replace(/\s+/g, '');
 }
 
 export function matchesAssetSearch(
@@ -17,11 +19,11 @@ export function matchesAssetSearch(
     location: string;
   }
 ): boolean {
-  const raw = query.trim().toLowerCase();
+  const raw = foldVn(query.trim());
   if (!raw) return true;
-  if (asset.title.toLowerCase().includes(raw)) return true;
-  if (asset.location.toLowerCase().includes(raw)) return true;
-  if (asset.slug.toLowerCase().includes(raw)) return true;
+  if (foldVn(asset.title).includes(raw)) return true;
+  if (foldVn(asset.location).includes(raw)) return true;
+  if (foldVn(asset.slug).includes(raw)) return true;
 
   const compact = normalizeQuery(query);
   if (compact.length < 4) return false;
@@ -31,6 +33,6 @@ export function matchesAssetSearch(
     return true;
   }
   if (idCompact.endsWith(compact) || idCompact.includes(compact)) return true;
-  if (asset.id.toLowerCase().includes(raw)) return true;
+  if (foldVn(asset.id).includes(raw)) return true;
   return false;
 }

@@ -774,7 +774,33 @@ const messages = {
     "collectedOwner": "Transferred to owner",
     "costNightTitle": "Nightly cost (owner cost)",
     "night": "Night",
-    "costInput": "Cost (VND). Leave empty and save to use WD/WE"
+    "costInput": "Cost (VND). Leave empty and save to use WD/WE",
+    "fromPicker": {
+      "fromLabel": "From date",
+      "prev": "Previous",
+      "next": "Next",
+      "today": "Today",
+      "rangeHint": "{start} → {end} ({count} nights)"
+    },
+    "boardFilters": {
+      "type": "Type",
+      "typeAll": "All types",
+      "city": "City / province",
+      "cityAll": "All cities",
+      "priceMin": "WD cost from",
+      "priceMax": "WD cost to",
+      "bedrooms": "Min bedrooms",
+      "bedroomsAny": "Any",
+      "sort": "Sort",
+      "sortDefault": "Default",
+      "sortTitleAsc": "Name A → Z",
+      "sortTitleDesc": "Name Z → A",
+      "sortPriceAsc": "WD cost low → high",
+      "sortPriceDesc": "WD cost high → low",
+      "sortBedsAsc": "Bedrooms low → high",
+      "sortBedsDesc": "Bedrooms high → low",
+      "reset": "Clear filters"
+    }
   },
   "admin": {
     "layout": {

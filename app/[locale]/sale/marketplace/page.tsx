@@ -8,24 +8,57 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { AssetCard } from '@/components/marketplace/AssetCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { VillaPagination } from '@/components/marketplace/VillaPagination';
-import { Alert, SimpleGrid, TextInput, Button, Group, Box } from '@mantine/core';
+import { NightBoardSearch } from '@/components/inventory/NightBoardSearch';
+import { Alert, SimpleGrid, Box } from '@mantine/core';
 import { colors, radius } from '@/config/design-tokens';
-import { exploreListHref } from '@/lib/engines/explore-assets';
+import { EXPLORE_PAGE_SIZE } from '@/lib/engines/explore-assets';
 import {
   loadSaleMarketplaceQuotedAssets,
   parseExplorePage,
 } from '@/lib/engines/sale-marketplace-assets';
+import {
+  matchesNightBoardFilters,
+  nightBoardFilterParams,
+  nightBoardFiltersActive,
+  parseNightBoardFilters,
+  sortNightBoardAssets,
+} from '@/lib/engines/night-board-filters';
+import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
+
+function marketplaceHref(
+  filters: ReturnType<typeof parseNightBoardFilters>,
+  page: number
+): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(nightBoardFilterParams(filters))) {
+    if (value) params.set(key, value);
+  }
+  if (page > 1) params.set('page', String(page));
+  const qs = params.toString();
+  return qs ? `/sale/marketplace?${qs}` : '/sale/marketplace';
+}
 
 export default async function SaleMarketplacePage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; page?: string | string[] }>;
+  searchParams: Promise<{
+    q?: string | string[];
+    city?: string | string[];
+    type?: string | string[];
+    priceMin?: string | string[];
+    priceMax?: string | string[];
+    beds?: string | string[];
+    sort?: string | string[];
+    page?: string | string[];
+  }>;
 }) {
   const t = await getTranslations('sale.marketplace');
-  const { q, page: pageParam } = await searchParams;
+  const params = await searchParams;
+  const filters = parseNightBoardFilters(params);
+  const filtersOn = nightBoardFiltersActive(filters);
   const profile = await getSessionProfile();
   const active = await saleHasActiveSub(profile!.id);
-  const page = parseExplorePage(pageParam);
+  const page = parseExplorePage(params.page);
 
   if (!active) {
     return (
@@ -38,28 +71,33 @@ export default async function SaleMarketplacePage({
     );
   }
 
+  // Load a wide ACTIVE set, then fold/filter in memory (accent-safe).
   const list = await loadSaleMarketplaceQuotedAssets({
     saleId: profile!.id,
-    q,
-    page,
+    page: 1,
+    pageSize: LIST_VIEW_LIMIT,
   });
 
-  const { assets, total, page: resolvedPage, totalPages, discounts } = list;
+  const matched = sortNightBoardAssets(
+    list.assets.filter((asset) => matchesNightBoardFilters(asset, filters)),
+    filters.sort
+  );
+  const total = matched.length;
+  const pageSize = EXPLORE_PAGE_SIZE;
+  const totalPages = Math.max(1, Math.ceil(Math.max(total, 0) / pageSize));
+  const resolvedPage = Math.min(page, totalPages);
+  const start = (resolvedPage - 1) * pageSize;
+  const assets = matched.slice(start, start + pageSize);
+  const { discounts } = list;
 
   if (page !== resolvedPage && total > 0) {
-    return await localeRedirect(
-      exploreListHref('/sale/marketplace', {
-        q: q?.trim(),
-        page: resolvedPage,
-      })
-    );
+    return await localeRedirect(marketplaceHref(filters, resolvedPage));
   }
 
   return (
     <>
       <PageHeader title={t('title')} description={t('description')} />
       <Box
-        component="form"
         mb="xl"
         style={{
           background: colors.surface,
@@ -68,22 +106,16 @@ export default async function SaleMarketplacePage({
           padding: 16,
         }}
       >
-        <Group align="flex-end" gap="sm" wrap="wrap">
-          <TextInput
-            name="q"
-            label={t('searchVillas')}
-            placeholder={t('searchPlaceholder')}
-            defaultValue={q}
-            style={{ flex: 1, minWidth: 200 }}
-          />
-          <Button type="submit" color="vbnbGreen">
-            {t('search')}
-          </Button>
-        </Group>
+        <NightBoardSearch
+          href="/sale/marketplace"
+          initial={filters}
+          searchLabel={t('searchVillas')}
+          searchPlaceholder={t('searchPlaceholder')}
+        />
       </Box>
-      {!assets?.length ? (
+      {!assets.length ? (
         <EmptyState
-          title={q ? t('emptyTitle') : t('emptyNoAssets')}
+          title={filtersOn ? t('emptyTitle') : t('emptyNoAssets')}
         />
       ) : (
         <>

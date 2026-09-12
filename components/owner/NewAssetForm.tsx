@@ -12,6 +12,7 @@ import {
   Image,
   NumberInput,
   SegmentedControl,
+  Select,
   SimpleGrid,
   Stack,
   Text,
@@ -20,7 +21,7 @@ import {
   Title,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from '@/lib/i18n/navigation';
 import { useRef, useState } from 'react';
 import {
@@ -40,6 +41,11 @@ import {
 import { colors, radius } from '@/config/design-tokens';
 import { OwnerAssetDiscountRulesEditor } from '@/components/owner/OwnerAssetDiscountRulesEditor';
 import type { AssetDiscountRuleForm } from '@/components/owner/OwnerAssetDiscountRulesEditor';
+import {
+  formatAssetLocation,
+  parseAssetLocation,
+  vnCityOptions,
+} from '@/lib/geo/vn-cities';
 
 export type AssetFormValues = {
   title: string;
@@ -98,10 +104,18 @@ export function AssetForm({
   const t = useTranslations('owner.assetForm');
   const tTags = useTranslations('assetTags');
   const tPropertyTypes = useTranslations('propertyTypes');
+  const locale = useLocale();
+  const cityOptions = vnCityOptions(locale);
   const isEdit = mode === 'edit';
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [form, setForm] = useState<AssetFormValues>(() => mergeValues(initial));
+  const [cityId, setCityId] = useState<string | null>(
+    () => parseAssetLocation(initial?.location ?? '').cityId
+  );
+  const [addressDetail, setAddressDetail] = useState(
+    () => parseAssetLocation(initial?.location ?? '').detail
+  );
   const resetRef = useRef<() => void>(null);
 
   if (isEdit && !assetId) {
@@ -195,6 +209,13 @@ export function AssetForm({
       });
       return;
     }
+    if (!cityId) {
+      notifications.show({
+        color: 'red',
+        message: t('cityRequired'),
+      });
+      return;
+    }
     if (submitForReview) {
       if (form.images.length < MIN_ASSET_IMAGES_FOR_REVIEW) {
         notifications.show({
@@ -217,7 +238,7 @@ export function AssetForm({
       const payload = {
         title: form.title,
         description: form.description,
-        location: form.location,
+        location: formatAssetLocation(cityId, addressDetail),
         capacity: form.capacity,
         bedrooms: form.bedrooms,
         bathrooms: form.bathrooms,
@@ -299,11 +320,23 @@ export function AssetForm({
           setForm({ ...form, description: e.currentTarget.value })
         }
       />
-      <TextInput
-        label={t('location')}
-        value={form.location}
-        onChange={(e) => setForm({ ...form, location: e.currentTarget.value })}
-      />
+      <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="sm">
+        <Select
+          label={t('city')}
+          placeholder={t('cityPlaceholder')}
+          searchable
+          required
+          value={cityId}
+          onChange={setCityId}
+          data={cityOptions}
+        />
+        <TextInput
+          label={t('addressDetail')}
+          placeholder={t('addressDetailPlaceholder')}
+          value={addressDetail}
+          onChange={(e) => setAddressDetail(e.currentTarget.value)}
+        />
+      </SimpleGrid>
 
       <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="sm">
         <NumberInput

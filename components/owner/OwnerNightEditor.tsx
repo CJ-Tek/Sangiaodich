@@ -20,6 +20,12 @@ const BOOKED = {
   border: '#E8D0D0',
 };
 
+const CLOSED = {
+  bg: '#6B6E68',
+  text: '#FFFFFF',
+  border: '#4A4D48',
+};
+
 export function OwnerNightEditor({
   assetId,
   board,
@@ -128,7 +134,7 @@ export function OwnerNightEditor({
             status === 'locked'
               ? BOOKED
               : status === 'closed'
-                ? bookingStatusColors.blocked
+                ? CLOSED
                 : status === 'hold'
                   ? bookingStatusColors.hold
                   : bookingStatusColors.available;

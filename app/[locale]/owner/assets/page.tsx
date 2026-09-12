@@ -12,7 +12,7 @@ import {
 import { loadAssetDiscountRulesByAssetIds } from '@/lib/engines/sale-pricing';
 
 const ASSET_COLUMNS =
-  'id, title, status, slug, location, property_type, bedrooms, bathrooms, asset_costs(cost_weekday, cost_weekend)';
+  'id, title, status, slug, location, property_type, bedrooms, bathrooms, asset_costs(cost_weekday, cost_weekend), asset_images(url, sort_order)';
 
 export default async function OwnerAssetsPage() {
   const t = await getTranslations('owner.assets');
@@ -36,6 +36,11 @@ export default async function OwnerAssetsPage() {
       cost_weekday: number;
       cost_weekend: number;
     };
+    const images = (a.asset_images || []) as {
+      url: string;
+      sort_order: number;
+    }[];
+    const cover = [...images].sort((x, y) => x.sort_order - y.sort_order)[0];
     return {
       id: a.id,
       title: a.title,
@@ -46,6 +51,7 @@ export default async function OwnerAssetsPage() {
       bathrooms: Number(a.bathrooms) || 0,
       costWeekday: Number(costs?.cost_weekday || 0),
       costWeekend: Number(costs?.cost_weekend || 0),
+      imageUrl: cover?.url ?? null,
       discountRules: (rulesByAsset.get(a.id) || []).map((r) => ({
         minCheckedOutCount: r.minCheckedOutCount,
         costDiscountPercent: r.costDiscountPercent,

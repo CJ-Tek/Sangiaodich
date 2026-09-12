@@ -34,7 +34,7 @@ import { shellNavLinkClass } from '@/components/shells/shell-nav-link-styles';
 
 export function OwnerMobileShell({
   children,
-  uiMode = 'expert',
+  uiMode = 'simple',
   headerExtra,
 }: {
   children: React.ReactNode;
@@ -58,6 +58,7 @@ export function OwnerMobileShell({
 
   const simpleDesktop = [
     { label: t('calendar'), href: '/owner/calendar' },
+    { label: t('assets'), href: '/owner/assets' },
     { label: t('pending'), href: '/owner/pending' },
     { label: t('platformFee'), href: '/owner/subscription' },
   ];
@@ -72,6 +73,7 @@ export function OwnerMobileShell({
 
   const simpleMobile = [
     { label: t('calendar'), href: '/owner/calendar', Icon: IconCalendar },
+    { label: t('assetsShort'), href: '/owner/assets', Icon: IconStore },
     { label: t('pending'), href: '/owner/pending', Icon: IconInbox },
     { label: t('platformFee'), href: '/owner/subscription', Icon: IconSettings },
   ];
@@ -147,7 +149,9 @@ export function OwnerMobileShell({
           </Stack>
         </AppShell.Navbar>
 
-        <AppShell.Main>{children}</AppShell.Main>
+        <AppShell.Main style={{ minWidth: 0, overflowX: 'hidden' }}>
+          {children}
+        </AppShell.Main>
       </AppShell>
     );
   }
@@ -166,7 +170,9 @@ export function OwnerMobileShell({
         </Group>
       </AppShell.Header>
 
-      <AppShell.Main pb={80}>{children}</AppShell.Main>
+      <AppShell.Main pb={80} style={{ minWidth: 0, overflowX: 'hidden' }}>
+        {children}
+      </AppShell.Main>
 
       <AppShell.Footer>
         <Group h="100%" px={4} grow gap={0}>

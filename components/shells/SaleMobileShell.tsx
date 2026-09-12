@@ -33,7 +33,7 @@ import { shellNavLinkClass } from '@/components/shells/shell-nav-link-styles';
 
 export function SaleMobileShell({
   children,
-  uiMode = 'expert',
+  uiMode = 'simple',
   headerExtra,
 }: {
   children: React.ReactNode;
@@ -147,7 +147,9 @@ export function SaleMobileShell({
           </Stack>
         </AppShell.Navbar>
 
-        <AppShell.Main>{children}</AppShell.Main>
+        <AppShell.Main style={{ minWidth: 0, overflowX: 'hidden' }}>
+          {children}
+        </AppShell.Main>
       </AppShell>
     );
   }
@@ -176,7 +178,9 @@ export function SaleMobileShell({
         </Group>
       </AppShell.Header>
 
-      <AppShell.Main pb={80}>{children}</AppShell.Main>
+      <AppShell.Main pb={80} style={{ minWidth: 0, overflowX: 'hidden' }}>
+        {children}
+      </AppShell.Main>
 
       <AppShell.Footer>
         <Group h="100%" px={4} grow gap={0}>

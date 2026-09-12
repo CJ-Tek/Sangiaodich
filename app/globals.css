@@ -126,6 +126,32 @@ a {
   transition: transform 280ms var(--vbnb-ease);
 }
 
+/* Night board: interactive cell hover (skip past nights). */
+@media (hover: hover) {
+  .vbnb-night-board-scroll td.vbnb-night-board-cell:not([data-past='true']):hover {
+    filter: brightness(0.93);
+    box-shadow: inset 0 0 0 2px var(--vbnb-primary);
+    position: relative;
+    z-index: 1;
+  }
+
+  .vbnb-night-board-scroll
+    td.vbnb-night-board-cell[data-status='closed']:not([data-past='true']):hover {
+    filter: brightness(1.08);
+    box-shadow: inset 0 0 0 2px #2f322e;
+  }
+}
+
+/* Closed nights: hatch so they stay obvious even next to muted past cells. */
+.vbnb-night-board-scroll td.vbnb-night-board-cell[data-status='closed']:not([data-past='true']) {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    rgba(255, 255, 255, 0.12) 0 4px,
+    transparent 4px 10px
+  );
+  letter-spacing: 0.02em;
+}
+
 @keyframes vbnb-fade-up {
   from {
     opacity: 0;

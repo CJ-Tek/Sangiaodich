@@ -64,9 +64,16 @@ const LOCKED_TONE = {
   border: '#E8D0D0',
 };
 
+/** Closed nights — stronger than muted gray so they read as unavailable. */
+const CLOSED_TONE = {
+  bg: '#6B6E68',
+  text: '#FFFFFF',
+  border: '#4A4D48',
+};
+
 function cellTone(status: NightStatus) {
   if (status === 'locked') return LOCKED_TONE;
-  if (status === 'closed') return bookingStatusColors.blocked;
+  if (status === 'closed') return CLOSED_TONE;
   if (status === 'hold') return bookingStatusColors.hold;
   return bookingStatusColors.available;
 }
@@ -540,21 +547,31 @@ export function NightBoardGrid({
   return (
     <>
       <Box
+        className="vbnb-night-board-scroll"
         style={{
-          overflow: 'auto',
+          // CSS quirk: overflow-x:auto + overflow-y:visible computes y to auto,
+          // which creates a non-scrolling vertical scrollport that eats wheel events.
+          overflowX: 'auto',
+          overflowY: isDesktop ? 'clip' : 'auto',
+          width: '100%',
           maxWidth: '100%',
+          minWidth: 0,
           maxHeight: isDesktop
             ? undefined
             : 'min(60dvh, calc(100svh - var(--app-shell-header-offset, 56px) - var(--app-shell-footer-offset, 0px) - 10.5rem))',
           WebkitOverflowScrolling: 'touch',
-          overscrollBehavior: 'contain',
+          overscrollBehaviorX: 'contain',
+          overscrollBehaviorY: isDesktop ? 'auto' : 'contain',
           userSelect: 'none',
+          touchAction: 'pan-x pan-y',
         }}
       >
         <table
           style={{
             borderCollapse: 'separate',
             borderSpacing: 0,
+            tableLayout: 'fixed',
+            width: columns.length * colWidth + 96,
             minWidth: columns.length * colWidth + 96,
           }}
         >
@@ -612,6 +629,9 @@ export function NightBoardGrid({
                   return (
                     <td
                       key={`${col.assetId}-${date}`}
+                      className="vbnb-night-board-cell"
+                      data-past={past ? 'true' : 'false'}
+                      data-status={status}
                       onClick={() => {
                         if (past || busy) return;
                         if (suppressClickRef.current) {
@@ -659,17 +679,28 @@ export function NightBoardGrid({
                         width: colWidth,
                         height: cellHeight,
                         textAlign: 'center',
-                        background: past ? colors.surfaceMuted : tone.bg,
+                        backgroundColor: past
+                          ? colors.surfaceMuted
+                          : tone.bg,
                         color: past
                           ? colors.textMuted
                           : inDraft
                             ? tone.text
                             : tone.text,
-                        border: `1px solid ${inDraft ? tone.border : colors.border}`,
+                        border: `1px solid ${
+                          inDraft
+                            ? tone.border
+                            : status === 'closed' && !past
+                              ? tone.border
+                              : colors.border
+                        }`,
                         cursor: past ? 'default' : 'pointer',
                         fontSize: 12,
                         fontWeight: 600,
-                        touchAction: 'manipulation',
+                        touchAction: 'pan-x pan-y',
+                        minWidth: colWidth,
+                        transition:
+                          'filter 120ms ease, box-shadow 120ms ease',
                       }}
                     >
                       {label}

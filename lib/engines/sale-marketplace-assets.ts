@@ -5,6 +5,7 @@ import {
   EXPLORE_PAGE_SIZE,
   parseExplorePage,
 } from '@/lib/engines/explore-assets';
+import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 
 export { EXPLORE_PAGE_SIZE, parseExplorePage };
 
@@ -72,7 +73,7 @@ export async function loadSaleMarketplaceAssets(input: {
 }): Promise<SaleMarketplacePage> {
   const pageSize = Math.min(
     Math.max(input.pageSize ?? EXPLORE_PAGE_SIZE, 1),
-    48
+    LIST_VIEW_LIMIT
   );
   const page = Math.max(input.page ?? 1, 1);
   const from = (page - 1) * pageSize;
