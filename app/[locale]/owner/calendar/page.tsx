@@ -101,7 +101,7 @@ export default async function OwnerCalendarPage({
       bedrooms: Number(asset.bedrooms) || 0,
       bathrooms: Number(asset.bathrooms) || 0,
       capacity: Number(asset.capacity) || 0,
-      location: asset.location,
+      location: asset.location || undefined,
       costWeekday: Number(costs?.cost_weekday || 0),
       costWeekend: Number(costs?.cost_weekend || 0),
       images,

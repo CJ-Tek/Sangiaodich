@@ -44,7 +44,10 @@ export type NightBoardSortableAsset = {
   property_type?: string | null;
   propertyType?: string | null;
   bedrooms?: number | null;
-  asset_costs?: { cost_weekday?: number | null } | null;
+  asset_costs?:
+    | { cost_weekday?: number | null }
+    | { cost_weekday?: number | null }[]
+    | null;
   costWeekday?: number | null;
 };
 
@@ -115,7 +118,10 @@ export function nightBoardFilterParams(
 
 function weekdayCost(asset: NightBoardSortableAsset): number {
   if (asset.costWeekday != null) return Number(asset.costWeekday);
-  return Number(asset.asset_costs?.cost_weekday || 0);
+  const costs = Array.isArray(asset.asset_costs)
+    ? asset.asset_costs[0]
+    : asset.asset_costs;
+  return Number(costs?.cost_weekday || 0);
 }
 
 export function matchesNightBoardFilters(
