@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Badge,
   Box,
@@ -9,6 +9,7 @@ import {
   Image,
   Modal,
   NumberInput,
+  Pagination,
   Paper,
   Select,
   Stack,
@@ -129,7 +130,7 @@ export function OwnerAssetsList({
   const [priceMax, setPriceMax] = useState<number | string>('');
   const [minBedrooms, setMinBedrooms] = useState<string | null>(null);
   const [discount, setDiscount] = useState<DiscountFilter>('all');
-  const [shown, setShown] = useState(PAGE_SIZE);
+  const [page, setPage] = useState(1);
   const [openId, setOpenId] = useState<string | null>(null);
   const [submittingId, setSubmittingId] = useState<string | null>(null);
 
@@ -188,7 +189,7 @@ export function OwnerAssetsList({
     setPriceMax('');
     setMinBedrooms(null);
     setDiscount('all');
-    setShown(PAGE_SIZE);
+    setPage(1);
   }
 
   async function submitReview(assetId: string) {
@@ -209,7 +210,16 @@ export function OwnerAssetsList({
     }
   }
 
-  const visible = filtered.slice(0, shown);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const visible = filtered.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE
+  );
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
   const selected = rows.find((r) => r.id === openId) ?? null;
 
   const filterBar = (
@@ -226,7 +236,7 @@ export function OwnerAssetsList({
             value={query}
             onChange={(e) => {
               setQuery(e.currentTarget.value);
-              setShown(PAGE_SIZE);
+              setPage(1);
             }}
             style={{ flex: 1, minWidth: 200 }}
           />
@@ -238,7 +248,7 @@ export function OwnerAssetsList({
             value={city}
             onChange={(v) => {
               setCity(v);
-              setShown(PAGE_SIZE);
+              setPage(1);
             }}
             data={cityOptions}
             w={200}
@@ -250,7 +260,7 @@ export function OwnerAssetsList({
             value={status}
             onChange={(v) => {
               setStatus(v);
-              setShown(PAGE_SIZE);
+              setPage(1);
             }}
             data={STATUS_OPTIONS.map((s) => ({
               value: s,
@@ -265,7 +275,7 @@ export function OwnerAssetsList({
             value={propertyType}
             onChange={(v) => {
               setPropertyType(v);
-              setShown(PAGE_SIZE);
+              setPage(1);
             }}
             data={[
               { value: 'VILLA', label: tPropertyTypes('VILLA') },
@@ -283,7 +293,7 @@ export function OwnerAssetsList({
             value={priceMin}
             onChange={(v) => {
               setPriceMin(v);
-              setShown(PAGE_SIZE);
+              setPage(1);
             }}
             w={140}
           />
@@ -297,7 +307,7 @@ export function OwnerAssetsList({
             value={priceMax}
             onChange={(v) => {
               setPriceMax(v);
-              setShown(PAGE_SIZE);
+              setPage(1);
             }}
             w={140}
           />
@@ -308,7 +318,7 @@ export function OwnerAssetsList({
             value={minBedrooms}
             onChange={(v) => {
               setMinBedrooms(v);
-              setShown(PAGE_SIZE);
+              setPage(1);
             }}
             data={[
               { value: '1', label: '1+' },
@@ -324,7 +334,7 @@ export function OwnerAssetsList({
             value={discount}
             onChange={(v) => {
               setDiscount((v as DiscountFilter) || 'all');
-              setShown(PAGE_SIZE);
+              setPage(1);
             }}
             data={[
               { value: 'all', label: t('filterAll', { count: rows.length }) },
@@ -441,7 +451,11 @@ export function OwnerAssetsList({
             </Table.Thead>
             <Table.Tbody>
               {visible.map((a) => (
-                <Table.Tr key={a.id}>
+                <Table.Tr
+                  key={a.id}
+                  onClick={() => router.push(`/owner/assets/${a.id}/edit`)}
+                  style={{ cursor: 'pointer' }}
+                >
                   <Table.Td>
                     <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
                       <Box
@@ -463,14 +477,7 @@ export function OwnerAssetsList({
                         />
                       </Box>
                         <div style={{ minWidth: 0 }}>
-                          <Text
-                            component={Link}
-                            href={`/owner/assets/${a.id}/edit`}
-                            fw={600}
-                            size="sm"
-                            lineClamp={1}
-                            style={{ color: 'inherit', textDecoration: 'none' }}
-                          >
+                          <Text fw={600} size="sm" lineClamp={1}>
                             {a.title}
                           </Text>
                         <Text size="xs" c="dimmed" lineClamp={1}>
@@ -507,7 +514,9 @@ export function OwnerAssetsList({
                       label={statusLabel(t, a.status)}
                     />
                   </Table.Td>
-                  <Table.Td>{actionsFor(a)}</Table.Td>
+                  <Table.Td onClick={(e) => e.stopPropagation()}>
+                    {actionsFor(a)}
+                  </Table.Td>
                 </Table.Tr>
               ))}
             </Table.Tbody>
@@ -599,16 +608,15 @@ export function OwnerAssetsList({
         </Stack>
       )}
 
-      {filtered.length > shown ? (
-        <Button
-          variant="subtle"
+      {totalPages > 1 ? (
+        <Pagination
+          value={safePage}
+          onChange={setPage}
+          total={totalPages}
           color="vbnbGreen"
-          size="xs"
-          w="fit-content"
-          onClick={() => setShown((n) => n + PAGE_SIZE)}
-        >
-          {t('showMore', { count: filtered.length - shown })}
-        </Button>
+          siblings={1}
+          boundaries={1}
+        />
       ) : null}
 
       <Modal
