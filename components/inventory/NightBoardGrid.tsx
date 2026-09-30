@@ -953,7 +953,7 @@ export function NightBoardGrid({
             {gallery.detailHref ? (
               <Link href={gallery.detailHref} style={{ textDecoration: 'none' }}>
                 <Text size="sm" c="vbnbGreen.6" mt="md">
-                  Xem căn (Nâng cao)
+                  {t('viewDetails')}
                 </Text>
               </Link>
             ) : null}

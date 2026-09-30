@@ -17,6 +17,7 @@ export function SubscriptionShell({
   active,
   role,
   status,
+  periodEnd,
   payment,
   phone,
   email,
@@ -25,6 +26,7 @@ export function SubscriptionShell({
   active: boolean;
   role: 'SALE' | 'OWNER';
   status?: string | null;
+  periodEnd?: string | null;
   payment: PlatformPaymentInfo;
   phone?: string | null;
   email?: string | null;
@@ -44,6 +46,7 @@ export function SubscriptionShell({
     <SubscriptionLocked
       role={role}
       status={status}
+      periodEnd={periodEnd}
       payment={payment}
       phone={phone}
       email={email}

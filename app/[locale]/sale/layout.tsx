@@ -49,6 +49,7 @@ export default async function SaleLayout({
         active={active}
         role="SALE"
         status={sub?.status ?? null}
+        periodEnd={sub?.period_end ?? null}
         payment={mapPaymentInfo(fees)}
         phone={profile?.phone}
         email={profile?.email}

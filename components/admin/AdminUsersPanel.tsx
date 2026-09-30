@@ -27,6 +27,7 @@ import type {
   AdminUserTab,
   AdminUsersPage,
 } from '@/lib/engines/admin-user-management';
+import { isSubscriptionActive } from '@/lib/engines/subscription';
 import type { SubscriptionPlan } from '@/lib/engines/subscription-plans';
 
 const ROLE_TABS: AdminUserTab[] = [
@@ -68,7 +69,14 @@ function UserCard({
   const tErrors = useTranslations('errors');
   const { formatDateTime } = useFormat();
   const sub = user.subscription;
-  const active = sub?.status === 'ACTIVE';
+  const coversToday = sub
+    ? isSubscriptionActive({
+        status: sub.status,
+        periodEnd: sub.period_end,
+      })
+    : false;
+  const periodLapsed = sub?.status === 'ACTIVE' && !coversToday;
+  const active = coversToday;
   const tone = active
     ? bookingStatusColors.confirmed
     : bookingStatusColors.blocked;
@@ -109,14 +117,20 @@ function UserCard({
               },
             }}
           >
-            {sub ? `${sub.status} → ${sub.period_end}` : t('noSub')}
+            {!sub
+              ? t('noSub')
+              : periodLapsed
+                ? t('lapsedUntil', { date: sub.period_end })
+                : `${sub.status} → ${sub.period_end}`}
           </Badge>
 
           {mode === 'active' ? (
             <>
               {(user.role === 'OWNER' || user.role === 'SALE') && (
                 <>
-                  <MarkPaidButton profileId={user.id} plans={rolePlans} />
+                  {!coversToday ? (
+                    <MarkPaidButton profileId={user.id} plans={rolePlans} />
+                  ) : null}
                   {active ? (
                     <Button
                       size="xs"

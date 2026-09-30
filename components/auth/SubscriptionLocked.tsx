@@ -4,20 +4,27 @@ import { Button, Paper, Stack, Text, Title } from '@mantine/core';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/lib/i18n/navigation';
 import { colors, radius } from '@/config/design-tokens';
+import { isSubscriptionActive } from '@/lib/engines/subscription';
 
 export function SubscriptionLocked({
   role,
   status,
+  periodEnd,
 }: {
   role: 'SALE' | 'OWNER';
   status?: string | null;
+  periodEnd?: string | null;
   payment?: unknown;
   phone?: string | null;
   email?: string | null;
 }) {
   const t = useTranslations('subscriptionLocked');
-  const isPending = status === 'PENDING_PAYMENT' || !status;
-  const isExpired = status === 'EXPIRED';
+  const coversToday =
+    Boolean(status && periodEnd) &&
+    isSubscriptionActive({ status: status!, periodEnd: periodEnd! });
+  const periodLapsed = status === 'ACTIVE' && Boolean(periodEnd) && !coversToday;
+  const isPending = (status === 'PENDING_PAYMENT' || !status) && !periodLapsed;
+  const isExpired = status === 'EXPIRED' || periodLapsed;
   const subHref =
     role === 'SALE'
       ? '/sale/settings?tab=subscription'
@@ -44,7 +51,9 @@ export function SubscriptionLocked({
                 : t('inactiveDesc')}
           </Text>
           <Text size="sm" fw={500} c="vbnbGreen.6">
-            {t('statusLabel', { status: status || 'PENDING_PAYMENT' })}
+            {periodLapsed && periodEnd
+              ? t('lapsedLabel', { date: periodEnd })
+              : t('statusLabel', { status: status || 'PENDING_PAYMENT' })}
           </Text>
           <Button component={Link} href={subHref} color="vbnbGreen">
             {t('choosePlan')}

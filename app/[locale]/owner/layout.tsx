@@ -49,6 +49,7 @@ export default async function OwnerLayout({
         active={active}
         role="OWNER"
         status={sub?.status ?? null}
+        periodEnd={sub?.period_end ?? null}
         payment={mapPaymentInfo(fees)}
         phone={profile?.phone}
         email={profile?.email}

@@ -758,6 +758,7 @@ const messages = {
     "pendingDesc": "Chọn gói trên trang Subscription, quét QR (nội dung CK đã sẵn) để kích hoạt.",
     "expiredDesc": "Kỳ phí đã hết. Chọn gói và thanh toán để mở lại.",
     "inactiveDesc": "Subscription chưa ACTIVE. Vào Subscription để chọn gói.",
+    "lapsedLabel": "Hết hạn {date}",
     "statusLabel": "Trạng thái: {status}",
     "choosePlan": "Chọn gói & thanh toán",
     "profile": "Hồ sơ cá nhân"
@@ -775,6 +776,7 @@ const messages = {
     "costNightTitle": "Giá đêm (cost Owner)",
     "night": "Đêm",
     "costInput": "Cost (VND). Để trống rồi lưu = dùng WD/WE",
+    "viewDetails": "Xem chi tiết",
     "fromPicker": {
       "fromLabel": "Từ ngày",
       "prev": "Trước",
@@ -885,6 +887,7 @@ const messages = {
       },
       "trashSince": "Trash từ {date}",
       "noSub": "Chưa có sub",
+      "lapsedUntil": "Hết hạn {date}",
       "removeSub": "Gỡ sub",
       "trash": "Trash",
       "restore": "Khôi phục",

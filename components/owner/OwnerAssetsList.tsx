@@ -19,7 +19,7 @@ import {
 import { useMediaQuery } from '@mantine/hooks';
 import { useLocale, useTranslations } from 'next-intl';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from '@/lib/i18n/navigation';
+import { Link, useRouter } from '@/lib/i18n/navigation';
 import { OwnerAssetReviewControls } from '@/components/owner/OwnerAssetReviewControls';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { LinkButton } from '@/components/ui/LinkButton';
@@ -462,10 +462,17 @@ export function OwnerAssetsList({
                           fit="cover"
                         />
                       </Box>
-                      <div style={{ minWidth: 0 }}>
-                        <Text fw={600} size="sm" lineClamp={1}>
-                          {a.title}
-                        </Text>
+                        <div style={{ minWidth: 0 }}>
+                          <Text
+                            component={Link}
+                            href={`/owner/assets/${a.id}/edit`}
+                            fw={600}
+                            size="sm"
+                            lineClamp={1}
+                            style={{ color: 'inherit', textDecoration: 'none' }}
+                          >
+                            {a.title}
+                          </Text>
                         <Text size="xs" c="dimmed" lineClamp={1}>
                           {a.location || '—'}
                         </Text>
@@ -513,8 +520,23 @@ export function OwnerAssetsList({
               key={a.id}
               p="md"
               radius={radius.lg}
-              style={{ border: `1px solid ${colors.border}` }}
+              style={{
+                position: 'relative',
+                border: `1px solid ${colors.border}`,
+                cursor: 'pointer',
+              }}
             >
+              <Link
+                href={`/owner/assets/${a.id}/edit`}
+                aria-label={a.title}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  zIndex: 0,
+                  borderRadius: 'inherit',
+                }}
+              />
+              <div style={{ position: 'relative', zIndex: 1, pointerEvents: 'none' }}>
               <OwnerAssetReviewControls
                 assetId={a.id}
                 status={a.status}
@@ -571,6 +593,7 @@ export function OwnerAssetsList({
                   </div>
                 </Group>
               </OwnerAssetReviewControls>
+              </div>
             </Paper>
           ))}
         </Stack>

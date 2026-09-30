@@ -758,6 +758,7 @@ const messages = {
     "pendingDesc": "Choose a plan on the Subscription page and scan the QR code (transfer memo included) to activate.",
     "expiredDesc": "Your billing period has ended. Choose a plan and pay to restore access.",
     "inactiveDesc": "Subscription is not active. Go to Subscription to choose a plan.",
+    "lapsedLabel": "Expired {date}",
     "statusLabel": "Status: {status}",
     "choosePlan": "Choose plan & pay",
     "profile": "Profile"
@@ -775,6 +776,7 @@ const messages = {
     "costNightTitle": "Nightly cost (owner cost)",
     "night": "Night",
     "costInput": "Cost (VND). Leave empty and save to use WD/WE",
+    "viewDetails": "View details",
     "fromPicker": {
       "fromLabel": "From date",
       "prev": "Previous",
@@ -885,6 +887,7 @@ const messages = {
       },
       "trashSince": "Trashed since {date}",
       "noSub": "No sub",
+      "lapsedUntil": "Expired {date}",
       "removeSub": "Remove sub",
       "trash": "Trash",
       "restore": "Restore",
