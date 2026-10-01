@@ -9,6 +9,7 @@ const memoryStore: { row: ZaloTokenRow | null } = { row: null };
 const KV_ACCESS = 'zalo:oa_access_token';
 const KV_REFRESH = 'zalo:oa_refresh_token';
 const KV_EXPIRES = 'zalo:oa_expires_at_ms';
+const KV_APPLIED_REFRESH = 'zalo:oa_applied_refresh';
 
 async function getKv() {
   if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
@@ -37,13 +38,23 @@ function seedFromEnv(): ZaloTokenRow | null {
 }
 
 export async function loadZaloTokens(): Promise<ZaloTokenRow | null> {
+  const envRow = seedFromEnv();
   const kv = await getKv();
   if (kv) {
-    const [accessToken, refreshToken, expiresAtMs] = await Promise.all([
-      kv.get<string>(KV_ACCESS),
-      kv.get<string>(KV_REFRESH),
-      kv.get<number>(KV_EXPIRES),
-    ]);
+    const [accessToken, refreshToken, expiresAtMs, appliedRefresh] =
+      await Promise.all([
+        kv.get<string>(KV_ACCESS),
+        kv.get<string>(KV_REFRESH),
+        kv.get<number>(KV_EXPIRES),
+        kv.get<string>(KV_APPLIED_REFRESH),
+      ]);
+
+    if (envRow && envRow.refreshToken !== appliedRefresh) {
+      await saveZaloTokens(envRow);
+      await kv.set(KV_APPLIED_REFRESH, envRow.refreshToken);
+      return envRow;
+    }
+
     if (refreshToken) {
       return {
         accessToken: accessToken || '',
