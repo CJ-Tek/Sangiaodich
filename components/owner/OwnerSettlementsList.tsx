@@ -28,14 +28,7 @@ import {
   matchesOwnerSettlementSearch,
   ownerTransferMemo,
 } from '@/lib/engines/booking-search';
-import {
-  ownerPayoutStatus,
-  type OwnerPayoutInfo,
-} from '@/lib/owner/payout-info';
-import {
-  saleOwnerPayoutSatisfied,
-  isGuestDepositCase,
-} from '@/lib/engines/guest-balance';
+import type { OwnerPayoutInfo } from '@/lib/owner/payout-info';
 import { OwnerStayActions } from '@/components/owner/OwnerStayActions';
 import { OwnerSaleRatingForm } from '@/components/owner/OwnerSaleRatingForm';
 import { SalePublicRatingCard } from '@/components/owner/SalePublicRatingCard';
@@ -89,23 +82,6 @@ function payoutGroup(r: OwnerSettlementRow): Exclude<PayoutFilter, 'all'> {
   return 'none';
 }
 
-function saleDutyStatus(r: OwnerSettlementRow): Exclude<PayoutFilter, 'all'> {
-  if (
-    saleOwnerPayoutSatisfied({
-      listPrice: r.listPrice,
-      amountCollected: r.amountCollected,
-      ownerEarn: r.ownerEarn,
-      ownerPaid: r.ownerPaid,
-    })
-  ) {
-    return 'full';
-  }
-  return ownerPayoutStatus({
-    ownerEarn: r.ownerEarn,
-    ownerPaid: r.ownerPaid,
-  });
-}
-
 export function OwnerSettlementsList({
   rows,
   payout,
@@ -121,8 +97,8 @@ export function OwnerSettlementsList({
 
   const PAYOUT_BADGE = {
     none: { label: t('notPaid'), color: 'red' as const },
-    partial: { label: t('partial'), color: 'yellow' as const },
-    full: { label: t('paidFull'), color: 'vbnbGreen' as const },
+    partial: { label: t('paidHalf'), color: 'yellow' as const },
+    full: { label: t('paidFull'), color: 'teal' as const },
   };
 
   const [query, setQuery] = useState('');
@@ -262,16 +238,9 @@ export function OwnerSettlementsList({
             </Table.Thead>
             <Table.Tbody>
               {filtered.map((b, i) => {
-                const payoutStatus = saleDutyStatus(b);
+                const payoutStatus = payoutGroup(b);
                 const payoutMeta = PAYOUT_BADGE[payoutStatus];
                 const remaining = Math.max(0, b.ownerEarn - b.ownerPaid);
-                const caseA = isGuestDepositCase(b.listPrice, b.amountCollected);
-                const saleDone = saleOwnerPayoutSatisfied({
-                  listPrice: b.listPrice,
-                  amountCollected: b.amountCollected,
-                  ownerEarn: b.ownerEarn,
-                  ownerPaid: b.ownerPaid,
-                });
                 const memo = ownerTransferMemo(b.id);
                 const open = openId === b.id;
 
@@ -319,15 +288,11 @@ export function OwnerSettlementsList({
                       <Table.Td>
                         <Text
                           size="sm"
-                          c={
-                            saleDone
-                              ? 'vbnbGreen.6'
-                              : remaining > 0
-                                ? 'red'
-                                : 'vbnbGreen.6'
-                          }
+                          c={remaining > 0 ? 'red' : 'vbnbGreen.6'}
                         >
-                        {caseA && saleDone ? '50%' : formatNumber(remaining)}
+                          {payoutStatus === 'partial'
+                            ? '50%'
+                            : formatNumber(remaining)}
                         </Text>
                       </Table.Td>
                       <Table.Td>
@@ -371,7 +336,7 @@ export function OwnerSettlementsList({
                             {b.tierLabel}
                             {b.salePhone ? ` · ${b.salePhone}` : ''}
                           </Text>
-                          {caseA && saleDone ? (
+                          {payoutStatus === 'partial' ? (
                             <Text size="sm" mt="xs">
                               {t('doneGuestPays')}
                             </Text>
@@ -392,6 +357,8 @@ export function OwnerSettlementsList({
                               listPrice={b.listPrice}
                               amountCollected={b.amountCollected}
                               guestPaidOwner={b.guestPaidOwner}
+                              ownerEarn={b.ownerEarn}
+                              ownerPaid={b.ownerPaid}
                               payout={payout}
                             />
                             {b.status === 'CHECKED_OUT' ? (

@@ -103,6 +103,8 @@ export async function PATCH(request: Request) {
           ? t('INVALID_STATUS.checkIn')
           : result.error === 'GUEST_BALANCE_DUE'
             ? t('GUEST_BALANCE_DUE')
+            : result.error === 'OWNER_EARN_DUE'
+              ? t('OWNER_EARN_DUE')
             : result.error === 'AMOUNT_REGRESSION'
               ? t('AMOUNT_REGRESSION.checkIn')
               : result.error === 'ABOVE_REMAINDER'

@@ -16,6 +16,16 @@ export const bookingStatusColors = {
     text: colors.primaryDark,
     border: '#D5E0D6',
   },
+  checkedIn: {
+    bg: '#E7F0F6',
+    text: '#2F5670',
+    border: '#C5D6E4',
+  },
+  checkedOut: {
+    bg: '#F3F1EC',
+    text: '#5C5348',
+    border: '#E0D8CC',
+  },
   selected: {
     bg: colors.primary,
     text: '#FFFFFF',

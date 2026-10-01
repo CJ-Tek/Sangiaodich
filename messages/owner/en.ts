@@ -193,6 +193,7 @@ export const ownerEn = {
     notPaid: 'Not paid',
     partial: 'Partially paid',
     paidFull: 'Fully paid',
+    paidHalf: '50%',
     filterAll: 'All ({count})',
     filterNone: 'Unpaid ({count})',
     filterPartial: '50% ({count})',
@@ -229,7 +230,7 @@ export const ownerEn = {
     colVilla: 'Villa',
     colSale: 'Sale',
     colPaid: 'Sale paid',
-    colDue: 'Owner due',
+    colDue: 'Still owed',
     colStatus: 'Status',
   },
   calendar: {
@@ -325,5 +326,7 @@ export const ownerEn = {
     receivedRemainder: 'Received remainder from guest',
     confirmRemainder:
       'Confirm remainder received before check-in',
+    needOwnerPaid:
+      'Sale must transfer the full owner amount before check-in',
   },
 } as const;

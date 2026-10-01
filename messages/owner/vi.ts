@@ -193,6 +193,7 @@ export const ownerVi = {
     notPaid: 'Chưa CK',
     partial: 'CK một phần',
     paidFull: 'Đã đủ CK',
+    paidHalf: '50%',
     filterAll: 'Tất cả ({count})',
     filterNone: 'Chưa ({count})',
     filterPartial: '50% ({count})',
@@ -229,7 +230,7 @@ export const ownerVi = {
     colVilla: 'Căn',
     colSale: 'Sale',
     colPaid: 'Sale đã CK',
-    colDue: 'Chủ nhà',
+    colDue: 'Còn thiếu',
     colStatus: 'Trạng thái',
   },
   calendar: {
@@ -325,5 +326,7 @@ export const ownerVi = {
     receivedRemainder: 'Đã nhận CK phần còn lại từ khách',
     confirmRemainder:
       'Xác nhận đã nhận CK phần còn lại trước khi check-in',
+    needOwnerPaid:
+      'Sale phải chuyển đủ phần chủ nhà trước khi check-in',
   },
 } as const;

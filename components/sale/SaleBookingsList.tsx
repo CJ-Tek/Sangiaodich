@@ -10,9 +10,10 @@ import {
   Button,
   Pagination,
   Table,
+  Select,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useFormat } from '@/lib/i18n/use-format';
 import { colors, radius } from '@/config/design-tokens';
 import { BookingStatusBadge } from '@/components/bookings/BookingStatusBadge';
@@ -21,6 +22,9 @@ import { GuestCollectedUpdate } from '@/components/sale/GuestCollectedUpdate';
 import { OwnerPayoutCard } from '@/components/sale/OwnerPayoutCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { matchesSaleBookingSearch } from '@/lib/engines/booking-search';
+import { guestRemaining } from '@/lib/engines/guest-balance';
+import { minOwnerDepositToConfirm } from '@/lib/engines/pricing';
+import { locationMatchesCity, vnCityOptions } from '@/lib/geo/vn-cities';
 import type { OwnerPayoutInfo } from '@/lib/owner/payout-info';
 
 export type SaleBookingListItem = {
@@ -29,6 +33,7 @@ export type SaleBookingListItem = {
   check_in: string;
   check_out: string;
   villaTitle: string;
+  location: string | null;
   guestName: string;
   guestPhone: string;
   ownerName: string;
@@ -39,6 +44,7 @@ export type SaleBookingListItem = {
   ownerEarn: number;
   ownerPaid: number;
   amountCollected: number | null;
+  guestPaidOwner: number;
   refund_amount: number | null;
   refund_kept_amount: number | null;
   refund_percent: number | null;
@@ -60,6 +66,19 @@ function copyPhone(phone: string, copiedMessage: string) {
 
 const PAGE_SIZE = 10;
 
+type OwnerTransfer = 'none' | 'half' | 'full';
+type GuestPay = 'paid' | 'due';
+
+function ownerTransfer(b: SaleBookingListItem): OwnerTransfer | 'partial' {
+  const earn = Math.max(0, b.ownerEarn);
+  const paid = Math.max(0, b.ownerPaid);
+  if (earn > 0 && paid >= earn) return 'full';
+  if (earn <= 0) return 'full';
+  if (paid <= 0) return 'none';
+  if (paid >= minOwnerDepositToConfirm(earn)) return 'half';
+  return 'partial';
+}
+
 export function SaleBookingsList({
   items,
   emptyTitle,
@@ -72,30 +91,58 @@ export function SaleBookingsList({
   simpleUi?: boolean;
 }) {
   const t = useTranslations('sale.bookings');
+  const locale = useLocale();
   const { formatNumber } = useFormat();
+  const cityOptions = vnCityOptions(locale);
   const [query, setQuery] = useState('');
+  const [owner, setOwner] = useState<string | null>(null);
+  const [city, setCity] = useState<string | null>(null);
+  const [transfer, setTransfer] = useState<string | null>(null);
+  const [guestPay, setGuestPay] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [openId, setOpenId] = useState<string | null>(null);
 
+  const ownerOptions = useMemo(() => {
+    const names = new Set(
+      items.map((b) => b.ownerName).filter((name) => name && name !== '—')
+    );
+    return [...names].sort().map((value) => ({ value, label: value }));
+  }, [items]);
+
   const filtered = useMemo(
     () =>
-      items.filter((b) =>
-        matchesSaleBookingSearch(query, {
-          villaTitle: b.villaTitle,
-          guestName: b.guestName,
-          guestPhone: b.guestPhone,
-          bookingId: b.id,
-        })
-      ),
-    [items, query]
+      items.filter((b) => {
+        if (
+          !matchesSaleBookingSearch(query, {
+            villaTitle: b.villaTitle,
+            guestName: b.guestName,
+            guestPhone: b.guestPhone,
+            bookingId: b.id,
+          })
+        ) {
+          return false;
+        }
+        if (owner && b.ownerName !== owner) return false;
+        if (city && !locationMatchesCity(b.location, city)) return false;
+        if (transfer && ownerTransfer(b) !== transfer) return false;
+        if (guestPay) {
+          const due =
+            guestRemaining(b.list, b.amountCollected || 0, b.guestPaidOwner) > 0;
+          if (guestPay === 'due' && !due) return false;
+          if (guestPay === 'paid' && due) return false;
+        }
+        return true;
+      }),
+    [items, query, owner, city, transfer, guestPay]
   );
 
   const q = query.trim();
+  const filtersActive = Boolean(q || owner || city || transfer || guestPay);
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 
   useEffect(() => {
     setPage(1);
-  }, [query, items]);
+  }, [query, owner, city, transfer, guestPay, items]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
@@ -108,19 +155,66 @@ export function SaleBookingsList({
 
   return (
     <Stack gap="md">
-      <TextInput
-        label={t('searchLabel')}
-        placeholder={t('searchPlaceholder')}
-        value={query}
-        onChange={(e) => setQuery(e.currentTarget.value)}
-        style={{ maxWidth: 420 }}
-      />
+      <Group gap="sm" align="flex-end" wrap="wrap">
+        <TextInput
+          label={t('searchLabel')}
+          placeholder={t('searchPlaceholder')}
+          value={query}
+          onChange={(e) => setQuery(e.currentTarget.value)}
+          style={{ flex: 1, minWidth: 220 }}
+        />
+        <Select
+          label={t('filterOwner')}
+          placeholder={t('filterOwnerAll')}
+          clearable
+          searchable
+          value={owner}
+          onChange={setOwner}
+          data={ownerOptions}
+          w={180}
+        />
+        <Select
+          label={t('filterCity')}
+          placeholder={t('filterCityAll')}
+          clearable
+          searchable
+          value={city}
+          onChange={setCity}
+          data={cityOptions}
+          w={200}
+        />
+        <Select
+          label={t('filterTransfer')}
+          placeholder={t('filterTransferAll')}
+          clearable
+          value={transfer}
+          onChange={setTransfer}
+          data={[
+            { value: 'none', label: t('filterTransferNone') },
+            { value: 'half', label: t('filterTransferHalf') },
+            { value: 'full', label: t('filterTransferFull') },
+          ] satisfies { value: OwnerTransfer; label: string }[]}
+          w={180}
+        />
+        <Select
+          label={t('filterGuestPay')}
+          placeholder={t('filterGuestPayAll')}
+          clearable
+          value={guestPay}
+          onChange={setGuestPay}
+          data={[
+            { value: 'paid', label: t('filterGuestPaid') },
+            { value: 'due', label: t('filterGuestDue') },
+          ] satisfies { value: GuestPay; label: string }[]}
+          w={180}
+        />
+      </Group>
       {!filtered.length ? (
         <EmptyState
-          title={q ? t('notFound') : emptyTitle}
-          description={q ? t('notFoundHint') : emptyDescription}
-          actionLabel={q ? undefined : t('exploreMarketplace')}
-          href={q ? undefined : '/sale/marketplace'}
+          title={filtersActive ? t('notFound') : emptyTitle}
+          description={filtersActive ? t('notFoundHint') : emptyDescription}
+          actionLabel={filtersActive ? undefined : t('exploreMarketplace')}
+          href={filtersActive ? undefined : '/sale/marketplace'}
         />
       ) : (
         <>
@@ -133,14 +227,24 @@ export function SaleBookingsList({
                   <Table.Th>{t('guestLabel')}</Table.Th>
                   <Table.Th>{t('ownerLabel')}</Table.Th>
                   <Table.Th>{t('listPrice')}</Table.Th>
+                  <Table.Th>{t('colGuestPaid')}</Table.Th>
                   <Table.Th>{t('margin')}</Table.Th>
-                  <Table.Th>{t('colStatus')}</Table.Th>
+                  <Table.Th style={{ whiteSpace: 'nowrap', width: 'max-content' }}>
+                    {t('colStatus')}
+                  </Table.Th>
                 </Table.Tr>
               </Table.Thead>
               <Table.Tbody>
                 {pageItems.map((b, i) => {
                   const open = openId === b.id;
                   const order = (page - 1) * PAGE_SIZE + i + 1;
+                  const guestPaid =
+                    (b.amountCollected || 0) + (b.guestPaidOwner || 0);
+                  const guestDue = guestRemaining(
+                    b.list,
+                    b.amountCollected || 0,
+                    b.guestPaidOwner || 0
+                  );
                   return (
                     <Fragment key={b.id}>
                       <Table.Tr
@@ -178,18 +282,32 @@ export function SaleBookingsList({
                           </Text>
                         </Table.Td>
                         <Table.Td>
+                          <Text
+                            size="sm"
+                            fw={600}
+                            c={guestDue > 0 ? undefined : 'vbnbGreen.6'}
+                          >
+                            {formatNumber(guestPaid)}
+                          </Text>
+                          <Text size="xs" c={guestDue > 0 ? 'red' : 'dimmed'}>
+                            {guestDue > 0
+                              ? t('guestDueLine', { amount: formatNumber(guestDue) })
+                              : t('filterGuestPaid')}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
                           <Text size="sm" fw={600} c="vbnbGreen.6">
                             {formatNumber(b.margin)}
                           </Text>
                         </Table.Td>
-                        <Table.Td>
+                        <Table.Td style={{ whiteSpace: 'nowrap', width: 'max-content' }}>
                           <BookingStatusBadge status={b.status} />
                         </Table.Td>
                       </Table.Tr>
                       {open ? (
                         <Table.Tr>
                           <Table.Td
-                            colSpan={7}
+                            colSpan={8}
                             style={{ background: colors.surfaceMuted }}
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -202,11 +320,11 @@ export function SaleBookingsList({
                                   onClick={() =>
                                     copyPhone(
                                       b.guestPhone,
-                                      t('copiedPhone', { label: 'khách' })
+                                      t('copiedPhone', { label: t('guestLabel') })
                                     )
                                   }
                                 >
-                                  {t('copyPhone')}
+                                  {t('copyGuestPhone')}
                                 </Button>
                                 <Button
                                   size="compact-xs"
@@ -215,11 +333,11 @@ export function SaleBookingsList({
                                   onClick={() =>
                                     copyPhone(
                                       b.ownerPhone,
-                                      t('copiedPhone', { label: 'chủ nhà' })
+                                      t('copiedPhone', { label: t('ownerLabel') })
                                     )
                                   }
                                 >
-                                  {t('copyPhone')}
+                                  {t('copyOwnerPhone')}
                                 </Button>
                                 <Text size="sm" c="dimmed">
                                   {t('floor')} {formatNumber(b.floor)}

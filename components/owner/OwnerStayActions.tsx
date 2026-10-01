@@ -36,6 +36,8 @@ export function OwnerStayActions({
   listPrice,
   amountCollected,
   guestPaidOwner,
+  ownerEarn,
+  ownerPaid,
   payout,
 }: {
   bookingId: string;
@@ -43,6 +45,8 @@ export function OwnerStayActions({
   listPrice: number;
   amountCollected: number;
   guestPaidOwner: number;
+  ownerEarn: number;
+  ownerPaid: number;
   payout: OwnerPayoutInfo;
 }) {
   const t = useTranslations('owner.stayActions');
@@ -58,6 +62,7 @@ export function OwnerStayActions({
     amountCollected,
     guestPaidOwner
   );
+  const ownerShort = ownerEarn > 0 && ownerPaid < ownerEarn;
   const remainderTarget = Math.max(0, listPrice - amountCollected);
   const memo = ownerTransferMemo(bookingId);
   const payoutReady = hasOwnerPayoutInfo(payout);
@@ -161,12 +166,25 @@ export function OwnerStayActions({
         />
       ) : null}
 
+      {ownerShort ? (
+        <Text size="sm" c="dimmed">
+          {t('needOwnerPaid')}
+        </Text>
+      ) : null}
+
       <Button
         size="xs"
         color="vbnbGreen"
         loading={loading}
-        disabled={caseA && remaining > 0 && !received}
+        disabled={(caseA && remaining > 0 && !received) || ownerShort}
         onClick={() => {
+          if (ownerShort) {
+            notifications.show({
+              color: 'yellow',
+              message: t('needOwnerPaid'),
+            });
+            return;
+          }
           if (caseA && remaining > 0 && !received) {
             notifications.show({
               color: 'yellow',

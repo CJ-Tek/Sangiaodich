@@ -8,17 +8,19 @@ import { getBookingStatusLabel } from '@/lib/i18n/booking-status';
 export function BookingStatusBadge({ status }: { status: string }) {
   const t = useTranslations('bookingStatus');
   const key =
-    status === 'CONFIRMED' || status === 'CHECKED_IN'
+    status === 'CONFIRMED'
       ? 'confirmed'
-      : status === 'CHECKED_OUT'
-        ? 'selected'
-        : status === 'PENDING'
-          ? 'hold'
-          : status === 'AWAITING_OWNER'
-            ? 'depositPending'
-            : status === 'CANCELLED'
-              ? 'cancelled'
-              : 'blocked';
+      : status === 'CHECKED_IN'
+        ? 'checkedIn'
+        : status === 'CHECKED_OUT'
+          ? 'checkedOut'
+          : status === 'PENDING'
+            ? 'hold'
+            : status === 'AWAITING_OWNER'
+              ? 'depositPending'
+              : status === 'CANCELLED'
+                ? 'cancelled'
+                : 'blocked';
   const colors = bookingStatusColors[key];
   return (
     <Badge
@@ -28,6 +30,14 @@ export function BookingStatusBadge({ status }: { status: string }) {
           background: colors.bg,
           color: colors.text,
           borderColor: colors.border,
+          maxWidth: 'none',
+          overflow: 'visible',
+          flexShrink: 0,
+        },
+        label: {
+          overflow: 'visible',
+          textOverflow: 'unset',
+          whiteSpace: 'nowrap',
         },
       }}
     >

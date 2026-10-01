@@ -765,6 +765,12 @@ export async function checkInBooking(input: {
     return { error: 'GUEST_BALANCE_DUE' as const };
   }
 
+  const ownerEarn = Number(booking.owner_earn_snapshot || 0);
+  const ownerPaid = Number(booking.owner_paid_amount || 0);
+  if (ownerEarn > 0 && ownerPaid < ownerEarn) {
+    return { error: 'OWNER_EARN_DUE' as const };
+  }
+
   const now = new Date().toISOString();
   const { data, error } = await admin
     .from('bookings')

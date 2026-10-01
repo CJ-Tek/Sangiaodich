@@ -601,6 +601,7 @@ const messages = {
     "LOCKED_AFTER_CONFIRM": "Sau khi Owner chốt, phần còn lại khách CK chủ nhà lúc check-in",
     "ABOVE_OWNER_EARN": "Không ghi nhận vượt phần Owner earn",
     "GUEST_BALANCE_DUE": "Khách chưa chuyển đủ phần còn lại — không check-in được",
+    "OWNER_EARN_DUE": "Sale chưa chuyển đủ phần chủ nhà — không check-in được",
     "ABOVE_REMAINDER": "Không ghi nhận vượt phần khách còn nợ",
     "ALREADY_PAID": "Khách đã đủ giá bán",
     "NO_PAYOUT": "Chưa cấu hình STK — vào Profile để điền tài khoản nhận tiền",
