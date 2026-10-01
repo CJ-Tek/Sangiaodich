@@ -627,6 +627,13 @@ describe('booking list search', () => {
     };
     expect(matchesOwnerSettlementSearch('', row)).toBe(true);
     expect(matchesOwnerSettlementSearch('biển', row)).toBe(true);
+    expect(matchesOwnerSettlementSearch('bien', row)).toBe(true);
+    expect(
+      matchesOwnerSettlementSearch('son', {
+        ...row,
+        villaTitle: 'Căn hộ Sơn Trà',
+      })
+    ).toBe(true);
     expect(matchesOwnerSettlementSearch('sale demo', row)).toBe(true);
     expect(matchesOwnerSettlementSearch('0365210936', row)).toBe(true);
     expect(matchesOwnerSettlementSearch('zzz', row)).toBe(false);

@@ -1,8 +1,9 @@
 import { phoneFieldMatch } from '@/lib/phone/vn-search';
+import { foldVn } from '@/lib/search/vn-fold';
 
 function textIncludes(haystack: string | null | undefined, q: string): boolean {
   if (!haystack) return false;
-  return haystack.toLowerCase().includes(q);
+  return foldVn(haystack).includes(foldVn(q));
 }
 
 /** Một mã CK cho Guest→Sale và Sale→Owner. */

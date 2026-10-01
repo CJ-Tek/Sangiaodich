@@ -88,6 +88,8 @@ export const saleEn = {
     villaFallback: 'Villa',
     guestFallback: 'Guest',
     ownerFallback: 'Owner',
+    colVilla: 'Villa',
+    colStatus: 'Status',
     monthAria: 'Month',
     yearAria: 'Year',
     months: {
@@ -155,6 +157,12 @@ export const saleEn = {
     notFoundHint:
       'Try another name or phone — guest may be under Saved / Cancelled tabs.',
     totalSpend: 'Total spend (net)',
+    colName: 'Guest',
+    colPhone: 'Phone',
+    colTier: 'Tier',
+    colBookings: 'Bookings',
+    colChannel: 'Channel',
+    colActions: 'Actions',
     bookingCount: '{count} bookings',
     tierMax: 'Already at highest tier.',
     tierProgress:
@@ -191,6 +199,14 @@ export const saleEn = {
     viewProperty: 'View property',
     saveFollowUp: 'Save for follow-up',
     leadFrom: 'Lead from {asset}',
+    searchLabel: 'Search',
+    searchPlaceholder: 'Guest, phone, or villa...',
+    notFound: 'No leads found',
+    notFoundHint: 'Try another guest, phone, or villa name.',
+    colGuest: 'Guest',
+    colVilla: 'Villa',
+    colPhone: 'Phone',
+    colWhen: 'When',
   },
   marketplace: {
     title: 'Marketplace',

@@ -5,6 +5,7 @@ import {
   Group,
   Paper,
   Stack,
+  Table,
   Tabs,
   Text,
   TextInput,
@@ -104,54 +105,57 @@ export function SaleCustomersTabs({
               description={t('notFoundHint')}
             />
           ) : (
-            <Stack gap="sm">
-              {filteredClosed.map((c) => (
-                <Paper
-                  key={c.guestId}
-                  p="lg"
-                  radius={radius.lg}
-                  style={{ border: `1px solid ${colors.border}` }}
-                >
-                  <Group
-                    justify="space-between"
-                    align="flex-start"
-                    wrap="wrap"
-                  >
-                    <Stack gap={4}>
-                      <Text fw={600} size="lg">
-                        {c.fullName}
-                      </Text>
-                      <Text size="sm" c="dimmed">
-                        {c.phone}
-                      </Text>
-                      <Group gap="xs" mt={4}>
+            <Paper radius={radius.lg} style={{ border: `1px solid ${colors.border}` }}>
+              <Table highlightOnHover horizontalSpacing="md" verticalSpacing="sm">
+                <Table.Thead style={{ background: colors.surfaceMuted }}>
+                  <Table.Tr>
+                    <Table.Th>{t('colName')}</Table.Th>
+                    <Table.Th>{t('colPhone')}</Table.Th>
+                    <Table.Th>{t('colTier')}</Table.Th>
+                    <Table.Th>{t('totalSpend')}</Table.Th>
+                    <Table.Th>{t('colBookings')}</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {filteredClosed.map((c) => (
+                    <Table.Tr key={c.guestId}>
+                      <Table.Td>
+                        <Text size="sm" fw={600}>
+                          {c.fullName}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {c.atMaxTier
+                            ? t('tierMax')
+                            : t('tierProgress', {
+                                bookings: c.remainingBooks ?? 0,
+                                amount: formatNumber(c.remainingGmv || 0),
+                                tier: c.nextTierLabel ?? '',
+                              })}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm">{c.phone}</Text>
+                      </Table.Td>
+                      <Table.Td>
                         <Badge color="vbnbGreen" variant="light">
                           {c.tierLabel}
                         </Badge>
-                      </Group>
-                    </Stack>
-                    <Stack gap={2} align="flex-end">
-                      <Text size="xs" c="dimmed">
-                        {t('totalSpend')}
-                      </Text>
-                      <Text fw={600}>{formatNumber(c.totalPaidNet)}</Text>
-                      <Text size="xs" c="dimmed">
-                        {t('bookingCount', { count: c.bookingCount })}
-                      </Text>
-                    </Stack>
-                  </Group>
-                  <Text size="sm" mt="md">
-                    {c.atMaxTier
-                      ? t('tierMax')
-                      : t('tierProgress', {
-                          bookings: c.remainingBooks ?? 0,
-                          amount: formatNumber(c.remainingGmv || 0),
-                          tier: c.nextTierLabel ?? '',
-                        })}
-                  </Text>
-                </Paper>
-              ))}
-            </Stack>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm" fw={600}>
+                          {formatNumber(c.totalPaidNet)}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm">
+                          {t('bookingCount', { count: c.bookingCount })}
+                        </Text>
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </Paper>
           )}
         </Tabs.Panel>
 
@@ -167,81 +171,83 @@ export function SaleCustomersTabs({
               description={t('notFoundHint')}
             />
           ) : (
-            <Stack gap="sm">
-              {filteredSaved.map((c) => (
-                <Paper
-                  key={c.id}
-                  p="lg"
-                  radius={radius.lg}
-                  style={{ border: `1px solid ${colors.border}` }}
-                >
-                  <Group
-                    justify="space-between"
-                    align="flex-start"
-                    wrap="wrap"
-                    mb="sm"
-                  >
-                    <Stack gap={4}>
-                      <Text fw={600} size="lg">
-                        {c.full_name}
-                      </Text>
-                      <Text size="sm" c="dimmed">
-                        {c.phone}
-                      </Text>
-                      <Group gap="xs" mt={4}>
-                        <Badge variant="light">{c.channel}</Badge>
-                        <Badge
-                          color={
-                            c.intent_level === 'HOT'
-                              ? 'red'
-                              : c.intent_level === 'WARM'
-                                ? 'yellow'
-                                : 'gray'
-                          }
-                          variant="light"
-                        >
-                          {c.intent_level}
-                        </Badge>
-                        <Badge
-                          color={
-                            c.status === 'ACTIVE'
-                              ? 'vbnbGreen'
-                              : c.status === 'CONVERTED'
-                                ? 'blue'
-                                : 'gray'
-                          }
-                          variant="light"
-                        >
-                          {c.status}
-                        </Badge>
-                      </Group>
-                    </Stack>
-                    <Stack gap={2} align="flex-end">
-                      <Text size="xs" c="dimmed">
-                        Follow-up
-                      </Text>
-                      <Text size="sm">
-                        {c.next_follow_up_at
-                          ? formatDateTime(c.next_follow_up_at)
-                          : '—'}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        Liên hệ gần nhất:{' '}
-                        {c.last_contact_at
-                          ? formatDateTime(c.last_contact_at)
-                          : '—'}
-                      </Text>
-                    </Stack>
-                  </Group>
-                  {c.note ? (
-                    <Text size="sm" c="dimmed" mb="sm">
-                      {c.note}
-                    </Text>
-                  ) : null}
-                  <SavedCustomerActions customer={c} />
-                </Paper>
-              ))}
-            </Stack>
+            <Paper radius={radius.lg} style={{ border: `1px solid ${colors.border}` }}>
+              <Table highlightOnHover horizontalSpacing="md" verticalSpacing="sm">
+                <Table.Thead style={{ background: colors.surfaceMuted }}>
+                  <Table.Tr>
+                    <Table.Th>{t('colName')}</Table.Th>
+                    <Table.Th>{t('colPhone')}</Table.Th>
+                    <Table.Th>{t('colChannel')}</Table.Th>
+                    <Table.Th>{t('followUp')}</Table.Th>
+                    <Table.Th>{t('colActions')}</Table.Th>
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {filteredSaved.map((c) => (
+                    <Table.Tr key={c.id}>
+                      <Table.Td>
+                        <Text size="sm" fw={600}>
+                          {c.full_name}
+                        </Text>
+                        {c.note ? (
+                          <Text size="xs" c="dimmed">
+                            {c.note}
+                          </Text>
+                        ) : null}
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm">{c.phone}</Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Group gap={6}>
+                          <Badge variant="light">{c.channel}</Badge>
+                          <Badge
+                            color={
+                              c.intent_level === 'HOT'
+                                ? 'red'
+                                : c.intent_level === 'WARM'
+                                  ? 'yellow'
+                                  : 'gray'
+                            }
+                            variant="light"
+                          >
+                            {c.intent_level}
+                          </Badge>
+                          <Badge
+                            color={
+                              c.status === 'ACTIVE'
+                                ? 'vbnbGreen'
+                                : c.status === 'CONVERTED'
+                                  ? 'blue'
+                                  : 'gray'
+                            }
+                            variant="light"
+                          >
+                            {c.status}
+                          </Badge>
+                        </Group>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm">
+                          {c.next_follow_up_at
+                            ? formatDateTime(c.next_follow_up_at)
+                            : '—'}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {t('lastContact')}{' '}
+                          {c.last_contact_at
+                            ? formatDateTime(c.last_contact_at)
+                            : '—'}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td onClick={(e) => e.stopPropagation()}>
+                        <SavedCustomerActions customer={c} />
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </Paper>
           )}
         </Tabs.Panel>
 
@@ -257,66 +263,67 @@ export function SaleCustomersTabs({
               description={t('notFoundHint')}
             />
           ) : (
-            <Stack gap="sm">
-              {filteredCancelled.map((c) => (
-                <Paper
-                  key={c.guestId}
-                  p="lg"
-                  radius={radius.lg}
-                  style={{ border: `1px solid ${colors.border}` }}
-                >
-                  <Group
-                    justify="space-between"
-                    align="flex-start"
-                    wrap="wrap"
-                  >
-                    <Stack gap={4}>
-                      <Text fw={600} size="lg">
-                        {c.fullName}
-                      </Text>
-                      <Text size="sm" c="dimmed">
-                        {c.phone}
-                      </Text>
-                      <Text size="sm" mt={4}>
-                        {c.lastAssetTitle || t('bookingLabel')}
-                        {' · '}
-                        {t('cancelCount', { count: c.cancelCount })}
-                      </Text>
-                    </Stack>
-                    <Stack gap={2} align="flex-end">
-                      <Text size="xs" c="dimmed">
-                        {t('lastCancelled')}
-                      </Text>
-                      <Text size="sm">
-                        {c.lastCancelledAt
-                          ? formatDateTime(c.lastCancelledAt)
-                          : '—'}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {t('refundShort', {
-                          refund: formatNumber(c.lastRefundAmount),
-                          kept: formatNumber(c.lastKeptAmount),
-                        })}
-                      </Text>
-                    </Stack>
-                  </Group>
-                  <Group mt="md">
-                    <SaveCustomerButton
-                      label={t('saveFollowUp')}
-                      size="xs"
-                      variant="light"
-                      initial={{
-                        fullName: c.fullName,
-                        phone: c.phone,
-                        note: t('cancelledAsset', {
-                          asset: c.lastAssetTitle || 'booking',
-                        }),
-                      }}
-                    />
-                  </Group>
-                </Paper>
-              ))}
-            </Stack>
+            <Paper radius={radius.lg} style={{ border: `1px solid ${colors.border}` }}>
+              <Table highlightOnHover horizontalSpacing="md" verticalSpacing="sm">
+                <Table.Thead style={{ background: colors.surfaceMuted }}>
+                  <Table.Tr>
+                    <Table.Th>{t('colName')}</Table.Th>
+                    <Table.Th>{t('colPhone')}</Table.Th>
+                    <Table.Th>{t('bookingLabel')}</Table.Th>
+                    <Table.Th>{t('lastCancelled')}</Table.Th>
+                    <Table.Th />
+                  </Table.Tr>
+                </Table.Thead>
+                <Table.Tbody>
+                  {filteredCancelled.map((c) => (
+                    <Table.Tr key={c.guestId}>
+                      <Table.Td>
+                        <Text size="sm" fw={600}>
+                          {c.fullName}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm">{c.phone}</Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm">
+                          {c.lastAssetTitle || t('bookingLabel')}
+                        </Text>
+                        <Text size="xs" c="dimmed">
+                          {t('cancelCount', { count: c.cancelCount })}
+                          {' · '}
+                          {t('refundShort', {
+                            refund: formatNumber(c.lastRefundAmount),
+                            kept: formatNumber(c.lastKeptAmount),
+                          })}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm">
+                          {c.lastCancelledAt
+                            ? formatDateTime(c.lastCancelledAt)
+                            : '—'}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td>
+                        <SaveCustomerButton
+                          label={t('saveFollowUp')}
+                          size="xs"
+                          variant="light"
+                          initial={{
+                            fullName: c.fullName,
+                            phone: c.phone,
+                            note: t('cancelledAsset', {
+                              asset: c.lastAssetTitle || 'booking',
+                            }),
+                          }}
+                        />
+                      </Table.Td>
+                    </Table.Tr>
+                  ))}
+                </Table.Tbody>
+              </Table>
+            </Paper>
           )}
         </Tabs.Panel>
       </Tabs>

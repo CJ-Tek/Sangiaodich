@@ -1,4 +1,5 @@
 import { digitsOnly, phoneFieldMatch } from '@/lib/phone/vn-search';
+import { foldVn } from '@/lib/search/vn-fold';
 
 export { digitsOnly };
 
@@ -75,7 +76,7 @@ export function matchesCustomerSearch(
 ): boolean {
   const q = query.trim().toLowerCase();
   if (!q) return true;
-  if (fullName.toLowerCase().includes(q)) return true;
+  if (foldVn(fullName).includes(foldVn(q))) return true;
   if (phoneFieldMatch(q, phone)) return true;
   return false;
 }

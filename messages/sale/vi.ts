@@ -89,6 +89,8 @@ export const saleVi = {
     villaFallback: 'Villa',
     guestFallback: 'Khách',
     ownerFallback: 'Chủ nhà',
+    colVilla: 'Căn',
+    colStatus: 'Trạng thái',
     monthAria: 'Tháng',
     yearAria: 'Năm',
     months: {
@@ -157,6 +159,12 @@ export const saleVi = {
     notFoundHint:
       'Thử tên hoặc số điện thoại khác — khách có thể còn ở tab Đã lưu / Đã hủy.',
     totalSpend: 'Tổng chi (net)',
+    colName: 'Khách',
+    colPhone: 'SĐT',
+    colTier: 'Hạng',
+    colBookings: 'Booking',
+    colChannel: 'Kênh',
+    colActions: 'Thao tác',
     bookingCount: '{count} booking',
     tierMax: 'Đã ở hạng cao nhất.',
     tierProgress:
@@ -193,6 +201,14 @@ export const saleVi = {
     viewProperty: 'Xem căn',
     saveFollowUp: 'Lưu vào follow-up',
     leadFrom: 'Lead từ {asset}',
+    searchLabel: 'Tìm kiếm',
+    searchPlaceholder: 'Tên khách, SĐT, hoặc căn...',
+    notFound: 'Không tìm thấy lead',
+    notFoundHint: 'Thử tên khách, số điện thoại, hoặc tên căn.',
+    colGuest: 'Khách',
+    colVilla: 'Căn',
+    colPhone: 'SĐT',
+    colWhen: 'Thời điểm',
   },
   marketplace: {
     title: 'Sàn',
