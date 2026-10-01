@@ -68,13 +68,13 @@ export default async function SaleBookingsPage({
   let bookingsQuery = admin
     .from('bookings')
     .select(
-      `id, status, check_in, check_out, list_price, amount_collected, asset_id,
+      `id, status, check_in, check_out, list_price, amount_collected, guest_paid_owner_amount, asset_id,
        effective_cost_snapshot, owner_earn_snapshot, owner_paid_amount,
        owner_payout_bank_name_snapshot, owner_payout_account_name_snapshot,
        owner_payout_account_number_snapshot,
        refund_amount, refund_kept_amount, refund_percent, cancellation_policy, cancel_reason,
        assets(
-         title,
+         title, location,
          asset_costs(cost_weekday, cost_weekend),
          profiles!assets_owner_id_fkey(
            full_name, phone,
@@ -137,6 +137,7 @@ export default async function SaleBookingsPage({
   const items: SaleBookingListItem[] = (bookings || []).map((b) => {
     const asset = b.assets as unknown as {
       title: string;
+      location: string | null;
       asset_costs:
         | { cost_weekday: number; cost_weekend: number }
         | { cost_weekday: number; cost_weekend: number }[]
@@ -205,6 +206,7 @@ export default async function SaleBookingsPage({
       check_in: b.check_in,
       check_out: b.check_out,
       villaTitle: asset?.title || t('villaFallback'),
+      location: asset?.location || null,
       guestName: guest?.full_name || t('guestFallback'),
       guestPhone: guest?.phone || '',
       ownerName: owner?.full_name || t('ownerFallback'),
@@ -216,6 +218,7 @@ export default async function SaleBookingsPage({
       ownerPaid,
       amountCollected:
         b.amount_collected != null ? Number(b.amount_collected) : null,
+      guestPaidOwner: Number(b.guest_paid_owner_amount || 0),
       refund_amount: b.refund_amount != null ? Number(b.refund_amount) : null,
       refund_kept_amount:
         b.refund_kept_amount != null ? Number(b.refund_kept_amount) : null,

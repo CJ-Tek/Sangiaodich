@@ -18,7 +18,6 @@ import { colors, radius } from '@/config/design-tokens';
 import { useFormat } from '@/lib/i18n/use-format';
 import { BookingTransferMemo } from '@/components/sale/BookingTransferMemo';
 import { ownerTransferMemo } from '@/lib/engines/booking-search';
-import { saleOwnerPayoutSatisfied } from '@/lib/engines/guest-balance';
 import { minOwnerDepositToConfirm } from '@/lib/engines/pricing';
 import {
   hasOwnerPayoutInfo,
@@ -46,8 +45,6 @@ export function OwnerPayoutCard({
   bookingId,
   ownerEarn,
   ownerPaid,
-  listPrice = 0,
-  amountCollected = 0,
   payout,
   transferHint,
 }: {
@@ -66,12 +63,7 @@ export function OwnerPayoutCard({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const remaining = Math.max(0, ownerEarn - ownerPaid);
-  const dutyDone = saleOwnerPayoutSatisfied({
-    listPrice,
-    amountCollected,
-    ownerEarn,
-    ownerPaid,
-  });
+  const dutyDone = ownerEarn <= 0 || ownerPaid >= ownerEarn;
   const halfCost = minOwnerDepositToConfirm(ownerEarn);
   const depositChunk = Math.min(
     Math.max(0, halfCost - ownerPaid),
@@ -97,11 +89,15 @@ export function OwnerPayoutCard({
     setAmount(Math.min(ownerEarn, ownerPaid + qrChunk));
   }, [preset, ownerPaid, ownerEarn, qrChunk]);
 
+  const halfReached = ownerEarn > 0 && ownerPaid >= halfCost && ownerPaid < ownerEarn;
   const status = ownerPayoutStatus({ ownerEarn, ownerPaid });
   const statusMeta = {
     none: { label: t('notPaid'), color: 'red' as const },
-    partial: { label: t('partial'), color: 'yellow' as const },
-    full: { label: t('paidFull'), color: 'vbnbGreen' as const },
+    partial: {
+      label: halfReached ? t('paidHalf') : t('partial'),
+      color: 'yellow' as const,
+    },
+    full: { label: t('paidFull'), color: 'teal' as const },
   };
   const meta = statusMeta[status];
   const hasBank = hasOwnerPayoutInfo(payout);
@@ -172,7 +168,7 @@ export function OwnerPayoutCard({
           <>
             <BookingTransferMemo bookingId={bookingId} transferHint={hint} />
             <Text size="sm" fw={600} c="vbnbGreen.6">
-              {remaining > 0 ? t('paidHalfNote') : t('youPaidFull')}
+              {t('youPaidFull')}
             </Text>
           </>
         ) : (
