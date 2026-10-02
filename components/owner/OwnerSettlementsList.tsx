@@ -312,7 +312,14 @@ export function OwnerSettlementsList({
                       </Table.Td>
                       <Table.Td>
                         <Group gap={6} wrap="wrap">
-                          <Badge color={payoutMeta.color} variant="light">
+                          <Badge
+                            color={payoutMeta.color}
+                            variant="filled"
+                            size="md"
+                            styles={{
+                              label: { fontWeight: 700, fontSize: 13 },
+                            }}
+                          >
                             {payoutMeta.label}
                           </Badge>
                           <BookingStatusBadge status={b.status} />

@@ -83,11 +83,23 @@ function StatusBadge({
   return (
     <Badge
       variant="outline"
+      size="md"
       styles={{
         root: {
           background: tone.bg,
           color: tone.text,
           borderColor: tone.border,
+          borderWidth: 1,
+          fontWeight: 700,
+          textTransform: 'none',
+          height: 'auto',
+          paddingInline: 10,
+        },
+        label: {
+          color: tone.text,
+          fontSize: 13,
+          fontWeight: 700,
+          lineHeight: 1.35,
         },
       }}
     >
