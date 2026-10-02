@@ -103,15 +103,17 @@ export async function PATCH(request: Request) {
           ? t('INVALID_STATUS.checkIn')
           : result.error === 'GUEST_BALANCE_DUE'
             ? t('GUEST_BALANCE_DUE')
-            : result.error === 'OWNER_EARN_DUE'
-              ? t('OWNER_EARN_DUE')
-            : result.error === 'AMOUNT_REGRESSION'
-              ? t('AMOUNT_REGRESSION.checkIn')
-              : result.error === 'ABOVE_REMAINDER'
-                ? t('ABOVE_REMAINDER')
-                : result.error === 'FORBIDDEN'
-                  ? t('FORBIDDEN.notYourAssetBooking')
-                  : String(result.error);
+            : result.error === 'OWNER_DEPOSIT_DUE'
+              ? t('OWNER_DEPOSIT_DUE')
+              : result.error === 'OWNER_EARN_DUE'
+                ? t('OWNER_EARN_DUE')
+                : result.error === 'AMOUNT_REGRESSION'
+                  ? t('AMOUNT_REGRESSION.checkIn')
+                  : result.error === 'ABOVE_REMAINDER'
+                    ? t('ABOVE_REMAINDER')
+                    : result.error === 'FORBIDDEN'
+                      ? t('FORBIDDEN.notYourAssetBooking')
+                      : String(result.error);
       return NextResponse.json(fail(String(result.error), message), {
         status: 400,
       });

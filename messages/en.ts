@@ -601,6 +601,7 @@ const messages = {
     "LOCKED_AFTER_CONFIRM": "After Owner confirms, remaining balance is paid to owner at check-in",
     "ABOVE_OWNER_EARN": "Cannot record more than owner earn",
     "GUEST_BALANCE_DUE": "Guest has not paid remaining balance — cannot check in",
+    "OWNER_DEPOSIT_DUE": "Sale has not transferred the 50% owner deposit — cannot check in",
     "OWNER_EARN_DUE": "Sale has not transferred the full owner amount — cannot check in",
     "ABOVE_REMAINDER": "Cannot record more than guest remainder",
     "ALREADY_PAID": "Guest has already paid full sale price",

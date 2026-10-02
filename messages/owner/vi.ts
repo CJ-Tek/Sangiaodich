@@ -326,6 +326,8 @@ export const ownerVi = {
     receivedRemainder: 'Đã nhận CK phần còn lại từ khách',
     confirmRemainder:
       'Xác nhận đã nhận CK phần còn lại trước khi check-in',
+    needOwnerDeposit:
+      'Sale phải chuyển đủ 50% phần chủ nhà trước khi check-in',
     needOwnerPaid:
       'Sale phải chuyển đủ phần chủ nhà trước khi check-in',
   },

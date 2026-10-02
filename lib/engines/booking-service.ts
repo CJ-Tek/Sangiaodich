@@ -20,7 +20,11 @@ import {
   minOwnerDepositToConfirm,
   minDepositToConfirm,
 } from '@/lib/engines/pricing';
-import { isGuestPaidInFull } from '@/lib/engines/guest-balance';
+import {
+  isGuestDepositCase,
+  isGuestPaidInFull,
+  saleOwnerPayoutSatisfied,
+} from '@/lib/engines/guest-balance';
 import { computeCancelRefund } from '@/lib/engines/cancellation';
 import { profileHasActiveSubscription } from '@/lib/engines/subscription-access';
 import { isPastDateOnly } from '@/lib/dates';
@@ -767,8 +771,19 @@ export async function checkInBooking(input: {
 
   const ownerEarn = Number(booking.owner_earn_snapshot || 0);
   const ownerPaid = Number(booking.owner_paid_amount || 0);
-  if (ownerEarn > 0 && ownerPaid < ownerEarn) {
-    return { error: 'OWNER_EARN_DUE' as const };
+  if (
+    !saleOwnerPayoutSatisfied({
+      listPrice,
+      amountCollected: saleCollected,
+      ownerEarn,
+      ownerPaid,
+    })
+  ) {
+    return {
+      error: isGuestDepositCase(listPrice, saleCollected)
+        ? ('OWNER_DEPOSIT_DUE' as const)
+        : ('OWNER_EARN_DUE' as const),
+    };
   }
 
   const now = new Date().toISOString();

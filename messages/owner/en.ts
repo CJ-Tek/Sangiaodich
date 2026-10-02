@@ -326,6 +326,8 @@ export const ownerEn = {
     receivedRemainder: 'Received remainder from guest',
     confirmRemainder:
       'Confirm remainder received before check-in',
+    needOwnerDeposit:
+      'Sale must transfer the 50% owner deposit before check-in',
     needOwnerPaid:
       'Sale must transfer the full owner amount before check-in',
   },

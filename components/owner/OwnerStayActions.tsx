@@ -17,6 +17,7 @@ import {
   guestRemaining,
   isGuestDepositCase,
   isGuestPaidInFull,
+  saleOwnerPayoutSatisfied,
 } from '@/lib/engines/guest-balance';
 import { ownerTransferMemo } from '@/lib/engines/booking-search';
 import {
@@ -62,7 +63,12 @@ export function OwnerStayActions({
     amountCollected,
     guestPaidOwner
   );
-  const ownerShort = ownerEarn > 0 && ownerPaid < ownerEarn;
+  const ownerShort = !saleOwnerPayoutSatisfied({
+    listPrice,
+    amountCollected,
+    ownerEarn,
+    ownerPaid,
+  });
   const remainderTarget = Math.max(0, listPrice - amountCollected);
   const memo = ownerTransferMemo(bookingId);
   const payoutReady = hasOwnerPayoutInfo(payout);
@@ -168,7 +174,7 @@ export function OwnerStayActions({
 
       {ownerShort ? (
         <Text size="sm" c="dimmed">
-          {t('needOwnerPaid')}
+          {caseA ? t('needOwnerDeposit') : t('needOwnerPaid')}
         </Text>
       ) : null}
 
@@ -181,7 +187,7 @@ export function OwnerStayActions({
           if (ownerShort) {
             notifications.show({
               color: 'yellow',
-              message: t('needOwnerPaid'),
+              message: caseA ? t('needOwnerDeposit') : t('needOwnerPaid'),
             });
             return;
           }
