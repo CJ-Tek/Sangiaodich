@@ -149,7 +149,7 @@ export function OwnerMobileShell({
           </Stack>
         </AppShell.Navbar>
 
-        <AppShell.Main style={{ minWidth: 0, overflowX: 'hidden' }}>
+        <AppShell.Main style={{ minWidth: 0, overflowX: 'clip' }}>
           {children}
         </AppShell.Main>
       </AppShell>
@@ -170,7 +170,7 @@ export function OwnerMobileShell({
         </Group>
       </AppShell.Header>
 
-      <AppShell.Main pb={80} style={{ minWidth: 0, overflowX: 'hidden' }}>
+      <AppShell.Main pb={80} style={{ minWidth: 0, overflowX: 'clip' }}>
         {children}
       </AppShell.Main>
 

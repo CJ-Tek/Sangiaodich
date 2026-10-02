@@ -99,6 +99,20 @@ a {
   background-color: #dfe8dc !important;
 }
 
+/* Keep every table header under the app bar while the page scrolls. */
+.mantine-Table-table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.mantine-Table-table > thead > tr > th {
+  position: sticky;
+  top: var(--app-shell-header-offset, 0px);
+  z-index: 4;
+  background-color: var(--vbnb-surface-muted);
+  box-shadow: inset 0 -1px 0 var(--vbnb-border);
+}
+
 .vbnb-surface-flat {
   background: var(--vbnb-surface);
   border-top: 1px solid var(--vbnb-border);

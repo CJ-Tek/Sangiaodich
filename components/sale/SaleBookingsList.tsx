@@ -229,13 +229,13 @@ export function SaleBookingsList({
                   <Table.Th style={{ width: 48 }}>#</Table.Th>
                   <Table.Th>{t('colVilla')}</Table.Th>
                   <Table.Th>{t('guestLabel')}</Table.Th>
-                  <Table.Th>{t('ownerLabel')}</Table.Th>
                   <Table.Th>{t('listPrice')}</Table.Th>
-                  <Table.Th>{t('colGuestPaid')}</Table.Th>
-                  <Table.Th>{t('margin')}</Table.Th>
                   <Table.Th>{t('floor')}</Table.Th>
+                  <Table.Th>{t('margin')}</Table.Th>
+                  <Table.Th>{t('colGuestPaid')}</Table.Th>
                   <Table.Th>{t('colSaleToOwner')}</Table.Th>
                   <Table.Th>{t('colGuestToOwner')}</Table.Th>
+                  <Table.Th>{t('colDue')}</Table.Th>
                   <Table.Th style={{ whiteSpace: 'nowrap', width: 'max-content' }}>
                     {t('colStatus')}
                   </Table.Th>
@@ -246,25 +246,24 @@ export function SaleBookingsList({
                   const open = openId === b.id;
                   const order = (page - 1) * PAGE_SIZE + i + 1;
                   const guestPaid = b.amountCollected || 0;
-                  const guestToOwner =
-                    b.guestPaidOwner +
-                    guestPaysOwner({
-                      listPrice: b.list,
-                      amountCollected: guestPaid,
-                      ownerCost: b.ownerEarn,
-                      ownerPaid: b.ownerPaid,
-                      guestPaidOwner: b.guestPaidOwner,
-                    });
                   const saleDue = saleDepositToOwner(
                     b.list,
                     guestPaid,
                     b.ownerEarn
                   );
-                  const guestDue = guestRemaining(
-                    b.list,
-                    b.amountCollected || 0,
-                    b.guestPaidOwner || 0
-                  );
+                  const settled =
+                    b.status === 'CHECKED_IN' || b.status === 'CHECKED_OUT';
+                  const guestShort = settled
+                    ? 0
+                    : guestPaysOwner({
+                        listPrice: b.list,
+                        amountCollected: guestPaid,
+                        ownerCost: b.ownerEarn,
+                        ownerPaid: b.ownerPaid,
+                        guestPaidOwner: b.guestPaidOwner,
+                      });
+                  const guestPaidFull = settled || guestPaid >= b.list;
+                  const salePaidFull = b.ownerPaid >= saleDue;
                   return (
                     <Fragment key={b.id}>
                       <Table.Tr
@@ -286,38 +285,10 @@ export function SaleBookingsList({
                         </Table.Td>
                         <Table.Td>
                           <Text size="sm">{b.guestName || '—'}</Text>
-                          <Text size="xs" c="dimmed">
-                            {b.guestPhone || t('noPhone')}
-                          </Text>
                         </Table.Td>
-                        <Table.Td>
-                          <Text size="sm">{b.ownerName || '—'}</Text>
-                          <Text size="xs" c="dimmed">
-                            {b.ownerPhone || t('noPhone')}
-                          </Text>
-                        </Table.Td>
-                        <Table.Td>
+                        <Table.Td style={{ background: 'var(--mantine-color-teal-light)' }}>
                           <Text size="sm" fw={600}>
                             {formatNumber(b.list)}
-                          </Text>
-                        </Table.Td>
-                        <Table.Td>
-                          <Text
-                            size="sm"
-                            fw={600}
-                            c={guestDue > 0 ? undefined : 'vbnbGreen.6'}
-                          >
-                            {formatNumber(guestPaid)}
-                          </Text>
-                          <Text size="xs" c={guestDue > 0 ? 'red' : 'dimmed'}>
-                            {guestDue > 0
-                              ? t('guestDueLine', { amount: formatNumber(guestDue) })
-                              : t('filterGuestPaid')}
-                          </Text>
-                        </Table.Td>
-                        <Table.Td>
-                          <Text size="sm" fw={600} c="vbnbGreen.6">
-                            {formatNumber(b.margin)}
                           </Text>
                         </Table.Td>
                         <Table.Td>
@@ -327,15 +298,50 @@ export function SaleBookingsList({
                         </Table.Td>
                         <Table.Td>
                           <Text size="sm" fw={600}>
+                            {formatNumber(b.margin)}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td
+                          style={{
+                            background: guestPaidFull
+                              ? 'var(--mantine-color-teal-light)'
+                              : '#FFF3BF',
+                          }}
+                        >
+                          <Text size="sm" fw={600}>
+                            {formatNumber(guestPaid)}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td
+                          style={{
+                            background: salePaidFull
+                              ? 'var(--mantine-color-teal-light)'
+                              : '#FFF3BF',
+                          }}
+                        >
+                          <Text size="sm" fw={600}>
                             {formatNumber(b.ownerPaid)}
                           </Text>
-                          <Text size="xs" c="dimmed">
-                            / {formatNumber(saleDue)}
+                        </Table.Td>
+                        <Table.Td
+                          style={{
+                            background:
+                              guestShort === 0
+                                ? 'var(--mantine-color-teal-light)'
+                                : '#FFF3BF',
+                          }}
+                        >
+                          <Text size="sm" fw={600}>
+                            {formatNumber(b.guestPaidOwner)}
                           </Text>
                         </Table.Td>
                         <Table.Td>
-                          <Text size="sm" fw={600}>
-                            {formatNumber(guestToOwner)}
+                          <Text
+                            size="sm"
+                            fw={600}
+                            c={guestShort > 0 ? 'red' : 'vbnbGreen.6'}
+                          >
+                            {formatNumber(guestShort)}
                           </Text>
                         </Table.Td>
                         <Table.Td style={{ whiteSpace: 'nowrap', width: 'max-content' }}>
