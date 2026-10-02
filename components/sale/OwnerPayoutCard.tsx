@@ -20,6 +20,11 @@ import { BookingTransferMemo } from '@/components/sale/BookingTransferMemo';
 import { ownerTransferMemo } from '@/lib/engines/booking-search';
 import { minOwnerDepositToConfirm } from '@/lib/engines/pricing';
 import {
+  isGuestDepositCase,
+  isGuestPaidInFull,
+  saleOwnerPayoutSatisfied,
+} from '@/lib/engines/guest-balance';
+import {
   hasOwnerPayoutInfo,
   ownerPayoutStatus,
   type OwnerPayoutInfo,
@@ -45,6 +50,9 @@ export function OwnerPayoutCard({
   bookingId,
   ownerEarn,
   ownerPaid,
+  listPrice = 0,
+  amountCollected = 0,
+  guestPaidOwner = 0,
   payout,
   transferHint,
 }: {
@@ -55,6 +63,7 @@ export function OwnerPayoutCard({
   ownerPaid: number;
   listPrice?: number;
   amountCollected?: number;
+  guestPaidOwner?: number;
   payout: OwnerPayoutInfo;
   transferHint?: string;
 }) {
@@ -62,22 +71,35 @@ export function OwnerPayoutCard({
   const { formatNumber } = useFormat();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const remaining = Math.max(0, ownerEarn - ownerPaid);
-  const dutyDone = ownerEarn <= 0 || ownerPaid >= ownerEarn;
+  const depositCase = isGuestDepositCase(listPrice, amountCollected);
   const halfCost = minOwnerDepositToConfirm(ownerEarn);
-  const depositChunk = Math.min(
-    Math.max(0, halfCost - ownerPaid),
-    remaining
+  const costRemaining = Math.max(0, ownerEarn - ownerPaid);
+  const depositChunk = Math.max(0, halfCost - ownerPaid);
+  const remaining = depositCase ? depositChunk : costRemaining;
+  const payoutCap = depositCase ? halfCost : ownerEarn;
+  const dutyDone = saleOwnerPayoutSatisfied({
+    listPrice,
+    amountCollected,
+    ownerEarn,
+    ownerPaid,
+  });
+  const guestSettled = isGuestPaidInFull(
+    listPrice,
+    amountCollected,
+    guestPaidOwner
   );
   const depositStillNeeded = depositChunk > 0;
 
   const defaultPreset: QrPreset = depositStillNeeded ? 'deposit' : 'remaining';
   const [preset, setPreset] = useState<QrPreset>(defaultPreset);
 
-  const qrChunk =
-    preset === 'deposit' && depositChunk > 0 ? depositChunk : remaining;
+  const qrChunk = depositCase
+    ? depositChunk
+    : preset === 'deposit' && depositChunk > 0
+      ? depositChunk
+      : remaining;
 
-  const suggestedCumulative = Math.min(ownerEarn, ownerPaid + qrChunk);
+  const suggestedCumulative = Math.min(payoutCap, ownerPaid + qrChunk);
 
   const [amount, setAmount] = useState(suggestedCumulative);
 
@@ -86,8 +108,8 @@ export function OwnerPayoutCard({
   }, [depositStillNeeded, bookingId]);
 
   useEffect(() => {
-    setAmount(Math.min(ownerEarn, ownerPaid + qrChunk));
-  }, [preset, ownerPaid, ownerEarn, qrChunk]);
+    setAmount(Math.min(payoutCap, ownerPaid + qrChunk));
+  }, [preset, ownerPaid, payoutCap, qrChunk]);
 
   const halfReached = ownerEarn > 0 && ownerPaid >= halfCost && ownerPaid < ownerEarn;
   const status = ownerPayoutStatus({ ownerEarn, ownerPaid });
@@ -168,7 +190,7 @@ export function OwnerPayoutCard({
           <>
             <BookingTransferMemo bookingId={bookingId} transferHint={hint} />
             <Text size="sm" fw={600} c="vbnbGreen.6">
-              {t('youPaidFull')}
+              {depositCase && !guestSettled ? t('paidHalfNote') : t('youPaidFull')}
             </Text>
           </>
         ) : (
@@ -188,14 +210,16 @@ export function OwnerPayoutCard({
                   >
                     {t('halfChunk', { amount: formatNumber(depositChunk) })}
                   </Button>
-                  <Button
-                    size="xs"
-                    color="vbnbGreen"
-                    variant={preset === 'remaining' ? 'filled' : 'light'}
-                    onClick={() => setPreset('remaining')}
-                  >
-                    {t('remainingChunk', { amount: formatNumber(remaining) })}
-                  </Button>
+                  {depositCase ? null : (
+                    <Button
+                      size="xs"
+                      color="vbnbGreen"
+                      variant={preset === 'remaining' ? 'filled' : 'light'}
+                      onClick={() => setPreset('remaining')}
+                    >
+                      {t('remainingChunk', { amount: formatNumber(remaining) })}
+                    </Button>
+                  )}
                 </Group>
 
                 {displayQrUrl ? (
@@ -254,7 +278,7 @@ export function OwnerPayoutCard({
                   {t('needPay')}
                 </Text>
                 <Text size="sm" fw={600}>
-                  {formatNumber(ownerEarn)}
+                  {formatNumber(depositCase ? halfCost : ownerEarn)}
                 </Text>
               </div>
               <div>
@@ -283,7 +307,7 @@ export function OwnerPayoutCard({
                 value={amount}
                 onChange={(v) => setAmount(Number(v) || 0)}
                 min={ownerPaid}
-                max={ownerEarn > 0 ? ownerEarn : undefined}
+                max={payoutCap > 0 ? payoutCap : undefined}
                 thousandSeparator="."
                 decimalSeparator=","
               />
@@ -293,7 +317,7 @@ export function OwnerPayoutCard({
                   loading={loading}
                   disabled={
                     amount < ownerPaid ||
-                    (ownerEarn > 0 && amount > ownerEarn) ||
+                    (payoutCap > 0 && amount > payoutCap) ||
                     amount === ownerPaid
                   }
                   onClick={() => markPaid(amount)}

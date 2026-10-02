@@ -52,6 +52,39 @@ export function saleOwnerPayoutSatisfied(input: {
   return earn <= 0 || paid >= earn;
 }
 
+export type SettlementPayout = 'none' | 'partial' | 'full';
+
+/**
+ * Owner settlement badge.
+ * Case A: 50% until the guest remainder is recorded at check-in, then full.
+ * Case B: full once Sale has transferred the whole owner earn.
+ */
+export function settlementPayoutStatus(input: {
+  listPrice: number;
+  amountCollected: number;
+  guestPaidOwner?: number;
+  ownerEarn: number;
+  ownerPaid: number;
+}): SettlementPayout {
+  const earn = money(input.ownerEarn);
+  const paid = money(input.ownerPaid);
+  const depositMet = paid >= minOwnerDepositToConfirm(earn);
+  if (isGuestDepositCase(input.listPrice, input.amountCollected)) {
+    const guestDone = isGuestPaidInFull(
+      input.listPrice,
+      input.amountCollected,
+      input.guestPaidOwner
+    );
+    if (depositMet && guestDone) return 'full';
+    if (depositMet) return 'partial';
+    return 'none';
+  }
+  if (earn <= 0) return paid > 0 ? 'full' : 'none';
+  if (paid >= earn && earn > 0) return 'full';
+  if (depositMet && paid < earn) return 'partial';
+  return 'none';
+}
+
 export type RemainderPayee = 'SALE' | 'OWNER' | null;
 
 /** Who should receive the unpaid remainder, if any. */

@@ -384,6 +384,7 @@ export function SaleBookingsList({
                                           amountCollected={Number(
                                             b.amountCollected || 0
                                           )}
+                                          guestPaidOwner={b.guestPaidOwner}
                                           payout={b.payout}
                                         />
                                       ) : null}

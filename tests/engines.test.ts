@@ -57,6 +57,7 @@ import {
   isGuestPaidInFull,
   remainderPayee,
   saleOwnerPayoutSatisfied,
+  settlementPayoutStatus,
 } from '@/lib/engines/guest-balance';
 import { normalizePhone } from '@/lib/auth/otp';
 import { formatPhoneForZalo } from '@/lib/zalo/phone';
@@ -474,6 +475,62 @@ describe('sale customer stats', () => {
         amountCollected: 10_000_000,
       })
     ).toBeNull();
+  });
+
+  it('settlement is full only after the case is complete', () => {
+    expect(
+      settlementPayoutStatus({
+        listPrice: 10_000_000,
+        amountCollected: 5_000_000,
+        guestPaidOwner: 0,
+        ownerEarn: 7_000_000,
+        ownerPaid: 1_000_000,
+      })
+    ).toBe('none');
+    expect(
+      settlementPayoutStatus({
+        listPrice: 10_000_000,
+        amountCollected: 5_000_000,
+        guestPaidOwner: 0,
+        ownerEarn: 7_000_000,
+        ownerPaid: 3_500_000,
+      })
+    ).toBe('partial');
+    expect(
+      settlementPayoutStatus({
+        listPrice: 10_000_000,
+        amountCollected: 5_000_000,
+        guestPaidOwner: 5_000_000,
+        ownerEarn: 7_000_000,
+        ownerPaid: 3_500_000,
+      })
+    ).toBe('full');
+    expect(
+      settlementPayoutStatus({
+        listPrice: 10_000_000,
+        amountCollected: 10_000_000,
+        guestPaidOwner: 0,
+        ownerEarn: 7_000_000,
+        ownerPaid: 3_500_000,
+      })
+    ).toBe('partial');
+    expect(
+      settlementPayoutStatus({
+        listPrice: 10_000_000,
+        amountCollected: 10_000_000,
+        guestPaidOwner: 0,
+        ownerEarn: 7_000_000,
+        ownerPaid: 7_000_000,
+      })
+    ).toBe('full');
+    expect(
+      settlementPayoutStatus({
+        listPrice: 10_000_000,
+        amountCollected: 10_000_000,
+        ownerEarn: 7_000_000,
+        ownerPaid: 0,
+      })
+    ).toBe('none');
   });
 
   it('Case A Sale is done after 50% cost; Case B needs full cost', () => {

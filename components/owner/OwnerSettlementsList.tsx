@@ -19,7 +19,10 @@ import { notifications } from '@mantine/notifications';
 import { useLocale, useTranslations } from 'next-intl';
 import { colors, radius } from '@/config/design-tokens';
 import { useFormat } from '@/lib/i18n/use-format';
-import { minOwnerDepositToConfirm } from '@/lib/engines/pricing';
+import {
+  isGuestDepositCase,
+  settlementPayoutStatus,
+} from '@/lib/engines/guest-balance';
 import { BookingStatusBadge } from '@/components/bookings/BookingStatusBadge';
 import { locationMatchesCity, vnCityOptions } from '@/lib/geo/vn-cities';
 import { getBookingStatusLabel } from '@/lib/i18n/booking-status';
@@ -65,21 +68,14 @@ type PayoutFilter = 'all' | 'none' | 'partial' | 'full';
 
 const BOOKING_STATUSES = ['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT'] as const;
 
-/** Sale has paid the 50% owner deposit and has not paid the full earn. */
-function saleTransferredHalf(r: OwnerSettlementRow): boolean {
-  const earn = Math.max(0, Number(r.ownerEarn) || 0);
-  const paid = Math.max(0, Number(r.ownerPaid) || 0);
-  if (earn <= 0 || paid >= earn) return false;
-  return paid >= minOwnerDepositToConfirm(earn);
-}
-
 function payoutGroup(r: OwnerSettlementRow): Exclude<PayoutFilter, 'all'> {
-  if (saleTransferredHalf(r)) return 'partial';
-  const earn = Math.max(0, Number(r.ownerEarn) || 0);
-  const paid = Math.max(0, Number(r.ownerPaid) || 0);
-  if (earn > 0 && paid >= earn) return 'full';
-  if (earn <= 0 && paid > 0) return 'full';
-  return 'none';
+  return settlementPayoutStatus({
+    listPrice: r.listPrice,
+    amountCollected: r.amountCollected,
+    guestPaidOwner: r.guestPaidOwner,
+    ownerEarn: r.ownerEarn,
+    ownerPaid: r.ownerPaid,
+  });
 }
 
 export function OwnerSettlementsList({
@@ -240,7 +236,16 @@ export function OwnerSettlementsList({
               {filtered.map((b, i) => {
                 const payoutStatus = payoutGroup(b);
                 const payoutMeta = PAYOUT_BADGE[payoutStatus];
-                const remaining = Math.max(0, b.ownerEarn - b.ownerPaid);
+                const saleShort = Math.max(0, b.ownerEarn - b.ownerPaid);
+                const waitingOnGuest =
+                  payoutStatus === 'partial' &&
+                  isGuestDepositCase(b.listPrice, b.amountCollected);
+                const dueText =
+                  payoutStatus === 'full'
+                    ? formatNumber(0)
+                    : waitingOnGuest
+                      ? '50%'
+                      : formatNumber(saleShort);
                 const memo = ownerTransferMemo(b.id);
                 const open = openId === b.id;
 
@@ -288,11 +293,9 @@ export function OwnerSettlementsList({
                       <Table.Td>
                         <Text
                           size="sm"
-                          c={remaining > 0 ? 'red' : 'vbnbGreen.6'}
+                          c={payoutStatus === 'full' ? 'vbnbGreen.6' : 'red'}
                         >
-                          {payoutStatus === 'partial'
-                            ? '50%'
-                            : formatNumber(remaining)}
+                          {dueText}
                         </Text>
                       </Table.Td>
                       <Table.Td>
