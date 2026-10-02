@@ -395,6 +395,7 @@ const messages = {
       "payment": "Thanh toán",
       "listPrice": "Giá booking",
       "collectedSale": "Đã thanh toán (Sale)",
+      "payOwner": "CK chủ nhà lúc nhận phòng",
       "collectedOwner": "Đã thanh toán (chủ nhà)",
       "remaining": "Còn lại",
       "refunded": "Đã hoàn",
@@ -581,7 +582,7 @@ const messages = {
     "LIMIT": "Tối đa 12 ảnh / asset",
     "INVALID_COST": "Giá đêm không hợp lệ",
     "NO_OWNER_EARN": "Chưa có giá gốc — không gửi Owner được",
-    "BELOW_OWNER_PAYOUT": "Cần xác nhận CK Owner tối thiểu 50% giá gốc ({amount}) trước khi gửi",
+    "BELOW_OWNER_PAYOUT": "Cần xác nhận CK Owner tối thiểu {amount} trước khi gửi",
     "BELOW_DEPOSIT": "Cần thu cọc Guest tối thiểu 50% giá bán ({amount}) trước khi gửi",
     "OVERLAP": {
       "submitConfirmed": "Ngày đã bị Sale khác chốt (CONFIRMED) — không gửi được",
@@ -788,7 +789,7 @@ const messages = {
   "inventory": {
     "listPriceGuestPay": "Giá bán cả stay (khách trả)",
     "collectedGuestMin": "Đã thu khách (tối thiểu 50% = {amount})",
-    "collectedOwnerMin": "Đã CK Owner (tối thiểu 50% cost = {amount})",
+    "collectedOwnerMin": "Đã CK Owner (cọc = {amount})",
     "collectedGuest": "Đã thu khách",
     "collectedOwner": "Đã CK Owner",
     "costNightTitle": "Giá đêm (cost Owner)",

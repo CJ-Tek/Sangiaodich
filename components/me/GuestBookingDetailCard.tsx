@@ -89,6 +89,7 @@ export function GuestBookingDetailCard({
             label={t('collectedSale')}
             value={money(booking.amountCollected)}
           />
+          <Row label={t('payOwner')} value={money(booking.ownerDue)} />
           {booking.guestPaidOwner > 0 ? (
             <Row
               label={t('collectedOwner')}

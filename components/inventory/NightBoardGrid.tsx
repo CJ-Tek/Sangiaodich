@@ -43,9 +43,9 @@ import {
 } from '@/lib/engines/night-board-display';
 import {
   minDepositToConfirm,
-  minOwnerDepositToConfirm,
   previewPricing,
 } from '@/lib/engines/pricing';
+import { saleDepositToOwner } from '@/lib/engines/guest-balance';
 import { GuestPicker } from '@/components/sale/GuestPicker';
 import {
   NightBoardColumnHeader,
@@ -188,7 +188,7 @@ export function NightBoardGrid({
     : 0;
   const minGuest = minDepositToConfirm(listPrice);
   const minOwner = holdPreview
-    ? minOwnerDepositToConfirm(holdPreview.effectiveCost)
+    ? saleDepositToOwner(listPrice, collected, holdPreview.effectiveCost)
     : 0;
   const canSubmitHold =
     !!guest &&

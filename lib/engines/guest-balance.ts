@@ -1,6 +1,4 @@
-import { minOwnerDepositToConfirm } from '@/lib/engines/pricing';
-
-function money(n: number): number {
+function money(n: number | undefined): number {
   const v = Number(n || 0);
   return Number.isFinite(v) ? v : 0;
 }
@@ -33,10 +31,55 @@ export function isGuestDepositCase(
   return money(saleCollected) < money(listPrice);
 }
 
+/** Sale margin kept from the guest's payment. Never negative. */
+export function saleMarginKept(listPrice: number, ownerCost: number): number {
+  return Math.max(0, money(listPrice) - money(ownerCost));
+}
+
+/**
+ * What Sale forwards to Owner from money already collected.
+ * Guest paid the full sale price: this is the whole cost.
+ * Guest paid a deposit: collected minus sale margin (example 2_500_000 − 1_000_000 = 1_500_000).
+ */
+export function saleDepositToOwner(
+  listPrice: number,
+  amountCollected: number,
+  ownerCost: number
+): number {
+  return Math.max(
+    0,
+    money(amountCollected) - saleMarginKept(listPrice, ownerCost)
+  );
+}
+
+/**
+ * What the guest still pays the owner. Capped so owner receipts never exceed cost.
+ */
+export function guestPaysOwner(input: {
+  listPrice: number;
+  amountCollected: number;
+  ownerCost: number;
+  ownerPaid: number;
+  guestPaidOwner?: number;
+}): number {
+  const listLeft = guestRemaining(
+    input.listPrice,
+    input.amountCollected,
+    input.guestPaidOwner
+  );
+  const costLeft = Math.max(
+    0,
+    money(input.ownerCost) -
+      money(input.ownerPaid) -
+      money(input.guestPaidOwner)
+  );
+  return Math.min(listLeft, costLeft);
+}
+
 /**
  * Whether Sale has finished their Owner-cost duty.
- * Case A: 50% cost is enough (remainder is Guest → Owner at check-in).
- * Case B: Sale must transfer full owner earn.
+ * Deposit case: Sale has forwarded collected minus margin.
+ * Guest paid in full: that amount is the whole owner cost.
  */
 export function saleOwnerPayoutSatisfied(input: {
   listPrice: number;
@@ -45,19 +88,20 @@ export function saleOwnerPayoutSatisfied(input: {
   ownerPaid: number;
 }): boolean {
   const paid = money(input.ownerPaid);
-  const earn = money(input.ownerEarn);
-  if (isGuestDepositCase(input.listPrice, input.amountCollected)) {
-    return paid >= minOwnerDepositToConfirm(earn);
-  }
-  return earn <= 0 || paid >= earn;
+  const due = saleDepositToOwner(
+    input.listPrice,
+    input.amountCollected,
+    input.ownerEarn
+  );
+  return paid >= due;
 }
 
 export type SettlementPayout = 'none' | 'partial' | 'full';
 
 /**
  * Owner settlement badge.
- * Case A: 50% until the guest remainder is recorded at check-in, then full.
- * Case B: full once Sale has transferred the whole owner earn.
+ * Partial: Sale has sent the deposit and the cost is not fully received.
+ * Full: Sale plus guest transfers cover the owner cost.
  */
 export function settlementPayoutStatus(input: {
   listPrice: number;
@@ -68,20 +112,16 @@ export function settlementPayoutStatus(input: {
 }): SettlementPayout {
   const earn = money(input.ownerEarn);
   const paid = money(input.ownerPaid);
-  const depositMet = paid >= minOwnerDepositToConfirm(earn);
-  if (isGuestDepositCase(input.listPrice, input.amountCollected)) {
-    const guestDone = isGuestPaidInFull(
-      input.listPrice,
-      input.amountCollected,
-      input.guestPaidOwner
-    );
-    if (depositMet && guestDone) return 'full';
-    if (depositMet) return 'partial';
-    return 'none';
-  }
-  if (earn <= 0) return paid > 0 ? 'full' : 'none';
-  if (paid >= earn && earn > 0) return 'full';
-  if (depositMet && paid < earn) return 'partial';
+  const guestPaid = money(input.guestPaidOwner);
+  const received = paid + guestPaid;
+  if (earn <= 0) return received > 0 ? 'full' : 'none';
+  if (received >= earn) return 'full';
+  const depositDue = saleDepositToOwner(
+    input.listPrice,
+    input.amountCollected,
+    earn
+  );
+  if (depositDue > 0 && paid >= depositDue) return 'partial';
   return 'none';
 }
 
@@ -93,7 +133,25 @@ export function remainderPayee(input: {
   listPrice: number;
   amountCollected: number;
   guestPaidOwner?: number;
+  ownerCost?: number;
+  ownerPaid?: number;
 }): RemainderPayee {
+  const ownerDue =
+    input.ownerCost != null
+      ? guestPaysOwner({
+          listPrice: input.listPrice,
+          amountCollected: input.amountCollected,
+          ownerCost: input.ownerCost,
+          ownerPaid: input.ownerPaid ?? 0,
+          guestPaidOwner: input.guestPaidOwner,
+        })
+      : 0;
+  if (
+    ownerDue > 0 &&
+    (input.status === 'CONFIRMED' || input.status === 'CHECKED_IN')
+  ) {
+    return 'OWNER';
+  }
   if (
     guestRemaining(
       input.listPrice,
@@ -104,6 +162,7 @@ export function remainderPayee(input: {
     return null;
   }
   if (input.status === 'CONFIRMED' || input.status === 'CHECKED_IN') {
+    if (input.ownerCost != null) return ownerDue > 0 ? 'OWNER' : 'SALE';
     return isGuestDepositCase(input.listPrice, input.amountCollected)
       ? 'OWNER'
       : 'SALE';

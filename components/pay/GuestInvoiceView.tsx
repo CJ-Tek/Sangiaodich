@@ -15,7 +15,7 @@ import {
 import { useTranslations } from 'next-intl';
 import { SurfaceCard } from '@/components/ui/SurfaceCard';
 import { ownerTransferMemo } from '@/lib/engines/booking-search';
-import { guestRemaining } from '@/lib/engines/guest-balance';
+import { guestPaysOwner } from '@/lib/engines/guest-balance';
 import {
   calendarUnlockedForInvoice,
   guestInvoiceAmounts,
@@ -42,6 +42,8 @@ export type GuestInvoiceViewProps = {
   listPrice: number;
   amountCollected: number;
   guestPaidOwner?: number;
+  ownerCost?: number;
+  ownerPaid?: number;
   payee?: 'SALE' | 'OWNER';
   saleName: string;
   salePhone: string;
@@ -65,11 +67,13 @@ export function GuestInvoiceView(props: GuestInvoiceViewProps) {
     listPrice: props.listPrice,
     amountCollected: props.amountCollected,
   });
-  const ownerRemainder = guestRemaining(
-    props.listPrice,
-    props.amountCollected,
-    props.guestPaidOwner
-  );
+  const ownerRemainder = guestPaysOwner({
+    listPrice: props.listPrice,
+    amountCollected: props.amountCollected,
+    ownerCost: props.ownerCost ?? 0,
+    ownerPaid: props.ownerPaid ?? 0,
+    guestPaidOwner: props.guestPaidOwner,
+  });
   const defaultPreset: GuestInvoicePreset = amounts.canDeposit
     ? 'deposit'
     : 'full';
@@ -189,9 +193,14 @@ export function GuestInvoiceView(props: GuestInvoiceViewProps) {
                   fullWidth
                 />
               ) : (
-                <Text size="sm" ta="center" c="dimmed">
-                  {t('remainderAtCheckIn')}
-                </Text>
+                <Stack gap={2}>
+                  <Text size="lg" ta="center" fw={600}>
+                    {formatVnd(ownerRemainder)}
+                  </Text>
+                  <Text size="sm" ta="center" c="dimmed">
+                    {t('remainderAtCheckIn')}
+                  </Text>
+                </Stack>
               )}
 
               {qrUrl && qrAmount > 0 ? (

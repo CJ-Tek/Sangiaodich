@@ -178,7 +178,7 @@ export const ownerEn = {
     overlapDesc:
       'Same asset / overlaps: #{ids}. First confirm locks dates; others fail if overlapping.',
     memoSearch: 'Transfer memo (search settlements)',
-    depositHint: 'Suggested 50% cost deposit',
+    depositHint: 'Sale transfer to book',
     saleNeedsSend: 'Sale must transfer to you',
     saleRecorded: 'Sale recorded transfer',
     paidFull: 'full',
@@ -193,10 +193,10 @@ export const ownerEn = {
     notPaid: 'Not paid',
     partial: 'Partially paid',
     paidFull: 'Fully paid',
-    paidHalf: '50%',
+    paidHalf: 'Deposited',
     filterAll: 'All ({count})',
     filterNone: 'Unpaid ({count})',
-    filterPartial: '50% ({count})',
+    filterPartial: 'Deposited ({count})',
     filterFull: 'Paid ({count})',
     searchLabel: 'Search',
     searchPlaceholder: 'Memo VBNB…, sale name, phone, villa...',
@@ -230,6 +230,9 @@ export const ownerEn = {
     colVilla: 'Villa',
     colSale: 'Sale',
     colPaid: 'Sale paid',
+    colCost: 'Owner cost',
+    colOwnerEarn: 'Collected',
+    colGuestPaid: 'Guest transferred',
     colDue: 'Still owed',
     colStatus: 'Status',
   },
@@ -327,7 +330,7 @@ export const ownerEn = {
     confirmRemainder:
       'Confirm remainder received before check-in',
     needOwnerDeposit:
-      'Sale must transfer the 50% owner deposit before check-in',
+      'Sale must transfer the booking deposit before check-in',
     needOwnerPaid:
       'Sale must transfer the full owner amount before check-in',
   },

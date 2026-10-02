@@ -56,6 +56,8 @@ import {
   isGuestDepositCase,
   isGuestPaidInFull,
   remainderPayee,
+  guestPaysOwner,
+  saleDepositToOwner,
   saleOwnerPayoutSatisfied,
   settlementPayoutStatus,
 } from '@/lib/engines/guest-balance';
@@ -477,6 +479,46 @@ describe('sale customer stats', () => {
     ).toBeNull();
   });
 
+  it('owner receives the cost after sale keeps the margin', () => {
+    expect(saleDepositToOwner(5_000_000, 2_500_000, 4_000_000)).toBe(1_500_000);
+    expect(saleDepositToOwner(5_000_000, 5_000_000, 4_000_000)).toBe(4_000_000);
+    expect(
+      guestPaysOwner({
+        listPrice: 5_000_000,
+        amountCollected: 2_500_000,
+        ownerCost: 4_000_000,
+        ownerPaid: 1_500_000,
+      })
+    ).toBe(2_500_000);
+    expect(
+      guestPaysOwner({
+        listPrice: 5_000_000,
+        amountCollected: 2_500_000,
+        ownerCost: 4_000_000,
+        ownerPaid: 1_500_000,
+        guestPaidOwner: 2_500_000,
+      })
+    ).toBe(0);
+    expect(
+      settlementPayoutStatus({
+        listPrice: 5_000_000,
+        amountCollected: 2_500_000,
+        guestPaidOwner: 0,
+        ownerEarn: 4_000_000,
+        ownerPaid: 1_500_000,
+      })
+    ).toBe('partial');
+    expect(
+      settlementPayoutStatus({
+        listPrice: 5_000_000,
+        amountCollected: 2_500_000,
+        guestPaidOwner: 2_500_000,
+        ownerEarn: 4_000_000,
+        ownerPaid: 1_500_000,
+      })
+    ).toBe('full');
+  });
+
   it('settlement is full only after the case is complete', () => {
     expect(
       settlementPayoutStatus({
@@ -513,7 +555,7 @@ describe('sale customer stats', () => {
         ownerEarn: 7_000_000,
         ownerPaid: 3_500_000,
       })
-    ).toBe('partial');
+    ).toBe('none');
     expect(
       settlementPayoutStatus({
         listPrice: 10_000_000,

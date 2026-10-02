@@ -32,6 +32,7 @@ export default async function OwnerPendingBookingsPage() {
         .from('bookings')
         .select(
           `id, asset_id, status, check_in, check_out, submitted_to_owner_at, sale_id,
+           list_price, amount_collected,
            owner_earn_snapshot, owner_paid_amount,
            sale_tier_label_snapshot`
         )
@@ -89,6 +90,8 @@ export default async function OwnerPendingBookingsPage() {
       tierLabel: b.sale_tier_label_snapshot,
       ownerEarn: Number(b.owner_earn_snapshot || 0),
       ownerPaid: Number(b.owner_paid_amount || 0),
+      listPrice: Number(b.list_price || 0),
+      amountCollected: Number(b.amount_collected || 0),
       status: b.status,
       ratingAggregate: aggregates.get(b.sale_id) ?? null,
       ratingComments: comments.filter((c) => c.saleId === b.sale_id),

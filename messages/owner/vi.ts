@@ -178,7 +178,7 @@ export const ownerVi = {
     overlapDesc:
       'Cùng căn / overlap với: #{ids}. Ai confirm trước sẽ khóa ngày; cái còn lại sẽ fail nếu trùng.',
     memoSearch: 'Mã CK (tìm trong quyết toán)',
-    depositHint: 'Gợi ý cọc 50% cost',
+    depositHint: 'Sale CK để chốt',
     saleNeedsSend: 'Sale cần gửi bạn',
     saleRecorded: 'Sale đã ghi CK',
     paidFull: 'đủ',
@@ -193,10 +193,10 @@ export const ownerVi = {
     notPaid: 'Chưa CK',
     partial: 'CK một phần',
     paidFull: 'Đã đủ CK',
-    paidHalf: '50%',
+    paidHalf: 'Đã cọc',
     filterAll: 'Tất cả ({count})',
     filterNone: 'Chưa ({count})',
-    filterPartial: '50% ({count})',
+    filterPartial: 'Đã cọc ({count})',
     filterFull: 'Đủ ({count})',
     searchLabel: 'Tìm kiếm',
     searchPlaceholder: 'Mã CK VBNB…, tên sale, SĐT, villa...',
@@ -230,6 +230,9 @@ export const ownerVi = {
     colVilla: 'Căn',
     colSale: 'Sale',
     colPaid: 'Sale đã CK',
+    colCost: 'Giá gốc',
+    colOwnerEarn: 'Đã thu',
+    colGuestPaid: 'Khách đã CK',
     colDue: 'Còn thiếu',
     colStatus: 'Trạng thái',
   },
@@ -327,7 +330,7 @@ export const ownerVi = {
     confirmRemainder:
       'Xác nhận đã nhận CK phần còn lại trước khi check-in',
     needOwnerDeposit:
-      'Sale phải chuyển đủ 50% phần chủ nhà trước khi check-in',
+      'Sale phải chuyển đủ tiền cọc trước khi check-in',
     needOwnerPaid:
       'Sale phải chuyển đủ phần chủ nhà trước khi check-in',
   },

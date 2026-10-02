@@ -14,7 +14,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from '@/lib/i18n/navigation';
 import { ExportGuestInvoiceButton } from '@/components/sale/ExportGuestInvoiceButton';
 import {
-  guestRemaining,
+  guestPaysOwner,
   isGuestDepositCase,
   isGuestPaidInFull,
   saleOwnerPayoutSatisfied,
@@ -56,7 +56,13 @@ export function OwnerStayActions({
   const [loading, setLoading] = useState(false);
   const [received, setReceived] = useState(false);
 
-  const remaining = guestRemaining(listPrice, amountCollected, guestPaidOwner);
+  const remaining = guestPaysOwner({
+    listPrice,
+    amountCollected,
+    ownerCost: ownerEarn,
+    ownerPaid,
+    guestPaidOwner,
+  });
   const caseA = isGuestDepositCase(listPrice, amountCollected);
   const paidInFull = isGuestPaidInFull(
     listPrice,
@@ -69,7 +75,7 @@ export function OwnerStayActions({
     ownerEarn,
     ownerPaid,
   });
-  const remainderTarget = Math.max(0, listPrice - amountCollected);
+  const remainderTarget = guestPaidOwner + remaining;
   const memo = ownerTransferMemo(bookingId);
   const payoutReady = hasOwnerPayoutInfo(payout);
 

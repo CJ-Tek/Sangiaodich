@@ -18,10 +18,12 @@ import { colors, radius } from '@/config/design-tokens';
 import { useFormat } from '@/lib/i18n/use-format';
 import { BookingTransferMemo } from '@/components/sale/BookingTransferMemo';
 import { ownerTransferMemo } from '@/lib/engines/booking-search';
-import { minOwnerDepositToConfirm } from '@/lib/engines/pricing';
 import {
+  guestPaysOwner,
   isGuestDepositCase,
   isGuestPaidInFull,
+  saleDepositToOwner,
+  saleMarginKept,
   saleOwnerPayoutSatisfied,
 } from '@/lib/engines/guest-balance';
 import {
@@ -72,11 +74,19 @@ export function OwnerPayoutCard({
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const depositCase = isGuestDepositCase(listPrice, amountCollected);
-  const halfCost = minOwnerDepositToConfirm(ownerEarn);
+  const depositTarget = saleDepositToOwner(listPrice, amountCollected, ownerEarn);
   const costRemaining = Math.max(0, ownerEarn - ownerPaid);
-  const depositChunk = Math.max(0, halfCost - ownerPaid);
+  const depositChunk = Math.max(0, depositTarget - ownerPaid);
   const remaining = depositCase ? depositChunk : costRemaining;
-  const payoutCap = depositCase ? halfCost : ownerEarn;
+  const payoutCap = depositCase ? depositTarget : ownerEarn;
+  const guestToOwner = guestPaysOwner({
+    listPrice,
+    amountCollected,
+    ownerCost: ownerEarn,
+    ownerPaid,
+    guestPaidOwner,
+  });
+  const margin = saleMarginKept(listPrice, ownerEarn);
   const dutyDone = saleOwnerPayoutSatisfied({
     listPrice,
     amountCollected,
@@ -111,7 +121,8 @@ export function OwnerPayoutCard({
     setAmount(Math.min(payoutCap, ownerPaid + qrChunk));
   }, [preset, ownerPaid, payoutCap, qrChunk]);
 
-  const halfReached = ownerEarn > 0 && ownerPaid >= halfCost && ownerPaid < ownerEarn;
+  const halfReached =
+    depositTarget > 0 && ownerPaid >= depositTarget && ownerPaid < ownerEarn;
   const status = ownerPayoutStatus({ ownerEarn, ownerPaid });
   const statusMeta = {
     none: { label: t('notPaid'), color: 'red' as const },
@@ -185,6 +196,56 @@ export function OwnerPayoutCard({
         <Text size="xs" c="dimmed">
           {t('title')}
         </Text>
+        <Group gap="md" wrap="wrap">
+          <div>
+            <Text size="xs" c="dimmed">
+              {t('listPrice')}
+            </Text>
+            <Text size="sm" fw={600}>
+              {formatNumber(listPrice)}
+            </Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed">
+              {t('ownerCost')}
+            </Text>
+            <Text size="sm" fw={600}>
+              {formatNumber(ownerEarn)}
+            </Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed">
+              {t('margin')}
+            </Text>
+            <Text size="sm" fw={600}>
+              {formatNumber(margin)}
+            </Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed">
+              {t('guestPaidSale')}
+            </Text>
+            <Text size="sm" fw={600}>
+              {formatNumber(amountCollected)}
+            </Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed">
+              {t('sendOwner')}
+            </Text>
+            <Text size="sm" fw={600}>
+              {formatNumber(depositTarget)}
+            </Text>
+          </div>
+          <div>
+            <Text size="xs" c="dimmed">
+              {t('guestToOwner')}
+            </Text>
+            <Text size="sm" fw={600}>
+              {formatNumber(guestPaidOwner + guestToOwner)}
+            </Text>
+          </div>
+        </Group>
 
         {dutyDone ? (
           <>
@@ -278,7 +339,7 @@ export function OwnerPayoutCard({
                   {t('needPay')}
                 </Text>
                 <Text size="sm" fw={600}>
-                  {formatNumber(depositCase ? halfCost : ownerEarn)}
+                  {formatNumber(depositCase ? depositTarget : ownerEarn)}
                 </Text>
               </div>
               <div>

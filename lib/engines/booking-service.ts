@@ -17,12 +17,12 @@ import {
 } from '@/lib/engines/membership';
 import {
   previewPricing,
-  minOwnerDepositToConfirm,
   minDepositToConfirm,
 } from '@/lib/engines/pricing';
 import {
+  guestPaysOwner,
   isGuestDepositCase,
-  isGuestPaidInFull,
+  saleDepositToOwner,
   saleOwnerPayoutSatisfied,
 } from '@/lib/engines/guest-balance';
 import { computeCancelRefund } from '@/lib/engines/cancellation';
@@ -261,7 +261,7 @@ export async function submitToOwner(input: {
   }
 
   const ownerEarn = pricing.effectiveCost;
-  const minOwnerPayout = minOwnerDepositToConfirm(ownerEarn);
+  const minOwnerPayout = saleDepositToOwner(listPrice, collected, ownerEarn);
   const ownerPaid = Number(booking.owner_paid_amount || 0);
   if (ownerEarn <= 0) {
     return { error: 'NO_OWNER_EARN' as const };
@@ -761,16 +761,22 @@ export async function checkInBooking(input: {
   if (!Number.isFinite(nextOwner) || nextOwner < previousOwner) {
     return { error: 'AMOUNT_REGRESSION' as const, previous: previousOwner };
   }
-  const maxOwner = Math.max(0, listPrice - saleCollected);
+  const ownerEarn = Number(booking.owner_earn_snapshot || 0);
+  const ownerPaid = Number(booking.owner_paid_amount || 0);
+  const stillDue = guestPaysOwner({
+    listPrice,
+    amountCollected: saleCollected,
+    ownerCost: ownerEarn,
+    ownerPaid,
+    guestPaidOwner: previousOwner,
+  });
+  const maxOwner = previousOwner + stillDue;
   if (nextOwner > maxOwner) {
     return { error: 'ABOVE_REMAINDER' as const, maxOwner };
   }
-  if (!isGuestPaidInFull(listPrice, saleCollected, nextOwner)) {
+  if (nextOwner < maxOwner) {
     return { error: 'GUEST_BALANCE_DUE' as const };
   }
-
-  const ownerEarn = Number(booking.owner_earn_snapshot || 0);
-  const ownerPaid = Number(booking.owner_paid_amount || 0);
   if (
     !saleOwnerPayoutSatisfied({
       listPrice,

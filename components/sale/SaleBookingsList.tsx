@@ -22,8 +22,11 @@ import { GuestCollectedUpdate } from '@/components/sale/GuestCollectedUpdate';
 import { OwnerPayoutCard } from '@/components/sale/OwnerPayoutCard';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { matchesSaleBookingSearch } from '@/lib/engines/booking-search';
-import { guestRemaining } from '@/lib/engines/guest-balance';
-import { minOwnerDepositToConfirm } from '@/lib/engines/pricing';
+import {
+  guestPaysOwner,
+  guestRemaining,
+  saleDepositToOwner,
+} from '@/lib/engines/guest-balance';
 import { locationMatchesCity, vnCityOptions } from '@/lib/geo/vn-cities';
 import type { OwnerPayoutInfo } from '@/lib/owner/payout-info';
 
@@ -72,10 +75,11 @@ type GuestPay = 'paid' | 'due';
 function ownerTransfer(b: SaleBookingListItem): OwnerTransfer | 'partial' {
   const earn = Math.max(0, b.ownerEarn);
   const paid = Math.max(0, b.ownerPaid);
+  const due = saleDepositToOwner(b.list, b.amountCollected || 0, earn);
   if (earn > 0 && paid >= earn) return 'full';
   if (earn <= 0) return 'full';
   if (paid <= 0) return 'none';
-  if (paid >= minOwnerDepositToConfirm(earn)) return 'half';
+  if (due > 0 && paid >= due) return 'half';
   return 'partial';
 }
 
@@ -229,6 +233,9 @@ export function SaleBookingsList({
                   <Table.Th>{t('listPrice')}</Table.Th>
                   <Table.Th>{t('colGuestPaid')}</Table.Th>
                   <Table.Th>{t('margin')}</Table.Th>
+                  <Table.Th>{t('floor')}</Table.Th>
+                  <Table.Th>{t('colSaleToOwner')}</Table.Th>
+                  <Table.Th>{t('colGuestToOwner')}</Table.Th>
                   <Table.Th style={{ whiteSpace: 'nowrap', width: 'max-content' }}>
                     {t('colStatus')}
                   </Table.Th>
@@ -238,8 +245,21 @@ export function SaleBookingsList({
                 {pageItems.map((b, i) => {
                   const open = openId === b.id;
                   const order = (page - 1) * PAGE_SIZE + i + 1;
-                  const guestPaid =
-                    (b.amountCollected || 0) + (b.guestPaidOwner || 0);
+                  const guestPaid = b.amountCollected || 0;
+                  const guestToOwner =
+                    b.guestPaidOwner +
+                    guestPaysOwner({
+                      listPrice: b.list,
+                      amountCollected: guestPaid,
+                      ownerCost: b.ownerEarn,
+                      ownerPaid: b.ownerPaid,
+                      guestPaidOwner: b.guestPaidOwner,
+                    });
+                  const saleDue = saleDepositToOwner(
+                    b.list,
+                    guestPaid,
+                    b.ownerEarn
+                  );
                   const guestDue = guestRemaining(
                     b.list,
                     b.amountCollected || 0,
@@ -300,6 +320,24 @@ export function SaleBookingsList({
                             {formatNumber(b.margin)}
                           </Text>
                         </Table.Td>
+                        <Table.Td>
+                          <Text size="sm" fw={600}>
+                            {formatNumber(b.ownerEarn)}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm" fw={600}>
+                            {formatNumber(b.ownerPaid)}
+                          </Text>
+                          <Text size="xs" c="dimmed">
+                            / {formatNumber(saleDue)}
+                          </Text>
+                        </Table.Td>
+                        <Table.Td>
+                          <Text size="sm" fw={600}>
+                            {formatNumber(guestToOwner)}
+                          </Text>
+                        </Table.Td>
                         <Table.Td style={{ whiteSpace: 'nowrap', width: 'max-content' }}>
                           <BookingStatusBadge status={b.status} />
                         </Table.Td>
@@ -307,7 +345,7 @@ export function SaleBookingsList({
                       {open ? (
                         <Table.Tr>
                           <Table.Td
-                            colSpan={8}
+                            colSpan={11}
                             style={{ background: colors.surfaceMuted }}
                             onClick={(e) => e.stopPropagation()}
                           >

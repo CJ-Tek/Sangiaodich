@@ -27,7 +27,7 @@ import {
   ownerTransferMemo,
 } from '@/lib/engines/booking-search';
 import { rangesOverlap } from '@/lib/engines/inventory';
-import { minOwnerDepositToConfirm } from '@/lib/engines/pricing';
+import { saleDepositToOwner } from '@/lib/engines/guest-balance';
 import type {
   SaleRatingAggregate,
   SaleRatingComment,
@@ -50,6 +50,8 @@ export type OwnerPendingRow = {
   tierLabel: string | null;
   ownerEarn: number;
   ownerPaid: number;
+  listPrice: number;
+  amountCollected: number;
   status: string;
   ratingAggregate: SaleRatingAggregate | null;
   ratingComments: SaleRatingComment[];
@@ -175,7 +177,11 @@ export function OwnerPendingList({
               {narrowed.map((b, i) => {
                 const open = openId === b.id;
                 const overlaps = overlapIds.get(b.id) || [];
-                const half = minOwnerDepositToConfirm(b.ownerEarn);
+                const half = saleDepositToOwner(
+                  b.listPrice,
+                  b.amountCollected,
+                  b.ownerEarn
+                );
                 const memo = ownerTransferMemo(b.id);
 
                 return (
@@ -281,7 +287,7 @@ export function OwnerPendingList({
                             </div>
                             <div>
                               <Text size="xs" c="dimmed">
-                                {t('saleNeedsSend')}
+                                {tf('colCost')}
                               </Text>
                               <Text size="sm" fw={600}>
                                 {formatNumber(b.ownerEarn)}

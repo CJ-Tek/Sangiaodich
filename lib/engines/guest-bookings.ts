@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 import {
+  guestPaysOwner,
   guestRemaining,
   remainderPayee,
   type RemainderPayee,
@@ -16,6 +17,7 @@ export type GuestBookingListItem = {
   listPrice: number;
   amountCollected: number;
   guestPaidOwner: number;
+  ownerDue: number;
   remaining: number;
   remainderPayee: RemainderPayee;
 };
@@ -64,7 +66,7 @@ export async function loadGuestBookings(
   const { data } = await db
     .from('bookings')
     .select(
-      'id, status, check_in, check_out, list_price, amount_collected, guest_paid_owner_amount, assets(title, slug)'
+      'id, status, check_in, check_out, list_price, amount_collected, guest_paid_owner_amount, owner_earn_snapshot, owner_paid_amount, assets(title, slug)'
     )
     .eq('guest_id', guestId)
     .order('created_at', { ascending: false })
@@ -75,7 +77,17 @@ export async function loadGuestBookings(
     const listPrice = Number(b.list_price || 0);
     const amountCollected = Number(b.amount_collected || 0);
     const guestPaidOwner = Number(b.guest_paid_owner_amount || 0);
+    const ownerCost = Number(b.owner_earn_snapshot || 0);
+    const ownerPaid = Number(b.owner_paid_amount || 0);
     const status = b.status as string;
+    const ownerDue = guestPaysOwner({
+      listPrice,
+      amountCollected,
+      ownerCost,
+      ownerPaid,
+      guestPaidOwner,
+    });
+    const listLeft = remainingToPay(listPrice, amountCollected, guestPaidOwner);
     return {
       id: b.id as string,
       status,
@@ -86,12 +98,15 @@ export async function loadGuestBookings(
       listPrice,
       amountCollected,
       guestPaidOwner,
-      remaining: remainingToPay(listPrice, amountCollected, guestPaidOwner),
+      ownerDue,
+      remaining: ownerDue > 0 ? ownerDue : listLeft,
       remainderPayee: remainderPayee({
         status,
         listPrice,
         amountCollected,
         guestPaidOwner,
+        ownerCost,
+        ownerPaid,
       }),
     };
   });
@@ -105,7 +120,7 @@ export async function loadGuestBookingDetail(
   const { data: b } = await db
     .from('bookings')
     .select(
-      'id, status, check_in, check_out, list_price, amount_collected, guest_paid_owner_amount, refund_amount, created_at, confirmed_at, checked_in_at, checked_out_at, cancelled_at, sale_id, assets(title, slug)'
+      'id, status, check_in, check_out, list_price, amount_collected, guest_paid_owner_amount, owner_earn_snapshot, owner_paid_amount, refund_amount, created_at, confirmed_at, checked_in_at, checked_out_at, cancelled_at, sale_id, assets(title, slug)'
     )
     .eq('guest_id', guestId)
     .eq('id', bookingId)
@@ -125,7 +140,17 @@ export async function loadGuestBookingDetail(
   const listPrice = Number(b.list_price || 0);
   const amountCollected = Number(b.amount_collected || 0);
   const guestPaidOwner = Number(b.guest_paid_owner_amount || 0);
+  const ownerCost = Number(b.owner_earn_snapshot || 0);
+  const ownerPaid = Number(b.owner_paid_amount || 0);
   const status = b.status as string;
+  const ownerDue = guestPaysOwner({
+    listPrice,
+    amountCollected,
+    ownerCost,
+    ownerPaid,
+    guestPaidOwner,
+  });
+  const listLeft = remainingToPay(listPrice, amountCollected, guestPaidOwner);
 
   const timeline: GuestBookingTimelineStep[] = [
     { step: 'created', at: (b.created_at as string) || null },
@@ -147,12 +172,15 @@ export async function loadGuestBookingDetail(
     listPrice,
     amountCollected,
     guestPaidOwner,
-    remaining: remainingToPay(listPrice, amountCollected, guestPaidOwner),
+    ownerDue,
+    remaining: ownerDue > 0 ? ownerDue : listLeft,
     remainderPayee: remainderPayee({
       status,
       listPrice,
       amountCollected,
       guestPaidOwner,
+      ownerCost,
+      ownerPaid,
     }),
     refundAmount: Number(b.refund_amount || 0),
     createdAt: (b.created_at as string) || null,

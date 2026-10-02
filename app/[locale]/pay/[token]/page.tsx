@@ -34,7 +34,7 @@ export default async function GuestPayPage({
     .from('bookings')
     .select(
       `id, status, check_in, check_out, list_price, amount_collected,
-       guest_paid_owner_amount, sale_id, asset_id`
+       guest_paid_owner_amount, owner_earn_snapshot, owner_paid_amount, sale_id, asset_id`
     )
     .eq('id', invoice.booking_id)
     .maybeSingle();
@@ -71,6 +71,8 @@ export default async function GuestPayPage({
           listPrice={Number(booking.list_price || 0)}
           amountCollected={Number(booking.amount_collected || 0)}
           guestPaidOwner={Number(booking.guest_paid_owner_amount || 0)}
+          ownerCost={Number(booking.owner_earn_snapshot || 0)}
+          ownerPaid={Number(booking.owner_paid_amount || 0)}
           payee={invoice.payee === 'OWNER' ? 'OWNER' : 'SALE'}
           saleName={sale?.full_name || t('saleFallback')}
           salePhone={sale?.phone || ''}

@@ -19,10 +19,7 @@ import { notifications } from '@mantine/notifications';
 import { useLocale, useTranslations } from 'next-intl';
 import { colors, radius } from '@/config/design-tokens';
 import { useFormat } from '@/lib/i18n/use-format';
-import {
-  isGuestDepositCase,
-  settlementPayoutStatus,
-} from '@/lib/engines/guest-balance';
+import { settlementPayoutStatus } from '@/lib/engines/guest-balance';
 import { BookingStatusBadge } from '@/components/bookings/BookingStatusBadge';
 import { locationMatchesCity, vnCityOptions } from '@/lib/geo/vn-cities';
 import { getBookingStatusLabel } from '@/lib/i18n/booking-status';
@@ -227,7 +224,10 @@ export function OwnerSettlementsList({
                 <Table.Th style={{ width: 48 }}>{t('colOrder')}</Table.Th>
                 <Table.Th>{t('colVilla')}</Table.Th>
                 <Table.Th>{t('colSale')}</Table.Th>
+                <Table.Th>{t('colCost')}</Table.Th>
                 <Table.Th>{t('colPaid')}</Table.Th>
+                <Table.Th>{t('colGuestPaid')}</Table.Th>
+                <Table.Th>{t('colOwnerEarn')}</Table.Th>
                 <Table.Th>{t('colDue')}</Table.Th>
                 <Table.Th>{t('colStatus')}</Table.Th>
               </Table.Tr>
@@ -236,16 +236,10 @@ export function OwnerSettlementsList({
               {filtered.map((b, i) => {
                 const payoutStatus = payoutGroup(b);
                 const payoutMeta = PAYOUT_BADGE[payoutStatus];
-                const saleShort = Math.max(0, b.ownerEarn - b.ownerPaid);
-                const waitingOnGuest =
-                  payoutStatus === 'partial' &&
-                  isGuestDepositCase(b.listPrice, b.amountCollected);
-                const dueText =
-                  payoutStatus === 'full'
-                    ? formatNumber(0)
-                    : waitingOnGuest
-                      ? '50%'
-                      : formatNumber(saleShort);
+                const collected = b.ownerPaid + b.guestPaidOwner;
+                const costLeft = Math.max(0, b.ownerEarn - collected);
+                const collectedShort = collected < b.ownerEarn;
+                const dueText = formatNumber(costLeft);
                 const memo = ownerTransferMemo(b.id);
                 const open = openId === b.id;
 
@@ -282,12 +276,30 @@ export function OwnerSettlementsList({
                           <Text size="sm">{b.saleName || t('saleUnknown')}</Text>
                         </Group>
                       </Table.Td>
+                      <Table.Td style={{ background: 'var(--mantine-color-teal-light)' }}>
+                        <Text size="sm" fw={600}>
+                          {formatNumber(b.ownerEarn)}
+                        </Text>
+                      </Table.Td>
                       <Table.Td>
                         <Text size="sm" fw={600}>
                           {formatNumber(b.ownerPaid)}
                         </Text>
-                        <Text size="xs" c="dimmed">
-                          / {formatNumber(b.ownerEarn)}
+                      </Table.Td>
+                      <Table.Td>
+                        <Text size="sm" fw={600}>
+                          {formatNumber(b.guestPaidOwner)}
+                        </Text>
+                      </Table.Td>
+                      <Table.Td
+                        style={{
+                          background: collectedShort
+                            ? '#FFF3BF'
+                            : 'var(--mantine-color-teal-light)',
+                        }}
+                      >
+                        <Text size="sm" fw={600}>
+                          {formatNumber(collected)}
                         </Text>
                       </Table.Td>
                       <Table.Td>
@@ -310,7 +322,7 @@ export function OwnerSettlementsList({
                     {open ? (
                       <Table.Tr>
                         <Table.Td
-                          colSpan={6}
+                          colSpan={9}
                           style={{ background: colors.surfaceMuted }}
                           onClick={(e) => e.stopPropagation()}
                         >

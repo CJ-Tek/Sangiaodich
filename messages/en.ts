@@ -395,6 +395,7 @@ const messages = {
       "payment": "Payment",
       "listPrice": "Booking price",
       "collectedSale": "Paid (sale)",
+      "payOwner": "Pay owner at check-in",
       "collectedOwner": "Paid (owner)",
       "remaining": "Remaining",
       "refunded": "Refunded",
@@ -581,7 +582,7 @@ const messages = {
     "LIMIT": "Maximum 12 images per asset",
     "INVALID_COST": "Invalid nightly rate",
     "NO_OWNER_EARN": "No owner cost set — cannot submit to Owner",
-    "BELOW_OWNER_PAYOUT": "Owner payout must be at least 50% of cost ({amount}) before submitting",
+    "BELOW_OWNER_PAYOUT": "Owner transfer must be at least {amount} before submitting",
     "BELOW_DEPOSIT": "Guest deposit must be at least 50% of sale price ({amount}) before submitting",
     "OVERLAP": {
       "submitConfirmed": "Dates already confirmed by another sale — cannot submit",
@@ -788,7 +789,7 @@ const messages = {
   "inventory": {
     "listPriceGuestPay": "List price for stay (guest pay)",
     "collectedGuestMin": "Collected from guest (min 50% = {amount})",
-    "collectedOwnerMin": "Transferred to owner (min 50% cost = {amount})",
+    "collectedOwnerMin": "Transferred to owner (deposit = {amount})",
     "collectedGuest": "Collected from guest",
     "collectedOwner": "Transferred to owner",
     "costNightTitle": "Nightly cost (owner cost)",
