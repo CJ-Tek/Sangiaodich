@@ -6,7 +6,6 @@ import {
   getLatestSubscription,
 } from '@/lib/engines/subscription-access';
 import { isSubscriptionActive } from '@/lib/engines/subscription';
-import { isSimpleUi } from '@/lib/engines/ui-mode';
 import { createClient } from '@/lib/supabase/server';
 import { mapPaymentInfo } from '@/lib/platform/payment-info';
 
@@ -31,18 +30,11 @@ export default async function OwnerLayout({
     .eq('id', 1)
     .maybeSingle();
 
-  const simple = isSimpleUi(profile?.uiMode);
-
   return (
     <OwnerMobileShell
       uiMode={profile?.uiMode ?? 'simple'}
       headerExtra={
-        profile ? (
-          <UiModeToggle
-            mode={profile.uiMode}
-            homeHref={simple ? '/owner' : '/owner/calendar'}
-          />
-        ) : null
+        profile ? <UiModeToggle mode={profile.uiMode} /> : null
       }
     >
       <SubscriptionShell

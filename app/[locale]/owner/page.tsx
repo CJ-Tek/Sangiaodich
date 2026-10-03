@@ -1,10 +1,8 @@
 import { getLocale, getTranslations } from 'next-intl/server';
-import { localeRedirect } from '@/lib/i18n/navigation';
 import { Stack, Group, SimpleGrid, Alert } from '@mantine/core';
 import { createClient } from '@/lib/supabase/server';
 import { fetchAllPages } from '@/lib/supabase/query-guard';
 import { getSessionProfile } from '@/lib/auth/session';
-import { isSimpleUi } from '@/lib/engines/ui-mode';
 import { isSubscriptionActive } from '@/lib/engines/subscription';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LinkButton } from '@/components/ui/LinkButton';
@@ -21,7 +19,6 @@ export default async function OwnerDashboard() {
   const t = await getTranslations('owner.home');
   const locale = (await getLocale()) as AppLocale;
   const profile = await getSessionProfile();
-  if (isSimpleUi(profile?.uiMode)) return await localeRedirect('/owner/calendar');
   const admin = await createClient();
 
   const assets = await fetchAllPages((from, to) =>

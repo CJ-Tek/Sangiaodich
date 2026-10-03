@@ -2,25 +2,19 @@
 
 import { SegmentedControl } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import type { UiMode } from '@/lib/engines/ui-mode';
+import { useRouter } from '@/lib/i18n/navigation';
 
-const OPTIONS: { value: UiMode; label: string }[] = [
-  { value: 'simple', label: 'Đơn giản' },
-  { value: 'expert', label: 'Nâng cao' },
-];
-
-export function UiModeToggle({
-  mode,
-  homeHref,
-}: {
-  mode: UiMode;
-  /** Where to land after switching. */
-  homeHref: string;
-}) {
+export function UiModeToggle({ mode }: { mode: UiMode }) {
+  const t = useTranslations('common.uiMode');
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const options: { value: UiMode; label: string }[] = [
+    { value: 'simple', label: t('simple') },
+    { value: 'expert', label: t('advanced') },
+  ];
 
   async function apply(next: UiMode) {
     if (next === mode || loading) return;
@@ -35,11 +29,10 @@ export function UiModeToggle({
       if (!json.success) {
         notifications.show({
           color: 'red',
-          message: json.error?.message || 'Không đổi được chế độ',
+          message: json.error?.message || t('switchFailed'),
         });
         return;
       }
-      router.push(homeHref);
       router.refresh();
     } finally {
       setLoading(false);
@@ -51,9 +44,9 @@ export function UiModeToggle({
       size="xs"
       color="vbnbGreen"
       value={mode}
-      data={OPTIONS}
+      data={options}
       disabled={loading}
-      aria-label="Chế độ giao diện"
+      aria-label={t('label')}
       onChange={(value) => void apply(value as UiMode)}
     />
   );

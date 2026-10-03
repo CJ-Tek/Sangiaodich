@@ -57,6 +57,7 @@ export function SaleMobileShell({
   ];
 
   const simpleDesktop = [
+    { label: t('home'), href: '/sale' },
     { label: t('calendar'), href: '/sale/calendar' },
     { label: t('holds'), href: '/sale/bookings' },
     { label: t('tier'), href: '/sale/settings?tab=membership' },
@@ -71,6 +72,7 @@ export function SaleMobileShell({
   ];
 
   const simpleMobile = [
+    { label: t('home'), href: '/sale', Icon: IconHome },
     { label: t('calendar'), href: '/sale/calendar', Icon: IconCalendar },
     { label: t('holdShort'), href: '/sale/bookings', Icon: IconHome },
     { label: t('tier'), href: '/sale/settings?tab=membership', Icon: IconSettings },

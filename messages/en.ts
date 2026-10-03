@@ -19,6 +19,12 @@ const messages = {
     "logout": "Log out",
     "copy": "Copy",
     "copied": "Copied",
+    "uiMode": {
+      "label": "Interface mode",
+      "simple": "Simple",
+      "advanced": "Advanced",
+      "switchFailed": "Could not switch mode"
+    },
     "vietQr": {
       "label": "VietQR bank code",
       "description": "Select bank for dynamic QR with amount and transfer memo. Type name or code to search.",

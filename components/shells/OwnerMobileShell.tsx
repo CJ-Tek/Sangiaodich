@@ -57,6 +57,7 @@ export function OwnerMobileShell({
   ];
 
   const simpleDesktop = [
+    { label: t('properties'), href: '/owner' },
     { label: t('calendar'), href: '/owner/calendar' },
     { label: t('assets'), href: '/owner/assets' },
     { label: t('pending'), href: '/owner/pending' },
@@ -72,6 +73,7 @@ export function OwnerMobileShell({
   ];
 
   const simpleMobile = [
+    { label: t('properties'), href: '/owner', Icon: IconHome },
     { label: t('calendar'), href: '/owner/calendar', Icon: IconCalendar },
     { label: t('assetsShort'), href: '/owner/assets', Icon: IconStore },
     { label: t('pending'), href: '/owner/pending', Icon: IconInbox },

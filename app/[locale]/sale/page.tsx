@@ -3,7 +3,6 @@ import { Text, Stack, Title, Group, SimpleGrid, Paper } from '@mantine/core';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { saleHasActiveSub } from '@/lib/engines/booking-service';
-import { isSimpleUi } from '@/lib/engines/ui-mode';
 import { countUnreadLeads, UNREAD_LEAD_CAP } from '@/lib/engines/sale-leads';
 import { resolveSaleAssetDiscounts } from '@/lib/engines/sale-pricing';
 import { quoteAssetCosts } from '@/lib/engines/pricing';
@@ -16,7 +15,7 @@ import { AssetCard } from '@/components/marketplace/AssetCard';
 import { BookingStatusBadge } from '@/components/bookings/BookingStatusBadge';
 import { SalePeriodFilter } from '@/components/sale/SalePeriodFilter';
 import { colors, radius } from '@/config/design-tokens';
-import { Link, localeRedirect } from '@/lib/i18n/navigation';
+import { Link } from '@/lib/i18n/navigation';
 import { formatVnd } from '@/lib/i18n/format';
 import type { AppLocale } from '@/lib/i18n/routing';
 
@@ -39,7 +38,6 @@ export default async function SaleHomePage({
   const { ym: ymParam } = await searchParams;
   const period = parseYearMonth(ymParam);
   const profile = await getSessionProfile();
-  if (isSimpleUi(profile?.uiMode)) return await localeRedirect('/sale/calendar');
   const admin = await createClient();
 
   const [

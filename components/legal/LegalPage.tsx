@@ -1,5 +1,5 @@
 import { Box, Group, Stack, Text, Title } from '@mantine/core';
-import { getLocale, getTranslations } from 'next-intl/server';
+import { getTranslations } from 'next-intl/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { LandingFooter } from '@/components/landing/LandingFooter';
@@ -7,7 +7,6 @@ import { LandingHeader } from '@/components/landing/LandingHeader';
 import { landingContainer } from '@/components/landing/landing-media';
 import { colors } from '@/config/design-tokens';
 import { appHrefForRole } from '@/lib/i18n/app-href';
-import type { AppLocale } from '@/lib/i18n/routing';
 
 export type LegalSlug = 'terms' | 'privacy' | 'cookies';
 
@@ -17,7 +16,6 @@ type LegalSection = {
 };
 
 export async function LegalPage({ slug }: { slug: LegalSlug }) {
-  const locale = (await getLocale()) as AppLocale;
   const profile = await getSessionProfile();
   const t = await getTranslations(`legal.${slug}`);
   const tCommon = await getTranslations('common');
@@ -27,7 +25,7 @@ export async function LegalPage({ slug }: { slug: LegalSlug }) {
     <>
       <LandingHeader
         isLoggedIn={!!profile}
-        appHref={appHrefForRole(profile?.role, locale)}
+        appHref={appHrefForRole(profile?.role)}
         solid
       />
       <Box

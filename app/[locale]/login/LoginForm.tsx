@@ -18,6 +18,7 @@ import { useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { colors, radius, typography } from '@/config/design-tokens';
 import { appHrefForRole } from '@/lib/i18n/app-href';
+import { withLocalePath } from '@/lib/i18n/locale-path';
 import { Link } from '@/lib/i18n/navigation';
 import { SurfaceCard } from '@/components/ui/SurfaceCard';
 import type { AppLocale } from '@/lib/i18n/routing';
@@ -130,7 +131,7 @@ export function LoginForm() {
       redirectAfterAuth(safeNext);
       return;
     }
-    redirectAfterAuth(appHrefForRole(role, locale));
+    redirectAfterAuth(withLocalePath(appHrefForRole(role), locale));
   }
 
   function switchMode(m: Mode) {

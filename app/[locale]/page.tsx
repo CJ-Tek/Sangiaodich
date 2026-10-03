@@ -1,4 +1,3 @@
-import { getLocale } from 'next-intl/server';
 import { createServiceClient } from '@/lib/supabase/server';
 import { getSessionRoleHint } from '@/lib/auth/session-role';
 import { LandingHeader } from '@/components/landing/LandingHeader';
@@ -16,7 +15,6 @@ import { LandingFooter } from '@/components/landing/LandingFooter';
 import { listAllPlans } from '@/lib/engines/subscription-payment';
 import type { AssetCardData } from '@/components/marketplace/AssetCard';
 import { appHrefForRole } from '@/lib/i18n/app-href';
-import type { AppLocale } from '@/lib/i18n/routing';
 import { unstable_cache } from 'next/cache';
 import { Suspense } from 'react';
 
@@ -71,7 +69,6 @@ async function PricingSectionStream() {
 }
 
 export default async function HomePage() {
-  const locale = (await getLocale()) as AppLocale;
   const startedAt = Date.now();
   const roleStartedAt = Date.now();
   const rolePromise = getSessionRoleHint().then((value) => ({
@@ -126,7 +123,7 @@ export default async function HomePage() {
       <LandingHashScroll />
       <LandingHeader
         isLoggedIn={!!role}
-        appHref={appHrefForRole(role ?? undefined, locale)}
+        appHref={appHrefForRole(role ?? undefined)}
       />
       <main>
         <HeroSection />

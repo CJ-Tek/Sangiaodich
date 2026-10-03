@@ -19,6 +19,12 @@ const messages = {
     "logout": "Đăng xuất",
     "copy": "Sao chép",
     "copied": "Đã copy",
+    "uiMode": {
+      "label": "Chế độ giao diện",
+      "simple": "Đơn giản",
+      "advanced": "Nâng cao",
+      "switchFailed": "Không đổi được chế độ"
+    },
     "vietQr": {
       "label": "Mã NH VietQR",
       "description": "Chọn ngân hàng để tạo QR động kèm số tiền + nội dung. Gõ tên hoặc mã để tìm.",
