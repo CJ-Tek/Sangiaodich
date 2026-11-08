@@ -26,7 +26,9 @@ const fontSans = Plus_Jakarta_Sans({
 });
 
 const fontMono = JetBrains_Mono({
-  subsets: ['latin', 'latin-ext', 'vietnamese'],
+  // JetBrains Mono has no Vietnamese glyphs; asking for that subset
+  // makes next/font return null on Vercel and fail the production build.
+  subsets: ['latin', 'latin-ext'],
   weight: ['400', '500', '600'],
   display: 'swap',
   variable: '--font-mono',
