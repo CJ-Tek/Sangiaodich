@@ -12,6 +12,7 @@ export type SessionProfile = {
   avatar_url: string | null;
   national_id: string | null;
   uiMode: UiMode;
+  guidebookCompleted: string[];
 };
 
 /**
@@ -33,7 +34,7 @@ export const getSessionProfile = cache(
     const { data } = await supabase
       .from('profiles')
       .select(
-        'id, role, phone, email, full_name, avatar_url, national_id, deleted_at, ui_mode'
+        'id, role, phone, email, full_name, avatar_url, national_id, deleted_at, ui_mode, guidebook_completed'
       )
       .eq('id', userId)
       .maybeSingle();
@@ -49,6 +50,9 @@ export const getSessionProfile = cache(
       avatar_url: data.avatar_url,
       national_id: data.national_id,
       uiMode: parseUiMode(data.ui_mode),
+      guidebookCompleted: Array.isArray(data.guidebook_completed)
+        ? data.guidebook_completed.filter((id): id is string => typeof id === 'string')
+        : [],
     } as SessionProfile;
   }
 );

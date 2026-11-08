@@ -10,6 +10,7 @@ export function PageHeader({
   breadcrumbs,
   action,
   mb = 'xl',
+  guideId,
 }: {
   title: string;
   description?: string;
@@ -18,6 +19,8 @@ export function PageHeader({
   action?: ReactNode;
   /** Pass 0 when the parent Stack already spaces its children. */
   mb?: MantineSpacing | 0;
+  /** Marks the heading so the guidebook can scroll to this screen. */
+  guideId?: string;
 }) {
   return (
     <Stack gap={8} mb={mb}>
@@ -39,6 +42,7 @@ export function PageHeader({
         <Stack gap={8} style={{ flex: '1 1 20rem', minWidth: 0 }}>
           <Title
             order={1}
+            data-guide={guideId}
             className="vbnb-text-balance"
             style={{
               color: colors.textPrimary,

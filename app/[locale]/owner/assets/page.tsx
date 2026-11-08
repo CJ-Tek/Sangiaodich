@@ -67,6 +67,7 @@ export default async function OwnerAssetsPage() {
       <PageHeader
         title={t('title')}
         description={t('description')}
+        guideId="owner-assets"
         action={
           rows.length ? (
             <LinkButton href="/owner/assets/new" color="vbnbGreen">

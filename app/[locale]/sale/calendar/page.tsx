@@ -115,7 +115,7 @@ export default async function SaleCalendarPage({
 
   return (
     <Stack gap="md" style={{ minWidth: 0, maxWidth: '100%' }}>
-      <PageHeader title={t('title')} />
+      <PageHeader title={t('title')} guideId="sale-calendar" />
       <Box
         style={{
           background: colors.surface,

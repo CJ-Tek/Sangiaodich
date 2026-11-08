@@ -591,6 +591,7 @@ const messages = {
       "tagsRequiredForReview": "Select at least 1 tag for review submission",
       "invalidPropertyType": "Invalid property type",
       "passwordRequired": "Password is required",
+      "guidebookStep": "Unknown guidebook step",
       "identifierRequired": "Email or phone number is required",
       "invalidPhone": "Invalid phone number",
       "fullNameRequired": "Full name is required",
@@ -1260,6 +1261,146 @@ const messages = {
           ]
         }
       ]
+    }
+  },
+  "guidebook": {
+    "open": "Guide",
+    "title": "Getting started",
+    "subtitle": "A short tour of the screens you actually use.",
+    "close": "Close",
+    "progress": "{percent}% complete",
+    "showMe": "Show me this step",
+    "gotIt": "Got it",
+    "previous": "Previous",
+    "exit": "Exit",
+    "step": "Step {n} of {total}",
+    "chapters": {
+      "owner-overview": {
+        "title": "Overview",
+        "summary": "See what needs you today."
+      },
+      "owner-villas": {
+        "title": "Villas",
+        "summary": "Your listings and the prices sales quote from."
+      },
+      "owner-calendar": {
+        "title": "Calendar",
+        "summary": "Open nights, holds, and stays on one board."
+      },
+      "owner-confirm": {
+        "title": "Confirm a booking",
+        "summary": "A sale cannot lock a stay until you confirm."
+      },
+      "owner-settlement": {
+        "title": "Settlement",
+        "summary": "You receive the villa cost, not the sale price."
+      },
+      "owner-subscription": {
+        "title": "Subscription",
+        "summary": "The plan that keeps your villas bookable."
+      },
+      "sale-home": {
+        "title": "Home",
+        "summary": "Today’s holds, bookings, and what is still owed."
+      },
+      "sale-calendar": {
+        "title": "Calendar holds",
+        "summary": "Hold nights before you send a booking to the owner."
+      },
+      "sale-marketplace": {
+        "title": "Marketplace",
+        "summary": "Quoted villas you can offer a guest."
+      },
+      "sale-booking": {
+        "title": "Create a booking",
+        "summary": "How the 5,000,000 / 4,000,000 split works."
+      },
+      "sale-people": {
+        "title": "Leads and customers",
+        "summary": "People asking, and guests you already booked."
+      },
+      "sale-membership": {
+        "title": "Membership",
+        "summary": "Your tier changes the margin you keep."
+      },
+      "guest-explore": {
+        "title": "Explore",
+        "summary": "Browse villas without seeing owner cost."
+      },
+      "guest-contact": {
+        "title": "Contact a sale",
+        "summary": "A sale quotes the stay and sends you the pay link."
+      },
+      "guest-bookings": {
+        "title": "Bookings",
+        "summary": "What you already paid, and what you pay the owner at check-in."
+      }
+    },
+    "steps": {
+      "owner-overview": {
+        "title": "Start from the overview",
+        "body": "This page lists villas, pending requests, and money still coming in. Open a card when something needs a decision."
+      },
+      "owner-villas": {
+        "title": "Your villas",
+        "body": "Each listing has a cost (giá gốc). Sales quote a higher price to the guest and keep the difference."
+      },
+      "owner-calendar": {
+        "title": "Read the calendar",
+        "body": "Open nights can be booked. A hold is a sale reserving dates. A confirmed stay is already yours to host."
+      },
+      "owner-confirm": {
+        "title": "Confirm when the deposit arrives",
+        "body": "The sale sends the booking deposit: what the guest paid them, minus the sale’s margin. Confirm once that transfer is in. You do not wait for the full cost."
+      },
+      "owner-settlement": {
+        "title": "Giá gốc, transfers, and đã thu",
+        "body": "Example: cost 4,000,000, sale price 5,000,000. Guest pays the sale 2,500,000. The sale sends you 1,500,000 to book. At check-in the guest pays you the other 2,500,000. Đã thu is those two transfers. When it equals giá gốc, the stay is fully collected."
+      },
+      "owner-subscription": {
+        "title": "Keep the plan active",
+        "body": "An inactive subscription hides your villas from sales. Renew here before the period ends."
+      },
+      "sale-home": {
+        "title": "Your home",
+        "body": "Holds about to expire, bookings waiting on the owner, and payouts still due show up here first."
+      },
+      "sale-calendar": {
+        "title": "Hold the nights",
+        "body": "Put a hold on open nights while the guest decides. The owner still has to confirm before the stay is locked."
+      },
+      "sale-marketplace": {
+        "title": "Pick a villa",
+        "body": "Marketplace shows active villas with your quote. Owner cost stays on your side of the screen; the guest never sees it."
+      },
+      "sale-booking": {
+        "title": "The 5 million / 4 million split",
+        "body": "Sale price 5,000,000, cost 4,000,000, your margin 1,000,000. If the guest pays you 2,500,000, you send the owner 1,500,000 (2,500,000 minus your margin). The guest pays the owner the remaining 2,500,000 at check-in. If the guest pays you the full 5,000,000, you send the owner the whole 4,000,000 and nothing is left at check-in."
+      },
+      "sale-leads": {
+        "title": "Work a lead",
+        "body": "A lead is someone asking about a stay. Reply, then turn them into a booking when the dates are held."
+      },
+      "sale-customers": {
+        "title": "Customers you already know",
+        "body": "Saved guests keep their contact details so the next booking does not start from a blank form."
+      },
+      "sale-membership": {
+        "title": "Your membership",
+        "body": "The tier is snapshotted onto each booking. A higher tier keeps more of the margin between sale price and owner cost."
+      },
+      "guest-explore": {
+        "title": "Browse without prices",
+        "body": "Explore shows villas and dates. You do not see the owner’s cost or the sale’s margin. A sale sends the price that applies to you."
+      },
+      "guest-contact": {
+        "title": "Talk to a sale",
+        "body": "Ask a sale for the stay. They collect your deposit and send a pay link. You never pay the owner’s cost as a separate hidden fee."
+      },
+      "guest-bookings": {
+        "title": "Your bookings and the pay link",
+        "body": "Each booking shows the sale price, what you already paid the sale, and what you still pay the owner at check-in. That last amount is the same number on the pay link."
+      }
     }
   }
 } as const;

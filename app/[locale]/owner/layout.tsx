@@ -36,6 +36,7 @@ export default async function OwnerLayout({
       headerExtra={
         profile ? <UiModeToggle mode={profile.uiMode} /> : null
       }
+      guidebookCompleted={profile ? profile.guidebookCompleted : undefined}
     >
       <SubscriptionShell
         active={active}

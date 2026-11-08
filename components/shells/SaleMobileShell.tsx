@@ -33,15 +33,19 @@ import { isSimpleUi } from '@/lib/engines/ui-mode';
 import type { ReactNode } from 'react';
 import { isNavItemActive } from '@/components/shells/nav-active';
 import { shellNavLinkClass } from '@/components/shells/shell-nav-link-styles';
+import { Guidebook } from '@/components/guide/Guidebook';
+import { guideTargetForHref } from '@/lib/guide/chapters';
 
 export function SaleMobileShell({
   children,
   uiMode = 'simple',
   headerExtra,
+  guidebookCompleted,
 }: {
   children: React.ReactNode;
   uiMode?: UiMode;
   headerExtra?: ReactNode;
+  guidebookCompleted?: string[];
 }) {
   const t = useTranslations('sale.nav');
   const tShell = useTranslations('sale.shell');
@@ -95,7 +99,7 @@ export function SaleMobileShell({
         navbar={{ width: 228, breakpoint: 'sm' }}
         padding="lg"
       >
-        <AppShell.Header>
+        <AppShell.Header data-guide-chrome="header">
           <Group h="100%" px="md" justify="space-between">
             <Group gap="sm">
               <VbnbLogo height={28} priority />
@@ -111,6 +115,7 @@ export function SaleMobileShell({
                   component={Link}
                   href="/sale/settings"
                   className="vbnb-hit"
+                  data-guide="sale-membership"
                 >
                   <Text size="sm" c="dimmed">
                     {tShell('setting')}
@@ -122,6 +127,7 @@ export function SaleMobileShell({
         </AppShell.Header>
 
         <AppShell.Navbar
+          data-guide-chrome="nav"
           p="sm"
           style={{ display: 'flex', flexDirection: 'column' }}
         >
@@ -141,6 +147,7 @@ export function SaleMobileShell({
                     href={item.href}
                     label={item.label}
                     active={active}
+                    data-guide={guideTargetForHref(item.href)}
                   />
                 );
               })}
@@ -153,32 +160,50 @@ export function SaleMobileShell({
           </Stack>
         </AppShell.Navbar>
 
-        <AppShell.Main style={{ minWidth: 0, overflowX: 'clip' }}>
+        <AppShell.Main data-guide-view style={{ minWidth: 0, overflowX: 'clip' }}>
           <ShellContent>{children}</ShellContent>
         </AppShell.Main>
+        {guidebookCompleted ? (
+          <Guidebook role="SALE" completed={guidebookCompleted} />
+        ) : null}
       </AppShell>
     );
   }
 
   return (
     <AppShell header={{ height: 56 }} footer={{ height: 68 }} padding="md">
-      <AppShell.Header>
+      <AppShell.Header data-guide-chrome="header">
         <Group h="100%" px="md" justify="space-between" wrap="nowrap">
           <ShellLogo />
           <Group gap={4} wrap="nowrap">
             <LanguageSwitcher compact />
             {headerExtra}
+            {simple ? null : (
+              <UnstyledButton
+                component={Link}
+                href="/sale/settings"
+                className="vbnb-hit"
+                data-guide="sale-membership"
+              >
+                <Text size="sm" c="dimmed">
+                  {tShell('setting')}
+                </Text>
+              </UnstyledButton>
+            )}
           </Group>
         </Group>
       </AppShell.Header>
 
-      <AppShell.Main pb={84} style={{ minWidth: 0, overflowX: 'clip' }}>
+      <AppShell.Main data-guide-view pb={84} style={{ minWidth: 0, overflowX: 'clip' }}>
         {children}
       </AppShell.Main>
 
-      <AppShell.Footer>
+      <AppShell.Footer data-guide-chrome="footer">
         <RoleTabBar items={mobileItems} isActive={isActive} />
       </AppShell.Footer>
+      {guidebookCompleted ? (
+        <Guidebook role="SALE" completed={guidebookCompleted} />
+      ) : null}
     </AppShell>
   );
 }

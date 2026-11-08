@@ -240,6 +240,7 @@ export default async function SaleBookingsPage({
       <PageHeader
         title={t('title')}
         description={simple ? t('descSimple') : t('descExpert')}
+        guideId="sale-booking"
       />
       <Stack gap="md" mb="lg">
         <BookingStatusFilter value={filter} />

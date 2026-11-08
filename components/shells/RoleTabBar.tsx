@@ -4,6 +4,7 @@ import { Group } from '@mantine/core';
 import type { ComponentType } from 'react';
 import { Link } from '@/lib/i18n/navigation';
 import { colors } from '@/config/design-tokens';
+import { guideTargetForHref } from '@/lib/guide/chapters';
 
 export type RoleTabItem = {
   label: string;
@@ -29,6 +30,7 @@ export function RoleTabBar({
             href={item.href}
             className="vbnb-tabbar-item"
             data-active={active || undefined}
+            data-guide={guideTargetForHref(item.href)}
             aria-current={active ? 'page' : undefined}
           >
             <span className="vbnb-tabbar-item__icon" aria-hidden>

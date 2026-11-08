@@ -66,7 +66,7 @@ export default async function SaleMarketplacePage({
   if (!active) {
     return (
       <>
-        <PageHeader title={t('title')} />
+        <PageHeader title={t('title')} guideId="sale-marketplace" />
         <Alert color="red" title={t('subInactive')}>
           {t('subInactiveDesc')}
         </Alert>
@@ -99,7 +99,7 @@ export default async function SaleMarketplacePage({
 
   return (
     <>
-      <PageHeader title={t('title')} description={t('description')} />
+      <PageHeader title={t('title')} description={t('description')} guideId="sale-marketplace" />
       <Box
         mb="xl"
         style={{

@@ -50,7 +50,7 @@ export default async function SaleCustomersPage({
 
   return (
     <>
-      <PageHeader title={t('title')} description={t('description')} />
+      <PageHeader title={t('title')} description={t('description')} guideId="sale-customers" />
       <SaleCustomersTabs
         closed={closed}
         saved={saved}

@@ -103,7 +103,7 @@ export default async function OwnerPendingBookingsPage() {
 
   return (
     <>
-      <PageHeader title={t('title')} description={t('description')} />
+      <PageHeader title={t('title')} description={t('description')} guideId="owner-pending" />
       <OwnerPendingList
         rows={rows}
         requireStkCheck={!isSimpleUi(profile!.uiMode)}

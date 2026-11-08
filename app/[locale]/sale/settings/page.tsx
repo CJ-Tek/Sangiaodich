@@ -95,7 +95,7 @@ export default async function SaleSettingsPage({
 
   return (
     <>
-      <PageHeader title={t('title')} description={t('description')} />
+      <PageHeader title={t('title')} description={t('description')} guideId="sale-membership" />
       <Stack gap="md">
         <SaleSettingsTabs
           tab={tab}

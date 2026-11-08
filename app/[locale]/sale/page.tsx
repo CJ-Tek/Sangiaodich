@@ -129,6 +129,7 @@ export default async function SaleHomePage({
     <Stack gap={40}>
       <PageHeader
         title={t('greeting', { name: firstName })}
+        guideId="sale-home"
         action={<SalePeriodFilter yearMonth={period.yearMonth} />}
         mb={0}
       />

@@ -20,6 +20,8 @@ import { LogoutButton } from '@/components/auth/LogoutButton';
 import { guestNav } from '@/components/shells/guest-nav';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { VbnbLogo } from '@/components/brand/VbnbLogo';
+import { Guidebook } from '@/components/guide/Guidebook';
+import { guideTargetForHref } from '@/lib/guide/chapters';
 
 /**
  * Chrome for a signed-in guest: sidebar on desktop, tab bar on mobile.
@@ -28,8 +30,10 @@ import { VbnbLogo } from '@/components/brand/VbnbLogo';
  */
 export function GuestDashboardShell({
   children,
+  guidebookCompleted,
 }: {
   children: React.ReactNode;
+  guidebookCompleted?: string[];
 }) {
   const pathname = usePathname();
   const tNav = useTranslations('guest.nav');
@@ -50,7 +54,7 @@ export function GuestDashboardShell({
       footer={{ height: { base: 68, md: 0 } }}
       padding="lg"
     >
-      <AppShell.Header>
+      <AppShell.Header data-guide-chrome="header">
         <Group h="100%" px="md" justify="space-between">
           <Group gap="sm">
             <UnstyledButton component={Link} href="/me">
@@ -77,6 +81,7 @@ export function GuestDashboardShell({
       </AppShell.Header>
 
       <AppShell.Navbar
+        data-guide-chrome="nav"
         p="sm"
         style={{ display: 'flex', flexDirection: 'column' }}
       >
@@ -96,6 +101,7 @@ export function GuestDashboardShell({
                   href={item.href}
                   label={tNav(item.labelKey)}
                   active={active}
+                  data-guide={guideTargetForHref(item.href)}
                 />
               );
             })}
@@ -108,11 +114,11 @@ export function GuestDashboardShell({
         </Stack>
       </AppShell.Navbar>
 
-      <AppShell.Main>
+      <AppShell.Main data-guide-view>
         <ShellContent>{children}</ShellContent>
       </AppShell.Main>
 
-      <AppShell.Footer hiddenFrom="md">
+      <AppShell.Footer data-guide-chrome="footer" hiddenFrom="md">
         <RoleTabBar
           items={guestNav.map((item) => ({
             label: tNav(item.labelKey),
@@ -122,6 +128,9 @@ export function GuestDashboardShell({
           isActive={(href) => activeHref === href}
         />
       </AppShell.Footer>
+      {guidebookCompleted ? (
+        <Guidebook role="GUEST" completed={guidebookCompleted} />
+      ) : null}
     </AppShell>
   );
 }

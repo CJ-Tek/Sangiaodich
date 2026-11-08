@@ -1274,3 +1274,61 @@ a {
     align-items: start;
   }
 }
+
+.vbnb-guide-scrim {
+  position: fixed;
+  z-index: 1000;
+  background: rgba(22, 22, 22, 0.55);
+}
+
+.vbnb-guide-mask {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.vbnb-guide-hole {
+  position: fixed;
+  z-index: 1001;
+  pointer-events: none;
+  border: 3px solid #0ca678;
+  border-radius: 16px;
+  box-shadow: 0 0 0 8px rgba(12, 166, 120, 0.45);
+}
+
+.vbnb-guide-panel {
+  background: #fff !important;
+  border: 2px solid #3d5142 !important;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 6px rgba(83, 107, 88, 0.45),
+    0 28px 70px rgba(22, 22, 22, 0.38);
+  animation: vbnb-guide-pulse 1.8s ease-in-out infinite;
+}
+
+.vbnb-guide-panel-bar {
+  height: 8px;
+  background: #3d5142;
+}
+
+@keyframes vbnb-guide-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 6px rgba(83, 107, 88, 0.5),
+      0 28px 70px rgba(22, 22, 22, 0.38);
+  }
+  50% {
+    box-shadow:
+      0 0 0 12px rgba(83, 107, 88, 0.18),
+      0 28px 70px rgba(22, 22, 22, 0.38);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vbnb-guide-panel {
+    animation: none;
+  }
+}
+

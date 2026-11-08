@@ -70,6 +70,7 @@ export default async function OwnerDashboard() {
       <PageHeader
         title={t('greeting', { name: firstName })}
         description={t('description')}
+        guideId="owner-overview"
         action={
           active ? (
             <Group gap="sm">

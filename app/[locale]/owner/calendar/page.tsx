@@ -117,6 +117,7 @@ export default async function OwnerCalendarPage({
     <Stack gap="md" style={{ minWidth: 0, maxWidth: '100%' }}>
       <PageHeader
         title={t('title')}
+        guideId="owner-calendar"
         action={
           <LinkButton href="/owner/assets/new" color="vbnbGreen" size="sm">
             {t('addAsset')}

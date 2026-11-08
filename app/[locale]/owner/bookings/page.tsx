@@ -132,6 +132,7 @@ export default async function OwnerSettlementsPage() {
       <PageHeader
         title="Settlements"
         description="Check-in/out khi khách đến. Case A: khách CK nốt cho bạn. Case B: Sale CK đủ cost."
+        guideId="owner-bookings"
       />
       <OwnerSettlementsList rows={rows} payout={payout} />
     </>

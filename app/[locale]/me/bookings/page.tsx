@@ -18,7 +18,7 @@ export default async function MyBookingsPage() {
 
   return (
     <>
-      <PageHeader title={t('title')} description={t('description')} />
+      <PageHeader title={t('title')} description={t('description')} guideId="guest-bookings" />
       <GuestBookingsList rows={bookings} />
     </>
   );

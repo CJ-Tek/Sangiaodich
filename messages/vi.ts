@@ -591,6 +591,7 @@ const messages = {
       "tagsRequiredForReview": "Chọn ít nhất 1 tag khi nộp duyệt",
       "invalidPropertyType": "Loại hình không hợp lệ",
       "passwordRequired": "Mật khẩu bắt buộc",
+      "guidebookStep": "Bước hướng dẫn không hợp lệ",
       "identifierRequired": "Email hoặc số điện thoại bắt buộc",
       "invalidPhone": "Số điện thoại không hợp lệ",
       "fullNameRequired": "Họ tên bắt buộc",
@@ -1260,6 +1261,146 @@ const messages = {
           ]
         }
       ]
+    }
+  },
+  "guidebook": {
+    "open": "Hướng dẫn",
+    "title": "Bắt đầu",
+    "subtitle": "Tour ngắn trên đúng các màn hình bạn đang dùng.",
+    "close": "Đóng",
+    "progress": "Hoàn thành {percent}%",
+    "showMe": "Xem bước này",
+    "gotIt": "Đã hiểu",
+    "previous": "Trước",
+    "exit": "Thoát",
+    "step": "Bước {n} / {total}",
+    "chapters": {
+      "owner-overview": {
+        "title": "Tổng quan",
+        "summary": "Việc cần xử lý hôm nay."
+      },
+      "owner-villas": {
+        "title": "Căn",
+        "summary": "Listing và giá gốc mà Sale báo giá từ đó."
+      },
+      "owner-calendar": {
+        "title": "Lịch",
+        "summary": "Đêm trống, chỗ giữ và kỳ lưu trú trên một bảng."
+      },
+      "owner-confirm": {
+        "title": "Xác nhận booking",
+        "summary": "Sale chưa khóa được kỳ lưu trú khi bạn chưa xác nhận."
+      },
+      "owner-settlement": {
+        "title": "Quyết toán",
+        "summary": "Bạn nhận giá gốc, không nhận giá Sale bán cho khách."
+      },
+      "owner-subscription": {
+        "title": "Gói thuê",
+        "summary": "Gói giữ căn của bạn ở trạng thái có thể đặt."
+      },
+      "sale-home": {
+        "title": "Trang chủ",
+        "summary": "Chỗ giữ, booking và khoản còn phải chuyển hôm nay."
+      },
+      "sale-calendar": {
+        "title": "Giữ lịch",
+        "summary": "Giữ đêm trước khi gửi booking cho chủ nhà."
+      },
+      "sale-marketplace": {
+        "title": "Chợ villa",
+        "summary": "Căn đang mở mà bạn có thể báo cho khách."
+      },
+      "sale-booking": {
+        "title": "Tạo booking",
+        "summary": "Cách chia 5.000.000 / 4.000.000."
+      },
+      "sale-people": {
+        "title": "Lead và khách",
+        "summary": "Người đang hỏi, và khách bạn đã đặt."
+      },
+      "sale-membership": {
+        "title": "Hạng thành viên",
+        "summary": "Hạng đổi phần lãi bạn giữ lại."
+      },
+      "guest-explore": {
+        "title": "Khám phá",
+        "summary": "Xem căn mà không thấy giá gốc của chủ nhà."
+      },
+      "guest-contact": {
+        "title": "Liên hệ Sale",
+        "summary": "Sale báo giá và gửi link thanh toán."
+      },
+      "guest-bookings": {
+        "title": "Booking",
+        "summary": "Bạn đã trả bao nhiêu, và còn trả chủ nhà lúc check-in."
+      }
+    },
+    "steps": {
+      "owner-overview": {
+        "title": "Bắt đầu từ tổng quan",
+        "body": "Trang này gom căn, yêu cầu đang chờ và tiền còn về. Mở thẻ khi có việc cần quyết."
+      },
+      "owner-villas": {
+        "title": "Căn của bạn",
+        "body": "Mỗi listing có giá gốc. Sale báo khách giá cao hơn và giữ phần chênh."
+      },
+      "owner-calendar": {
+        "title": "Đọc lịch",
+        "body": "Đêm trống còn đặt được. Chỗ giữ là Sale đang giữ ngày. Kỳ đã xác nhận là bạn sắp đón khách."
+      },
+      "owner-confirm": {
+        "title": "Xác nhận khi nhận cọc",
+        "body": "Sale chuyển khoản cọc booking: số khách đã trả Sale, trừ lãi Sale. Xác nhận khi khoản đó đã vào. Bạn không chờ đủ cả giá gốc."
+      },
+      "owner-settlement": {
+        "title": "Giá gốc, chuyển khoản và đã thu",
+        "body": "Ví dụ: giá gốc 4.000.000, giá bán 5.000.000. Khách CK Sale 2.500.000. Sale CK bạn 1.500.000 để chốt. Lúc check-in khách CK bạn 2.500.000 còn lại. Đã thu là tổng hai khoản đó. Khi đã thu bằng giá gốc, kỳ lưu trú đã thu đủ."
+      },
+      "owner-subscription": {
+        "title": "Giữ gói còn hạn",
+        "body": "Gói hết hạn thì Sale không thấy căn. Gia hạn tại đây trước khi kỳ kết thúc."
+      },
+      "sale-home": {
+        "title": "Trang chủ của bạn",
+        "body": "Chỗ giữ sắp hết hạn, booking đang chờ chủ nhà và khoản còn phải CK hiện ở đây trước."
+      },
+      "sale-calendar": {
+        "title": "Giữ đêm",
+        "body": "Giữ đêm đang trống trong lúc khách quyết. Chủ nhà vẫn phải xác nhận thì kỳ lưu trú mới khóa."
+      },
+      "sale-marketplace": {
+        "title": "Chọn căn",
+        "body": "Chợ hiện căn đang mở kèm giá bạn báo. Giá gốc nằm phía bạn; khách không thấy."
+      },
+      "sale-booking": {
+        "title": "Chia 5 triệu / 4 triệu",
+        "body": "Giá bán 5.000.000, giá gốc 4.000.000, lãi của bạn 1.000.000. Khách CK bạn 2.500.000 thì bạn CK chủ nhà 1.500.000 (2.500.000 trừ lãi). Khách CK chủ nhà 2.500.000 còn lại lúc check-in. Nếu khách CK bạn đủ 5.000.000, bạn CK chủ nhà đủ 4.000.000 và check-in không còn khoản nào."
+      },
+      "sale-leads": {
+        "title": "Xử lý lead",
+        "body": "Lead là người đang hỏi kỳ lưu trú. Trả lời, rồi chuyển thành booking khi ngày đã được giữ."
+      },
+      "sale-customers": {
+        "title": "Khách đã quen",
+        "body": "Khách đã lưu giữ số liên hệ, lần booking sau không phải nhập lại từ đầu."
+      },
+      "sale-membership": {
+        "title": "Hạng của bạn",
+        "body": "Hạng được chụp vào từng booking. Hạng cao hơn giữ nhiều hơn phần chênh giữa giá bán và giá gốc."
+      },
+      "guest-explore": {
+        "title": "Xem căn, không thấy giá gốc",
+        "body": "Khám phá cho xem căn và ngày. Bạn không thấy giá gốc của chủ nhà hay lãi của Sale. Sale gửi giá áp cho bạn."
+      },
+      "guest-contact": {
+        "title": "Nói chuyện với Sale",
+        "body": "Nhờ Sale giữ kỳ lưu trú. Sale nhận cọc và gửi link thanh toán. Bạn không trả một khoản giá gốc ẩn riêng."
+      },
+      "guest-bookings": {
+        "title": "Booking và link thanh toán",
+        "body": "Mỗi booking hiện giá bán, số bạn đã CK Sale, và số còn CK chủ nhà lúc check-in. Số cuối cùng trùng với link thanh toán."
+      }
     }
   }
 } as const;

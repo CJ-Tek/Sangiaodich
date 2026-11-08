@@ -87,7 +87,7 @@ export default async function GuestExplorePage({
 
   return (
     <>
-      <PageHeader title={t('title')} description={t('description')} />
+      <PageHeader title={t('title')} description={t('description')} guideId="guest-explore" />
       <VillaSearch
         variant="marketplace"
         action="/me/explore"

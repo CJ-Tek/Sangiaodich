@@ -38,6 +38,9 @@ export default async function SaleLayout({
           <UiModeToggle mode={profile.uiMode} />
         ) : null
       }
+      guidebookCompleted={
+        profile?.role === 'SALE' ? profile.guidebookCompleted : undefined
+      }
     >
       <SubscriptionShell
         active={active}

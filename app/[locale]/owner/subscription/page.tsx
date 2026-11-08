@@ -47,7 +47,11 @@ export default async function OwnerSubscriptionPage() {
 
   return (
     <>
-      <PageHeader title={t('title')} description={t('description')} />
+      <PageHeader
+        title={t('title')}
+        description={t('description')}
+        guideId="owner-subscription"
+      />
       <Stack gap="xl" maw={760}>
         <Paper
           p="lg"
