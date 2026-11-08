@@ -28,7 +28,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
         <Text
           size={compact ? 'xs' : 'sm'}
           fw={active ? 700 : 500}
-          c={active ? colors.primaryDark : colors.textMuted}
+          c={active ? colors.primary : colors.textMuted}
           td={active ? 'underline' : undefined}
           style={{ textUnderlineOffset: 3 }}
         >

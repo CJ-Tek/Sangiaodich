@@ -32,11 +32,27 @@ const messages = {
     }
   },
   "nav": {
-    "exploreVillas": "Khám phá villas",
+    "exploreVillas": "Khám phá villa",
     "forOwners": "Dành cho Chủ villa",
     "forSales": "Dành cho Sale",
     "pricing": "Bảng giá",
     "aboutUs": "Về chúng tôi"
+  },
+  "seo": {
+    "home": {
+      "title": "VBNB – Sàn giao dịch villa kết nối Chủ villa, Sale & Khách hàng",
+      "description": "Sàn giao dịch villa thông minh: chủ villa tăng booking, sale xem giá vốn & lịch trống real-time để chốt đơn, khách đặt villa với tư vấn tận tâm.",
+      "keywords": [
+        "sàn giao dịch villa",
+        "cho thuê villa",
+        "đặt villa",
+        "booking villa",
+        "quản lý villa",
+        "sale villa",
+        "villa Đà Lạt",
+        "villa Vũng Tàu"
+      ]
+    }
   },
   "login": {
     "subtitle": "Tạo tài khoản — chọn đúng role (không đổi sau này).",
@@ -107,13 +123,30 @@ const messages = {
         "Sale không cần tự tìm kiếm khách và chủ nhà",
         "Khách hàng được hưởng dịch vụ tốt hơn từ sale có tâm"
       ],
-      "exploreCta": "Khám phá villas",
+      "exploreCta": "Khám phá villa",
       "learnMoreCta": "Tìm hiểu thêm",
       "imageAlt": "Villa hiện đại với hồ bơi"
     },
-    "trustStrip": {
-      "ariaLabel": "Đối tác tin tưởng",
-      "tagline": "Được tin tưởng bởi chủ villa và sales chuyên nghiệp"
+    "commitments": {
+      "ariaLabel": "Cam kết của VBNB",
+      "items": {
+        "transparency": {
+          "title": "Giá vốn minh bạch",
+          "body": "Giá vốn, lịch trống và đối soát rõ ràng cho Chủ villa và Sale."
+        },
+        "realtime": {
+          "title": "Lịch trống real-time",
+          "body": "Sale xem lịch trống và giá vốn tức thì trước khi chốt khách."
+        },
+        "safety": {
+          "title": "Ghi nhận thanh toán rõ ràng",
+          "body": "Các bên chuyển khoản trực tiếp, VBNB ghi nhận từng khoản."
+        },
+        "free": {
+          "title": "Khách dùng miễn phí",
+          "body": "Khách tìm villa và được sale tư vấn mà không mất phí."
+        }
+      }
     },
     "howItWorks": {
       "eyebrow": "VBNB hoạt động như thế nào",
@@ -213,12 +246,42 @@ const messages = {
       "ownerCta": "Tôi là Chủ villa",
       "saleCta": "Tôi là Sale"
     },
+    "faq": {
+      "eyebrow": "Câu hỏi thường gặp",
+      "title": "Giải đáp nhanh về VBNB",
+      "items": [
+        {
+          "question": "VBNB là gì?",
+          "answer": "VBNB là sàn giao dịch villa thông minh kết nối Chủ villa, Sale và Khách hàng. Chủ villa đăng tài sản với giá vốn và lịch trống, Sale truy cập toàn bộ villa để tư vấn và tạo booking, còn khách hàng được phục vụ bởi sale phù hợp."
+        },
+        {
+          "question": "Chủ villa đăng villa lên VBNB như thế nào?",
+          "answer": "Đăng ký tài khoản Chủ villa, chọn gói thành viên rồi tạo tài sản với hình ảnh, tiện nghi, giá vốn và lịch trống. Villa sẽ hiển thị trên sàn sau khi admin duyệt."
+        },
+        {
+          "question": "Sale tăng thu nhập trên VBNB như thế nào?",
+          "answer": "Sale xem giá vốn weekday/weekend và lịch trống theo thời gian thực, tạo booking cho khách chỉ trong vài phút và tối ưu lợi nhuận trên mỗi đơn. Check-out càng nhiều trên một căn, giá vốn càng tốt nếu Chủ villa đã mở chiết khấu."
+        },
+        {
+          "question": "Khách hàng đặt villa trên VBNB như thế nào?",
+          "answer": "Khách tìm villa theo địa điểm, tiện nghi, ngân sách và ngày ở, sau đó kết nối với sale để được tư vấn và chốt booking. Giá không hiển thị công khai trên danh sách. Tạo tài khoản khách để theo dõi lịch sử booking."
+        },
+        {
+          "question": "Phí tham gia VBNB là bao nhiêu?",
+          "answer": "Chủ villa và Sale trả phí thành viên theo gói 1 tháng, 3 tháng, 6 tháng hoặc 1 năm, gói càng dài ưu đãi càng nhiều. Xem chi tiết ở mục Bảng giá. Khách hàng sử dụng miễn phí."
+        },
+        {
+          "question": "Giao dịch trên VBNB có an toàn không?",
+          "answer": "VBNB không giữ tiền: khách, Sale và Chủ villa chuyển khoản trực tiếp cho nhau qua VietQR. Mỗi khoản được ghi nhận trên hệ thống và bên nhận xác nhận đã nhận tiền, nên các bên luôn đối soát được. VBNB có quyền khóa tài khoản khi phát hiện dấu hiệu gian lận."
+        }
+      ]
+    },
     "footer": {
       "tagline": "Nền tảng giao dịch villa hiện đại kết nối Chủ villa, Sale và Khách hàng.",
       "columns": {
         "platform": {
           "title": "Nền tảng",
-          "exploreVillas": "Khám phá villas",
+          "exploreVillas": "Khám phá villa",
           "howItWorks": "Cách hoạt động",
           "pricing": "Bảng giá",
           "membership": "Thành viên"
@@ -259,7 +322,7 @@ const messages = {
       "tagsLabel": "Thuộc tính",
       "tagsPlaceholder": "Hồ bơi, wifi, gần biển...",
       "tagsAria": "Thuộc tính villa",
-      "submit": "Tìm kiếm villas",
+      "submit": "Tìm kiếm villa",
       "advancedToggle": "Tìm kiếm nâng cao",
       "budgetLabel": "Ngân sách / đêm",
       "budgetFrom": "Từ",
@@ -277,7 +340,7 @@ const messages = {
   },
   "marketplace": {
     "page": {
-      "title": "Khám phá villas",
+      "title": "Khám phá villa",
       "description": "Lọc theo địa điểm và thuộc tính chủ nhà đã đăng. Không hiển thị giá.",
       "emptyTitle": "Không tìm thấy",
       "emptyDescription": "Thử từ khóa khác, bớt thuộc tính, hoặc nới ngân sách / số khách.",
@@ -1027,7 +1090,7 @@ const messages = {
     "terms": {
       "slug": "terms",
       "title": "Điều khoản sử dụng",
-      "updated": "12/08/2026",
+      "updated": "08/11/2026",
       "intro": "Khi tạo tài khoản trên VBNB, bạn xác nhận đã đọc và đồng ý với các điều khoản dưới đây. Điều khoản áp dụng cho Khách hàng, Sale và Chủ nhà (Owner).",
       "sections": [
         {
@@ -1041,8 +1104,9 @@ const messages = {
         {
           "heading": "Cảnh báo lừa đảo và chiếm dụng tiền",
           "paragraphs": [
-            "Nghiêm cấm giả mạo danh tính, tạo booking ảo, yêu cầu chuyển khoản ngoài luồng VBNB, chiếm dụng tiền cọc / thanh toán, hoặc bất kỳ hành vi nhằm chiếm đoạt tài sản của bên khác.",
-            "Khi có dấu hiệu gian lận, VBNB có quyền khóa tài khoản ngay và cung cấp thông tin liên quan cho cơ quan có thẩm quyền theo pháp luật Việt Nam."
+            "VBNB không làm trung gian nhận, giữ hay chuyển tiền. Khách hàng, Sale và Chủ nhà chuyển khoản trực tiếp cho nhau; VBNB chỉ ghi nhận và hiển thị trạng thái các khoản thanh toán do các bên xác nhận.",
+            "Người dùng tự chịu trách nhiệm kiểm tra thông tin người nhận (họ tên, số tài khoản, nội dung chuyển khoản) và đối chiếu với thông tin hiển thị trên VBNB trước khi chuyển tiền. VBNB không chịu trách nhiệm đối với các khoản tiền chuyển nhầm, bị chiếm dụng hoặc bị lừa đảo giữa các bên.",
+            "Nghiêm cấm giả mạo danh tính, tạo booking ảo, chiếm dụng tiền cọc / thanh toán, hoặc bất kỳ hành vi nhằm chiếm đoạt tài sản của bên khác. Khi có dấu hiệu gian lận, VBNB có quyền khóa tài khoản ngay và cung cấp thông tin liên quan cho cơ quan có thẩm quyền theo pháp luật Việt Nam."
           ]
         },
         {

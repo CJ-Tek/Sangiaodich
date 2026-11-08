@@ -12,8 +12,24 @@ import {
 import { notFound } from 'next/navigation';
 import { hasLocale } from 'next-intl';
 import { mantineHtmlProps } from '@mantine/core';
+import { JetBrains_Mono, Plus_Jakarta_Sans } from 'next/font/google';
 import { routing, type AppLocale } from '@/lib/i18n/routing';
 import { AppProviders } from '@/components/providers/AppProviders';
+import { ogImage, siteUrl } from '@/lib/seo/site';
+
+const fontSans = Plus_Jakarta_Sans({
+  subsets: ['latin', 'latin-ext', 'vietnamese'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-sans',
+});
+
+const fontMono = JetBrains_Mono({
+  subsets: ['latin', 'latin-ext', 'vietnamese'],
+  weight: ['400', '500', '600'],
+  display: 'swap',
+  variable: '--font-mono',
+});
 
 type Props = {
   children: React.ReactNode;
@@ -31,9 +47,15 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'common' });
+  const image = ogImage(
+    hasLocale(routing.locales, locale) ? locale : routing.defaultLocale,
+    t('appName')
+  );
 
   return {
+    metadataBase: new URL(siteUrl()),
     applicationName: t('appName'),
+    robots: { index: true, follow: true },
     title: {
       default: t('appName'),
       template: `%s · ${t('appName')}`,
@@ -59,12 +81,17 @@ export async function generateMetadata({
       siteName: t('appName'),
       title: t('appName'),
       description: t('appDescription'),
+      images: [image],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      images: [image.url],
     },
   };
 }
 
 export const viewport: Viewport = {
-  themeColor: '#536b58',
+  themeColor: '#10a18e',
   width: 'device-width',
   initialScale: 1,
 };
@@ -79,19 +106,11 @@ export default async function LocaleLayout({ children, params }: Props) {
   const messages = await getMessages();
 
   return (
-    <html lang={locale} {...mantineHtmlProps}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html
+      lang={locale}
+      className={`${fontSans.variable} ${fontMono.variable}`}
+      {...mantineHtmlProps}
+    >
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <AppProviders locale={locale as AppLocale}>{children}</AppProviders>

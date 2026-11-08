@@ -1,54 +1,32 @@
 'use client';
 
-import { Box, Group, SimpleGrid, Stack, Title } from '@mantine/core';
+import { Group } from '@mantine/core';
 import { useTranslations } from 'next-intl';
-import { colors, spacing, typography } from '@/config/design-tokens';
-import { containerClassName } from '@/components/landing/landing-media';
+import type { CSSProperties } from 'react';
 import { AssetCard, type AssetCardData } from '@/components/marketplace/AssetCard';
-import { EmptyState } from '@/components/ui/EmptyState';
 import { LinkButton } from '@/components/ui/LinkButton';
+import { Reveal } from '@/components/landing/Reveal';
+import { SectionShell } from '@/components/ui/SectionShell';
 
 export function FeaturedStays({ assets }: { assets: AssetCardData[] }) {
   const t = useTranslations('landing.featured');
 
+  if (!assets.length) return null;
+
   return (
-    <Box component="section" aria-labelledby="featured-heading" className="vbnb-landing-section">
-      <Stack gap={spacing['3xl']} className={containerClassName}>
-        <Group justify="space-between" align="baseline">
-        <Title
-          id="featured-heading"
-          order={2}
-          fw={typography.title.fontWeight}
-          className="vbnb-text-balance"
-          style={{
-            fontSize: typography.title.fontSize,
-            letterSpacing: typography.title.letterSpacing,
-            lineHeight: typography.title.lineHeight,
-            color: colors.textPrimary,
-          }}
-        >
-          {t('title')}
-        </Title>
-        <LinkButton href="/marketplace" variant="subtle" color="vbnbGreen">
+    <SectionShell id="featured" title={t('title')} align="center">
+      <div className="vbnb-grid vbnb-grid-3" style={{ '--vbnb-grid-gap': '24px' } as CSSProperties}>
+        {assets.map((asset, index) => (
+          <Reveal key={asset.id} delay={(index % 3) * 70}>
+            <AssetCard asset={asset} />
+          </Reveal>
+        ))}
+      </div>
+      <Group justify="center" mt={40}>
+        <LinkButton href="/marketplace" variant="default" size="md" h={46} px={24}>
           {t('viewAll')}
         </LinkButton>
-        </Group>
-
-        {!assets.length ? (
-        <EmptyState
-          title={t('emptyTitle')}
-          description={t('emptyDescription')}
-          actionLabel={t('emptyAction')}
-          href="/login"
-        />
-        ) : (
-          <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xl">
-            {assets.map((asset) => (
-              <AssetCard key={asset.id} asset={asset} />
-            ))}
-          </SimpleGrid>
-        )}
-      </Stack>
-    </Box>
+      </Group>
+    </SectionShell>
   );
 }

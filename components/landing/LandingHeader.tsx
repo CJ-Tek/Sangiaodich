@@ -16,13 +16,13 @@ import { goToLandingSection } from '@/components/landing/landing-nav';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { Link, usePathname } from '@/lib/i18n/navigation';
 import { LinkButton } from '@/components/ui/LinkButton';
+import { VbnbLogo } from '@/components/brand/VbnbLogo';
 
 const navItems = [
   { labelKey: 'exploreVillas' as const, href: '/marketplace' },
   { labelKey: 'forOwners' as const, href: '/#owner' },
   { labelKey: 'forSales' as const, href: '/#sale' },
   { labelKey: 'pricing' as const, href: '/#pricing' },
-  { labelKey: 'aboutUs' as const, href: '/#how' },
 ];
 
 export function LandingHeader({
@@ -72,14 +72,17 @@ export function LandingHeader({
         transition: `background ${motion.normal}ms ${motion.easing}, border-color ${motion.normal}ms ${motion.easing}`,
       }}
     >
-      <Group h="100%" justify="space-between" wrap="nowrap" className="vbnb-landing-container">
-        <UnstyledButton component={Link} href="/" aria-label={tCommon('homeAriaLabel')}>
-          <Text fw={700} c="vbnbGreen.6" style={{ letterSpacing: '-0.04em', fontSize: 22 }}>
-            {tCommon('appName')}
-          </Text>
+      <div className="vbnb-landing-container vbnb-landing-header__bar">
+        <UnstyledButton
+          component={Link}
+          href="/"
+          aria-label={tCommon('homeAriaLabel')}
+          style={{ justifySelf: 'start' }}
+        >
+          <VbnbLogo height={28} priority alt={tCommon('appName')} />
         </UnstyledButton>
 
-        <Group gap={22} visibleFrom="md">
+        <Group gap={28} visibleFrom="md" wrap="nowrap" component="nav">
           {navItems.map((item) => {
             const active = isActive(item.href);
             return (
@@ -92,7 +95,7 @@ export function LandingHeader({
                 <Text
                   size="sm"
                   fw={active ? 600 : 500}
-                  c={active ? colors.primaryDark : colors.textSecondary}
+                  c={active ? colors.primary : colors.textSecondary}
                   style={{
                     transition: `color ${motion.fast}ms ${motion.easing}`,
                   }}
@@ -104,7 +107,7 @@ export function LandingHeader({
           })}
         </Group>
 
-        <Group gap="sm" visibleFrom="md">
+        <Group gap="sm" visibleFrom="md" wrap="nowrap" style={{ justifySelf: 'end' }}>
           <LanguageSwitcher />
           {isLoggedIn ? (
             <LinkButton href={appHref} color="vbnbGreen" size="sm">
@@ -131,8 +134,9 @@ export function LandingHeader({
           size="sm"
           color={colors.textPrimary}
           aria-label={tCommon('openMenu')}
+          style={{ justifySelf: 'end' }}
         />
-      </Group>
+      </div>
 
       <Drawer
         opened={opened}
@@ -140,11 +144,7 @@ export function LandingHeader({
         position="right"
         size="xs"
         hiddenFrom="md"
-        title={
-          <Text fw={700} c="vbnbGreen.6">
-            {tCommon('appName')}
-          </Text>
-        }
+        title={<VbnbLogo height={22} alt={tCommon('appName')} />}
       >
         <Stack gap="lg" pt="md">
           {navItems.map((item) => {

@@ -10,9 +10,9 @@ export const colors = {
   textSecondary: '#5F625D',
   textMuted: '#8B8D87',
 
-  primary: '#536B58',
-  primaryDark: '#3D5142',
-  primarySoft: '#EAF0E8',
+  primary: '#10A18E',
+  primaryDark: '#0D8777',
+  primarySoft: '#ECF7F6',
 
   success: '#5B7A62',
   successSoft: '#EAF0E8',
@@ -28,8 +28,8 @@ export const colors = {
 } as const;
 
 export const fonts = {
-  sans: '"Plus Jakarta Sans", system-ui, -apple-system, sans-serif',
-  mono: '"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
+  sans: 'var(--font-sans), "Plus Jakarta Sans", system-ui, -apple-system, sans-serif',
+  mono: 'var(--font-mono), "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace',
 } as const;
 
 export const typography = {
@@ -93,23 +93,23 @@ export const spacing = {
   '4xl': 48,
   '5xl': 64,
   '6xl': 80,
-  sectionY: 56,
-  sectionYLarge: 80,
+  sectionY: 96,
+  sectionYLarge: 120,
 } as const;
 
 /** Tinted shadows — single light source from above */
 export const shadows = {
   none: 'none',
-  xs: '0 1px 2px rgba(83, 107, 88, 0.04)',
-  card: '0 1px 3px rgba(22, 22, 22, 0.04), 0 1px 2px rgba(83, 107, 88, 0.03)',
+  xs: '0 1px 2px rgba(16, 161, 142, 0.04)',
+  card: '0 1px 3px rgba(22, 22, 22, 0.04), 0 1px 2px rgba(16, 161, 142, 0.03)',
   cardHover:
-    '0 8px 24px rgba(22, 22, 22, 0.06), 0 2px 8px rgba(83, 107, 88, 0.05)',
+    '0 8px 24px rgba(22, 22, 22, 0.06), 0 2px 8px rgba(16, 161, 142, 0.05)',
   dropdown:
-    '0 12px 32px rgba(22, 22, 22, 0.08), 0 4px 12px rgba(83, 107, 88, 0.04)',
+    '0 12px 32px rgba(22, 22, 22, 0.08), 0 4px 12px rgba(16, 161, 142, 0.04)',
   float:
-    '0 16px 40px rgba(22, 22, 22, 0.08), 0 6px 16px rgba(83, 107, 88, 0.05)',
+    '0 16px 40px rgba(22, 22, 22, 0.08), 0 6px 16px rgba(16, 161, 142, 0.05)',
   modal:
-    '0 24px 48px rgba(22, 22, 22, 0.12), 0 8px 24px rgba(83, 107, 88, 0.06)',
+    '0 24px 48px rgba(22, 22, 22, 0.12), 0 8px 24px rgba(16, 161, 142, 0.06)',
 } as const;
 
 export const motion = {

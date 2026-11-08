@@ -5,15 +5,15 @@ import { colors, fonts, motion, radius, shadows } from './design-tokens';
 
 const primary: MantineColorsTuple = [
   colors.primarySoft,
-  '#D5E0D6',
-  '#B8C9BA',
-  '#9BB29F',
-  '#7E9A83',
+  '#D4EEEB',
+  '#A9DDD6',
+  '#7ECCC2',
+  '#53BBAE',
+  '#2DAC9C',
   colors.primary,
   colors.primaryDark,
-  '#2E3D32',
-  '#1F2A23',
-  '#141C17',
+  '#0B6D61',
+  '#08544A',
 ];
 
 const transition = `${motion.normal}ms ${motion.easing}`;

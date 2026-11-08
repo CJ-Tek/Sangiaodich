@@ -7,7 +7,6 @@ import {
   NavLink,
   Stack,
   Text,
-  Title,
   UnstyledButton,
   Divider,
   Box,
@@ -18,6 +17,7 @@ import { colors, radius } from '@/config/design-tokens';
 import { shellNavLinkClass } from '@/components/shells/shell-nav-link-styles';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import { VbnbLogo } from '@/components/brand/VbnbLogo';
 import type { ReactNode } from 'react';
 
 export type NavItem = {
@@ -90,9 +90,7 @@ export function DesktopRoleShell({
               hiddenFrom="sm"
               size="sm"
             />
-            <Title order={3} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
-              VBNB
-            </Title>
+            <VbnbLogo height={28} priority />
             <Text size="sm" c="dimmed">
               {title}
             </Text>

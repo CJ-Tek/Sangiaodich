@@ -1,10 +1,11 @@
 'use client';
 
-import { Badge, Box, Group, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { Badge, Box, Group, Stack, Text } from '@mantine/core';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 import { colors, radius, shadows, spacing, typography } from '@/config/design-tokens';
 import { LinkButton } from '@/components/ui/LinkButton';
+import { Reveal } from '@/components/landing/Reveal';
 import { SectionShell } from '@/components/ui/SectionShell';
 import { SurfaceCard } from '@/components/ui/SurfaceCard';
 import {
@@ -16,6 +17,18 @@ import {
 
 type RoleTab = 'OWNER' | 'SALE';
 
+function featuredPlanId(plans: SubscriptionPlan[]): string | undefined {
+  let best: { id: string; percent: number } | undefined;
+  for (const plan of plans) {
+    const discount = planDiscount(plan);
+    if (discount && (!best || discount.percent > best.percent)) {
+      best = { id: plan.id, percent: discount.percent };
+    }
+  }
+  if (best) return best.id;
+  return plans.length > 2 ? plans[1].id : undefined;
+}
+
 export function PricingSection({
   ownerPlans,
   salePlans,
@@ -26,6 +39,7 @@ export function PricingSection({
   const t = useTranslations('landing.pricing');
   const [tab, setTab] = useState<RoleTab>('OWNER');
   const plans = tab === 'OWNER' ? ownerPlans : salePlans;
+  const featuredId = featuredPlanId(plans);
   const ctaHref =
     tab === 'OWNER'
       ? '/login?mode=register&role=OWNER'
@@ -33,34 +47,15 @@ export function PricingSection({
   const ctaLabel = tab === 'OWNER' ? t('ctaOwner') : t('ctaSale');
 
   return (
-    <SectionShell id="pricing" large>
+    <SectionShell
+      id="pricing"
+      eyebrow={t('eyebrow')}
+      title={t('title')}
+      description={t('subtitle')}
+      align="center"
+      tone="surface"
+    >
       <Stack gap={spacing['3xl']} align="center">
-        <Stack gap="sm" align="center" maw={480}>
-          <span className="vbnb-eyebrow">{t('eyebrow')}</span>
-          <Title
-            id="pricing-heading"
-            order={2}
-            ta="center"
-            fw={typography.title.fontWeight}
-            className="vbnb-text-balance"
-            style={{
-              fontSize: typography.title.fontSize,
-              letterSpacing: typography.title.letterSpacing,
-              lineHeight: typography.title.lineHeight,
-              color: colors.textPrimary,
-            }}
-          >
-            {t('title')}
-          </Title>
-          <Text
-            ta="center"
-            c={colors.textSecondary}
-            style={{ lineHeight: typography.body.lineHeight }}
-          >
-            {t('subtitle')}
-          </Text>
-        </Stack>
-
         <Group justify="center">
           <Box
             role="tablist"
@@ -92,7 +87,7 @@ export function PricingSection({
                     border: 0,
                     cursor: 'pointer',
                     background: active ? colors.surface : 'transparent',
-                    color: active ? colors.primaryDark : colors.textSecondary,
+                    color: active ? colors.primary : colors.textSecondary,
                     fontWeight: active ? 600 : 500,
                     fontSize: typography.body.fontSize,
                     fontFamily: 'inherit',
@@ -113,14 +108,16 @@ export function PricingSection({
             {tab === 'OWNER' ? t('emptyOwner') : t('emptySale')}
           </Text>
         ) : (
-          <SimpleGrid cols={{ base: 1, sm: 2, lg: 3 }} spacing="md" w="100%">
+          <div className="vbnb-grid vbnb-grid-4" style={{ width: '100%' }}>
             {plans.map((plan, index) => (
-              <PlanCard key={plan.id} plan={plan} featured={index === 1 && plans.length > 2} />
+              <Reveal key={plan.id} delay={index * 70}>
+                <PlanCard plan={plan} featured={plan.id === featuredId} />
+              </Reveal>
             ))}
-          </SimpleGrid>
+          </div>
         )}
 
-        <LinkButton href={ctaHref} color="vbnbGreen" h={46} px={22} fw={600}>
+        <LinkButton href={ctaHref} color="vbnbGreen" size="md" h={48} px={28}>
           {ctaLabel}
         </LinkButton>
       </Stack>
@@ -134,43 +131,47 @@ function PlanCard({ plan, featured }: { plan: SubscriptionPlan; featured?: boole
 
   return (
     <SurfaceCard
-      p="lg"
+      p="xl"
+      h="100%"
       style={{
-        minHeight: 168,
         ...(featured
           ? {
               borderColor: colors.primary,
-              boxShadow: shadows.cardHover,
+              boxShadow: `0 0 0 1px ${colors.primary}, ${shadows.cardHover}`,
             }
           : {}),
       }}
     >
-      <Stack gap="sm">
-        <Text size="sm" fw={600}>
-          {title}
-        </Text>
-        {discount ? (
-          <Badge size="sm" color="red" variant="light" w="fit-content">
-            −{discount.percent}%
-          </Badge>
-        ) : null}
-        <Text
-          fw={typography.data.fontWeight}
-          c="vbnbGreen.6"
-          className="vbnb-tabular-nums"
-          style={{
-            fontSize: typography.data.fontSize,
-            letterSpacing: typography.data.letterSpacing,
-            lineHeight: typography.data.lineHeight,
-          }}
-        >
-          {formatVnd(plan.amount)}
-        </Text>
-        {discount ? (
-          <Text size="xs" c="dimmed" td="line-through" className="vbnb-tabular-nums">
-            {formatVnd(discount.compareAt)}
+      <Stack gap="md" h="100%">
+        <Group justify="space-between" align="center" wrap="nowrap">
+          <Text fw={600} c={colors.textPrimary}>
+            {title}
           </Text>
-        ) : null}
+          {discount ? (
+            <Badge size="sm" color="red" variant="light">
+              −{discount.percent}%
+            </Badge>
+          ) : null}
+        </Group>
+        <Stack gap={4} mt="auto">
+          <Text
+            fw={typography.data.fontWeight}
+            c="vbnbGreen.6"
+            className="vbnb-tabular-nums"
+            style={{
+              fontSize: typography.data.fontSize,
+              letterSpacing: typography.data.letterSpacing,
+              lineHeight: typography.data.lineHeight,
+            }}
+          >
+            {formatVnd(plan.amount)}
+          </Text>
+          {discount ? (
+            <Text size="sm" c="dimmed" td="line-through" className="vbnb-tabular-nums">
+              {formatVnd(discount.compareAt)}
+            </Text>
+          ) : null}
+        </Stack>
       </Stack>
     </SurfaceCard>
   );

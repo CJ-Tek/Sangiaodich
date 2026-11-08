@@ -6,7 +6,6 @@ import {
   NavLink,
   Stack,
   Text,
-  Title,
   UnstyledButton,
   Divider,
   Box,
@@ -17,6 +16,7 @@ import { Link, usePathname } from '@/lib/i18n/navigation';
 import { colors, radius } from '@/config/design-tokens';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import { VbnbLogo } from '@/components/brand/VbnbLogo';
 import {
   IconCalendar,
   IconClipboard,
@@ -98,9 +98,7 @@ export function OwnerMobileShell({
         <AppShell.Header>
           <Group h="100%" px="md" justify="space-between">
             <Group gap="sm">
-              <Title order={3} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
-                VBNB
-              </Title>
+              <VbnbLogo height={28} priority />
               <Text size="sm" c="dimmed">
                 {tShell('roleLabel')}
               </Text>
@@ -162,9 +160,7 @@ export function OwnerMobileShell({
     <AppShell header={{ height: 56 }} footer={{ height: 64 }} padding="md">
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
-          <Title order={4} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
-            VBNB
-          </Title>
+          <VbnbLogo height={24} priority />
           <Group gap="md">
             <LanguageSwitcher compact />
             {headerExtra}
@@ -180,7 +176,7 @@ export function OwnerMobileShell({
         <Group h="100%" px={4} grow gap={0}>
           {mobileItems.map((item) => {
             const active = isActive(item.href);
-            const iconColor = active ? colors.primaryDark : colors.textSecondary;
+            const iconColor = active ? colors.primary : colors.textSecondary;
             return (
               <UnstyledButton
                 key={item.href}

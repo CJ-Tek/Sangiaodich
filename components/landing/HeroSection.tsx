@@ -3,7 +3,7 @@
 import { Box, Group, Stack, Text, Title } from '@mantine/core';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
-import { colors, spacing, typography } from '@/config/design-tokens';
+import { colors, typography } from '@/config/design-tokens';
 import { containerClassName, landingMedia } from '@/components/landing/landing-media';
 import { LinkButton } from '@/components/ui/LinkButton';
 import { VillaSearch } from '@/components/landing/VillaSearch';
@@ -13,25 +13,9 @@ export function HeroSection() {
   const bullets = t.raw('bullets') as string[];
 
   return (
-    <Box
-      component="section"
-      aria-labelledby="landing-hero-title"
-      style={{ position: 'relative', overflow: 'hidden' }}
-    >
-      <Box
-        className={`${containerClassName} vbnb-landing-hero`}
-        style={{
-          position: 'relative',
-          paddingTop: spacing['3xl'],
-          paddingBottom: spacing.sm,
-        }}
-      >
-        <Stack
-          gap="lg"
-          maw={620}
-          className="vbnb-landing-fade-up vbnb-landing-hero-copy"
-          style={{ position: 'relative', zIndex: 1, paddingBottom: spacing.md }}
-        >
+    <Box component="section" aria-labelledby="landing-hero-title" className="vbnb-hero">
+      <div className={`${containerClassName} vbnb-hero__grid`}>
+        <Stack gap={28} className="vbnb-landing-fade-up vbnb-hero__copy">
           <span className="vbnb-eyebrow">{t('badge')}</span>
 
           <Title
@@ -41,57 +25,43 @@ export function HeroSection() {
             c={colors.textPrimary}
             className="vbnb-text-balance"
             style={{
-              fontSize: typography.display.fontSize,
-              lineHeight: typography.display.lineHeight,
+              fontSize: 'clamp(2.125rem, 4.2vw, 3.25rem)',
+              lineHeight: 1.08,
               letterSpacing: typography.display.letterSpacing,
             }}
           >
-            {t('titleLine1')}
-            <br />
-            {t('titleLine2')}
-            <br />
+            {t('titleLine1')} {t('titleLine2')}{' '}
             <Text span inherit c="vbnbGreen.6">
               {t('titleHighlight')}
             </Text>
           </Title>
 
-          <Box
-            component="ul"
-            maw={520}
-            style={{
-              margin: 0,
-              paddingLeft: spacing.lg,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: spacing.xs,
-              color: colors.primary,
-            }}
-          >
+          <ul className="vbnb-hero__bullets">
             {bullets.map((line) => (
               <Text
                 key={line}
                 component="li"
+                c={colors.textSecondary}
                 style={{
-                  fontSize: typography.body.fontSize,
+                  fontSize: '1rem',
                   lineHeight: typography.body.lineHeight,
                 }}
               >
-                <Text span c={colors.textSecondary} inherit>
-                  {line}
-                </Text>
+                {line}
               </Text>
             ))}
-          </Box>
+          </ul>
 
-          <Group gap="sm" className="vbnb-landing-hero-ctas">
-            <LinkButton href="/marketplace" color="vbnbGreen" h={46} px={20} fw={600}>
+          <Group gap="sm" className="vbnb-hero__ctas">
+            <LinkButton href="/marketplace" color="vbnbGreen" size="md" h={48} px={24}>
               {t('exploreCta')}
             </LinkButton>
             <LinkButton
               href="#how"
               variant="default"
-              h={46}
-              px={20}
+              size="md"
+              h={48}
+              px={24}
               fw={500}
               style={{ borderColor: colors.borderStrong, color: colors.textPrimary }}
             >
@@ -100,22 +70,21 @@ export function HeroSection() {
           </Group>
         </Stack>
 
-        <Box className="vbnb-landing-hero-image vbnb-landing-fade-in">
+        <div className="vbnb-hero__media vbnb-landing-fade-in">
           <Image
             src={landingMedia.hero}
             alt={t('imageAlt')}
             fill
             priority
-            sizes="(max-width: 767px) 100vw, 52vw"
+            sizes="(max-width: 899px) 100vw, 560px"
             style={{ objectFit: 'cover' }}
           />
-          <Box className="vbnb-landing-hero-fade" />
-        </Box>
+        </div>
+      </div>
 
-        <Box className="vbnb-landing-hero-search" style={{ position: 'relative', zIndex: 2 }}>
-          <VillaSearch />
-        </Box>
-      </Box>
+      <div className={`${containerClassName} vbnb-hero__search`}>
+        <VillaSearch />
+      </div>
     </Box>
   );
 }

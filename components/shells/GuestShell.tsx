@@ -5,7 +5,6 @@ import {
   Box,
   Group,
   Text,
-  Title,
   UnstyledButton,
 } from '@mantine/core';
 import { useMediaQuery } from '@mantine/hooks';
@@ -14,6 +13,7 @@ import { Link, usePathname } from '@/lib/i18n/navigation';
 import { colors, radius } from '@/config/design-tokens';
 import { guestNav, guestNavHref } from '@/components/shells/guest-nav';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import { VbnbLogo } from '@/components/brand/VbnbLogo';
 
 export function GuestShell({
   children,
@@ -61,9 +61,7 @@ export function GuestShell({
         >
           <Group gap="xl">
             <UnstyledButton component={Link} href="/">
-              <Title order={3} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
-                VBNB
-              </Title>
+              <VbnbLogo height={28} priority />
             </UnstyledButton>
             {!isCompact && !isLoginPage ? (
             <Group gap="md">
@@ -78,7 +76,7 @@ export function GuestShell({
                     <Text
                       size="sm"
                       fw={active ? 600 : 500}
-                      c={active ? colors.primaryDark : colors.textSecondary}
+                      c={active ? colors.primary : colors.textSecondary}
                     >
                       {tNav(item.labelKey)}
                     </Text>
@@ -125,7 +123,7 @@ export function GuestShell({
           <Group h="100%" px={4} grow gap={0}>
             {items.map((item) => {
               const active = activeTarget === item.target;
-              const iconColor = active ? colors.primaryDark : colors.textSecondary;
+              const iconColor = active ? colors.primary : colors.textSecondary;
               return (
                 <UnstyledButton
                   key={item.href}

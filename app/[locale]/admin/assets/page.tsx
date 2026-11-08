@@ -10,7 +10,7 @@ import { adminAssetStatusTone } from '@/components/admin/admin-asset-status';
 import { isPropertyType, propertyTypeLabel } from '@/config/asset-tags';
 import { colors, radius } from '@/config/design-tokens';
 
-const PLACEHOLDER = 'https://placehold.co/240x160/F3F3EF/536B58?text=VBNB';
+const PLACEHOLDER = 'https://placehold.co/240x160/F3F3EF/10A18E?text=VBNB';
 
 function ownerNameOf(profiles: unknown): string {
   return (profiles as { full_name?: string } | null)?.full_name || '';

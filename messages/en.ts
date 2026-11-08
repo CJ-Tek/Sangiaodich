@@ -38,6 +38,22 @@ const messages = {
     "pricing": "Pricing",
     "aboutUs": "About us"
   },
+  "seo": {
+    "home": {
+      "title": "VBNB – Villa marketplace connecting Owners, Sales & Guests",
+      "description": "Smart villa marketplace: owners fill more nights, sales see real-time cost and availability to close bookings, and guests book villas with dedicated advice.",
+      "keywords": [
+        "villa marketplace",
+        "villa rental Vietnam",
+        "book a villa",
+        "villa booking",
+        "villa management",
+        "villa sales",
+        "Da Lat villa",
+        "Vung Tau villa"
+      ]
+    }
+  },
   "login": {
     "subtitle": "Create an account — choose the right role (cannot be changed later).",
     "modeLogin": "Log in",
@@ -111,9 +127,26 @@ const messages = {
       "learnMoreCta": "Learn more",
       "imageAlt": "Modern villa with pool"
     },
-    "trustStrip": {
-      "ariaLabel": "Trusted partners",
-      "tagline": "Trusted by villa owners and professional sales"
+    "commitments": {
+      "ariaLabel": "VBNB commitments",
+      "items": {
+        "transparency": {
+          "title": "Transparent cost prices",
+          "body": "Clear cost prices, availability, and reconciliation."
+        },
+        "realtime": {
+          "title": "Real-time availability",
+          "body": "Sales see availability and cost before closing a guest."
+        },
+        "safety": {
+          "title": "Clear payment records",
+          "body": "Parties pay each other directly; VBNB records every payment."
+        },
+        "free": {
+          "title": "Free for guests",
+          "body": "Guests search villas and get advice from sales at no cost."
+        }
+      }
     },
     "howItWorks": {
       "eyebrow": "How VBNB works",
@@ -212,6 +245,36 @@ const messages = {
       "subtitle": "Join thousands of villa owners and professional sales nationwide.",
       "ownerCta": "I am a villa owner",
       "saleCta": "I am a sale"
+    },
+    "faq": {
+      "eyebrow": "Frequently asked questions",
+      "title": "Quick answers about VBNB",
+      "items": [
+        {
+          "question": "What is VBNB?",
+          "answer": "VBNB is a smart villa marketplace connecting villa owners, sales, and guests. Owners list properties with cost prices and availability, sales access every villa to advise guests and create bookings, and guests are served by the right sale."
+        },
+        {
+          "question": "How do villa owners list a villa on VBNB?",
+          "answer": "Sign up as a villa owner, choose a membership plan, then create your property with photos, amenities, cost prices, and availability. Your villa appears on the marketplace after admin approval."
+        },
+        {
+          "question": "How do sales earn more on VBNB?",
+          "answer": "Sales see weekday/weekend cost and availability in real time, create bookings in minutes, and optimize profit on every deal. More check-outs on a property can lower its cost if the owner enabled discounts."
+        },
+        {
+          "question": "How do guests book a villa on VBNB?",
+          "answer": "Guests search villas by location, amenities, budget, and dates, then connect with a sale for advice and to confirm the booking. Prices are not shown publicly on listings. Create a guest account to track your booking history."
+        },
+        {
+          "question": "How much does it cost to join VBNB?",
+          "answer": "Villa owners and sales pay a membership fee on 1-month, 3-month, 6-month, or 1-year plans; longer plans offer bigger savings. See the Pricing section for details. Guests use VBNB for free."
+        },
+        {
+          "question": "Are transactions on VBNB safe?",
+          "answer": "VBNB does not hold money: guests, sales, and villa owners pay each other directly via VietQR. Each payment is recorded in the system and confirmed by the receiver, so every party can reconcile. VBNB may lock accounts when signs of fraud appear."
+        }
+      ]
     },
     "footer": {
       "tagline": "Modern villa marketplace connecting Owners, Sales, and Guests.",
@@ -1027,7 +1090,7 @@ const messages = {
     "terms": {
       "slug": "terms",
       "title": "Terms of Service",
-      "updated": "12/08/2026",
+      "updated": "08/11/2026",
       "intro": "By creating an account on VBNB, you confirm that you have read and agree to the terms below. These terms apply to Guests, Sales, and Villa Owners.",
       "sections": [
         {
@@ -1041,8 +1104,9 @@ const messages = {
         {
           "heading": "Fraud and Misappropriation Warning",
           "paragraphs": [
-            "Identity impersonation, fake bookings, requests to transfer money outside VBNB, misappropriation of deposits or payments, or any act intended to seize another party's assets is strictly prohibited.",
-            "When signs of fraud appear, VBNB may lock the account immediately and provide relevant information to competent authorities under Vietnamese law."
+            "VBNB does not act as an intermediary to receive, hold, or transfer money. Guests, Sales, and Owners pay each other directly; VBNB only records and displays the status of payments confirmed by the parties.",
+            "Users are responsible for verifying the recipient's details (name, account number, transfer note) against the information shown on VBNB before sending money. VBNB is not liable for money sent by mistake, misappropriated, or lost to fraud between parties.",
+            "Identity impersonation, fake bookings, misappropriation of deposits or payments, or any act intended to seize another party's assets is strictly prohibited. When signs of fraud appear, VBNB may lock the account immediately and provide relevant information to competent authorities under Vietnamese law."
           ]
         },
         {

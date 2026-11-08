@@ -13,8 +13,8 @@ export const bookingStatusColors = {
   },
   confirmed: {
     bg: colors.primarySoft,
-    text: colors.primaryDark,
-    border: '#D5E0D6',
+    text: colors.primary,
+    border: '#D4EEEB',
   },
   checkedIn: {
     bg: '#E7F0F6',

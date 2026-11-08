@@ -8,7 +8,6 @@ import {
   NavLink,
   Stack,
   Text,
-  Title,
   UnstyledButton,
 } from '@mantine/core';
 import { useTranslations } from 'next-intl';
@@ -18,6 +17,7 @@ import { shellNavLinkClass } from '@/components/shells/shell-nav-link-styles';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { guestNav } from '@/components/shells/guest-nav';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import { VbnbLogo } from '@/components/brand/VbnbLogo';
 
 /**
  * Chrome for a signed-in guest: sidebar on desktop, tab bar on mobile.
@@ -52,9 +52,7 @@ export function GuestDashboardShell({
         <Group h="100%" px="md" justify="space-between">
           <Group gap="sm">
             <UnstyledButton component={Link} href="/me">
-              <Title order={3} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
-                VBNB
-              </Title>
+              <VbnbLogo height={28} priority />
             </UnstyledButton>
             <Text size="sm" c="dimmed" visibleFrom="md">
               {tShell('roleLabel')}
@@ -110,7 +108,7 @@ export function GuestDashboardShell({
           {guestNav.map((item) => {
             const active = activeHref === item.href;
             const iconColor = active
-              ? colors.primaryDark
+              ? colors.primary
               : colors.textSecondary;
             return (
               <UnstyledButton

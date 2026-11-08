@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { colors, spacing, typography } from '@/config/design-tokens';
 import { containerClassName } from '@/components/landing/landing-media';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
+import { VbnbLogo } from '@/components/brand/VbnbLogo';
 
 export function LandingFooter() {
   const t = useTranslations('landing.footer');
@@ -26,7 +27,7 @@ export function LandingFooter() {
         { label: t('columns.owner.listVilla'), href: '/login?mode=register&role=OWNER' },
         { label: t('columns.owner.guide'), href: '/#owner' },
         { label: t('columns.owner.policy'), href: '/terms' },
-        { label: t('columns.owner.faq'), href: '/#owner' },
+        { label: t('columns.owner.faq'), href: '/#faq' },
       ],
     },
     {
@@ -65,16 +66,14 @@ export function LandingFooter() {
         background: colors.background,
       }}
     >
-      <Box className={containerClassName} py={spacing['4xl']} pb={spacing['3xl']}>
-        <SimpleGrid cols={{ base: 2, sm: 3, md: 6 }} spacing={{ base: spacing['2xl'], md: spacing.xl }}>
-          <Stack gap={spacing.sm}>
-            <Text
-              fw={700}
-              c="vbnbGreen.6"
-              style={{ letterSpacing: typography.title.letterSpacing, fontSize: typography.subtitle.fontSize }}
-            >
-              {tCommon('appName')}
-            </Text>
+      <Box className={containerClassName} pt={spacing['5xl']} pb={spacing['2xl']}>
+        <SimpleGrid
+          cols={{ base: 2, sm: 3, md: 7 }}
+          spacing={{ base: spacing['2xl'], md: spacing.xl }}
+          verticalSpacing={spacing['2xl']}
+        >
+          <Stack gap={spacing.md} style={{ gridColumn: 'span 2' }} maw={300}>
+            <VbnbLogo height={28} alt={tCommon('appName')} />
             <Text size="sm" c={colors.textSecondary} style={{ lineHeight: typography.body.lineHeight }}>
               {t('tagline')}
             </Text>
@@ -99,7 +98,13 @@ export function LandingFooter() {
             </Stack>
           ))}
         </SimpleGrid>
-        <Text size="xs" c={colors.textMuted} mt={spacing['3xl']}>
+        <Text
+          size="xs"
+          c={colors.textSecondary}
+          mt={spacing['4xl']}
+          pt={spacing.xl}
+          style={{ borderTop: `1px solid ${colors.border}` }}
+        >
           {tCommon('copyright', { year: new Date().getFullYear() })}
         </Text>
       </Box>

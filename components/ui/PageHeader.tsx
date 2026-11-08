@@ -26,7 +26,7 @@ export function PageHeader({
           tt="uppercase"
           style={{
             letterSpacing: typography.label.letterSpacing,
-            color: colors.primaryDark,
+            color: colors.primary,
           }}
         >
           {eyebrow}
