@@ -148,5 +148,7 @@ export const zIndex = {
 export const layout = {
   contentMax: 1200,
   contentWide: 1280,
+  /** Role dashboards (beside the 228px sidebar). */
+  appContentMax: 1120,
   proseMax: 42,
 } as const;

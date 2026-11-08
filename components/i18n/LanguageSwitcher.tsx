@@ -21,6 +21,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
     const active = locale === code;
     return (
       <UnstyledButton
+        className="vbnb-hit"
         onClick={() => switchLocale(code)}
         aria-label={t('switchLanguage', { lang: label })}
         aria-current={active ? 'true' : undefined}
@@ -39,7 +40,7 @@ export function LanguageSwitcher({ compact = false }: { compact?: boolean }) {
   };
 
   return (
-    <Group gap={6} wrap="nowrap">
+    <Group gap={0} wrap="nowrap">
       {btn('vi', 'VI')}
       <Text size={compact ? 'xs' : 'sm'} c={colors.textMuted}>
         |

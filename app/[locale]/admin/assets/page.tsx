@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { Badge, Group, Image, Paper, Stack, Text } from '@mantine/core';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -15,6 +16,8 @@ const PLACEHOLDER = 'https://placehold.co/240x160/F3F3EF/10A18E?text=VBNB';
 function ownerNameOf(profiles: unknown): string {
   return (profiles as { full_name?: string } | null)?.full_name || '';
 }
+
+export const generateMetadata = pageTitle('admin.assets');
 
 export default async function AdminAssetsPage({
   searchParams,

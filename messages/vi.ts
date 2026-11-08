@@ -17,6 +17,7 @@ const messages = {
     "openMenu": "Mở menu",
     "copyright": "© {year} VBNB. Thuộc sở hữu của Công Ty TNHH Cap Saint Jacques Tek.",
     "logout": "Đăng xuất",
+    "account": "Tài khoản",
     "copy": "Sao chép",
     "copied": "Đã copy",
     "roles": {

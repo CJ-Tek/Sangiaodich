@@ -1,9 +1,12 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { localeRedirect } from '@/lib/i18n/navigation';
 import { getSessionProfile } from '@/lib/auth/session';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { GuestBookingsList } from '@/components/me/GuestBookingsList';
 import { loadGuestBookings } from '@/lib/engines/guest-bookings';
+
+export const generateMetadata = pageTitle('guest.bookings');
 
 export default async function MyBookingsPage() {
   const t = await getTranslations('guest.bookings');

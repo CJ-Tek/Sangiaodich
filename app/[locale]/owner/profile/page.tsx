@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -13,6 +14,8 @@ import {
   hasOwnerPayoutInfo,
   mapOwnerPayoutInfo,
 } from '@/lib/owner/payout-info';
+
+export const generateMetadata = pageTitle('owner.profile');
 
 export default async function OwnerProfilePage() {
   const t = await getTranslations('owner.profile');

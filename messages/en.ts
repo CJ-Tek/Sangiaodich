@@ -17,6 +17,7 @@ const messages = {
     "openMenu": "Open menu",
     "copyright": "© {year} VBNB. Owned by Cap Saint Jacques Tek Co., Ltd.",
     "logout": "Log out",
+    "account": "Account",
     "copy": "Copy",
     "copied": "Copied",
     "roles": {

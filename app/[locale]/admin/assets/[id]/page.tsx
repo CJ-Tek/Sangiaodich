@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { notFound } from 'next/navigation';
 import { Alert, Badge, Paper, SimpleGrid, Stack, Text } from '@mantine/core';
 import { createClient } from '@/lib/supabase/server';
@@ -12,6 +13,8 @@ import {
 } from '@/components/marketplace/AssetDetailBody';
 import { isPropertyType, propertyTypeLabel } from '@/config/asset-tags';
 import { colors, radius } from '@/config/design-tokens';
+
+export const generateMetadata = pageTitle('admin.assets');
 
 export default async function AdminAssetDetailPage({
   params,

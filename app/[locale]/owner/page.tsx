@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { Stack, Group, SimpleGrid, Alert } from '@mantine/core';
 import { createClient } from '@/lib/supabase/server';
 import { fetchAllPages } from '@/lib/supabase/query-guard';
@@ -14,6 +15,8 @@ import {
 } from '@/lib/owner/payout-info';
 import { formatVnd } from '@/lib/i18n/format';
 import type { AppLocale } from '@/lib/i18n/routing';
+
+export const generateMetadata = pageTitle('owner.nav', 'properties');
 
 export default async function OwnerDashboard() {
   const t = await getTranslations('owner.home');

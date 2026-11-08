@@ -2,7 +2,6 @@
 
 import {
   AppShell,
-  Burger,
   Group,
   NavLink,
   Stack,
@@ -11,15 +10,18 @@ import {
   Divider,
   Box,
 } from '@mantine/core';
-import { useDisclosure, useMediaQuery } from '@mantine/hooks';
+import { useMediaQuery } from '@mantine/hooks';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/lib/i18n/navigation';
-import { colors, radius } from '@/config/design-tokens';
+import { colors } from '@/config/design-tokens';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { VbnbLogo } from '@/components/brand/VbnbLogo';
+import { RoleTabBar } from '@/components/shells/RoleTabBar';
+import { ShellContent } from '@/components/shells/ShellContent';
 import {
   IconCalendar,
+  IconClipboard,
   IconHome,
   IconStore,
   IconSettings,
@@ -42,7 +44,6 @@ export function SaleMobileShell({
 }) {
   const t = useTranslations('sale.nav');
   const tShell = useTranslations('sale.shell');
-  const [opened, { toggle }] = useDisclosure();
   const pathname = usePathname();
   const isDesktop = useMediaQuery('(min-width: 1024px)');
   const simple = isSimpleUi(uiMode);
@@ -74,7 +75,7 @@ export function SaleMobileShell({
   const simpleMobile = [
     { label: t('home'), href: '/sale', Icon: IconHome },
     { label: t('calendar'), href: '/sale/calendar', Icon: IconCalendar },
-    { label: t('holdShort'), href: '/sale/bookings', Icon: IconHome },
+    { label: t('holdShort'), href: '/sale/bookings', Icon: IconClipboard },
     { label: t('tier'), href: '/sale/settings?tab=membership', Icon: IconSettings },
   ];
 
@@ -105,7 +106,11 @@ export function SaleMobileShell({
               <LanguageSwitcher compact />
               {headerExtra}
               {simple ? null : (
-                <UnstyledButton component={Link} href="/sale/settings">
+                <UnstyledButton
+                  component={Link}
+                  href="/sale/settings"
+                  className="vbnb-hit"
+                >
                   <Text size="sm" c="dimmed">
                     {tShell('setting')}
                   </Text>
@@ -148,67 +153,30 @@ export function SaleMobileShell({
         </AppShell.Navbar>
 
         <AppShell.Main style={{ minWidth: 0, overflowX: 'clip' }}>
-          {children}
+          <ShellContent>{children}</ShellContent>
         </AppShell.Main>
       </AppShell>
     );
   }
 
   return (
-    <AppShell header={{ height: 56 }} footer={{ height: 64 }} padding="md">
+    <AppShell header={{ height: 56 }} footer={{ height: 68 }} padding="md">
       <AppShell.Header>
         <Group h="100%" px="md" justify="space-between">
-          <Group gap="sm">
-            <Burger opened={opened} onClick={toggle} size="sm" hiddenFrom="sm" style={{ display: 'none' }} />
-            <VbnbLogo height={24} priority />
-          </Group>
-          <Group gap="md">
+          <VbnbLogo height={24} priority />
+          <Group gap={4} wrap="nowrap">
             <LanguageSwitcher compact />
             {headerExtra}
-            {simple ? null : (
-              <UnstyledButton component={Link} href="/sale/settings">
-                <Text size="sm" c="dimmed">
-                  {tShell('setting')}
-                </Text>
-              </UnstyledButton>
-            )}
           </Group>
         </Group>
       </AppShell.Header>
 
-      <AppShell.Main pb={80} style={{ minWidth: 0, overflowX: 'clip' }}>
+      <AppShell.Main pb={84} style={{ minWidth: 0, overflowX: 'clip' }}>
         {children}
       </AppShell.Main>
 
       <AppShell.Footer>
-        <Group h="100%" px={4} grow gap={0}>
-          {mobileItems.map((item) => {
-            const active = isActive(item.href);
-            const iconColor = active ? colors.primary : colors.textSecondary;
-            return (
-              <UnstyledButton
-                key={item.href}
-                component={Link}
-                href={item.href}
-                title={item.label}
-                aria-label={item.label}
-                style={{ textAlign: 'center', padding: 8, minHeight: 44 }}
-              >
-                <Box
-                  style={{
-                    borderRadius: radius.sm,
-                    background: active ? colors.primarySoft : 'transparent',
-                    padding: '8px 4px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <item.Icon color={iconColor} />
-                </Box>
-              </UnstyledButton>
-            );
-          })}
-        </Group>
+        <RoleTabBar items={mobileItems} isActive={isActive} />
       </AppShell.Footer>
     </AppShell>
   );

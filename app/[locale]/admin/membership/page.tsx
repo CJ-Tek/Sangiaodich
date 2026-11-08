@@ -1,8 +1,11 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { MembershipCategoryTabs } from '@/components/admin/MembershipCategoryTabs';
 import type { GuestTierRecord } from '@/components/admin/TierEditor';
+
+export const generateMetadata = pageTitle('admin.membership');
 
 export default async function AdminMembershipPage() {
   const t = await getTranslations('admin.membership');

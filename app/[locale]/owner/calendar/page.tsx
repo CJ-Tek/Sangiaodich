@@ -1,4 +1,5 @@
 import { Box, Stack, Text } from '@mantine/core';
+import { pageTitle } from '@/lib/seo/page-title';
 import { getTranslations } from 'next-intl/server';
 import { createClient } from '@/lib/supabase/server';
 import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
@@ -27,6 +28,8 @@ import { LinkButton } from '@/components/ui/LinkButton';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { colors, radius } from '@/config/design-tokens';
 import type { NightBoardColumn } from '@/lib/engines/night-board-display';
+
+export const generateMetadata = pageTitle('owner.calendar');
 
 export default async function OwnerCalendarPage({
   searchParams,

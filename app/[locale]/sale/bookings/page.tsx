@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { createClient } from '@/lib/supabase/server';
 import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 import { getSessionProfile } from '@/lib/auth/session';
@@ -45,6 +46,8 @@ type OwnerProfile = {
   payout_qr_image_url: string | null;
   payout_note: string | null;
 };
+
+export const generateMetadata = pageTitle('sale.bookings');
 
 export default async function SaleBookingsPage({
   searchParams,

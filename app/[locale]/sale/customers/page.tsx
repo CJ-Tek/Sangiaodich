@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { getSessionProfile } from '@/lib/auth/session';
 import { saleHasActiveSub } from '@/lib/engines/booking-service';
 import {
@@ -14,6 +15,8 @@ function parseTab(raw?: string): 'closed' | 'saved' | 'cancelled' {
   if (raw === 'saved' || raw === 'cancelled') return raw;
   return 'closed';
 }
+
+export const generateMetadata = pageTitle('sale.customers');
 
 export default async function SaleCustomersPage({
   searchParams,

@@ -12,7 +12,9 @@ import {
 } from '@mantine/core';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/lib/i18n/navigation';
-import { colors, radius } from '@/config/design-tokens';
+import { colors } from '@/config/design-tokens';
+import { RoleTabBar } from '@/components/shells/RoleTabBar';
+import { ShellContent } from '@/components/shells/ShellContent';
 import { shellNavLinkClass } from '@/components/shells/shell-nav-link-styles';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { guestNav } from '@/components/shells/guest-nav';
@@ -45,7 +47,7 @@ export function GuestDashboardShell({
     <AppShell
       header={{ height: { base: 56, md: 64 } }}
       navbar={{ width: 228, breakpoint: 'md', collapsed: { mobile: true } }}
-      footer={{ height: { base: 64, md: 0 } }}
+      footer={{ height: { base: 68, md: 0 } }}
       padding="lg"
     >
       <AppShell.Header>
@@ -60,7 +62,12 @@ export function GuestDashboardShell({
           </Group>
           <Group gap="sm">
             <LanguageSwitcher compact />
-            <UnstyledButton component={Link} href="/me/profile">
+            <UnstyledButton
+              component={Link}
+              href="/me/profile"
+              className="vbnb-hit"
+              visibleFrom="md"
+            >
               <Text size="sm" c="dimmed">
                 {tShell('account')}
               </Text>
@@ -101,39 +108,19 @@ export function GuestDashboardShell({
         </Stack>
       </AppShell.Navbar>
 
-      <AppShell.Main>{children}</AppShell.Main>
+      <AppShell.Main>
+        <ShellContent>{children}</ShellContent>
+      </AppShell.Main>
 
       <AppShell.Footer hiddenFrom="md">
-        <Group h="100%" px={4} grow gap={0}>
-          {guestNav.map((item) => {
-            const active = activeHref === item.href;
-            const iconColor = active
-              ? colors.primary
-              : colors.textSecondary;
-            return (
-              <UnstyledButton
-                key={item.href}
-                component={Link}
-                href={item.href}
-                title={tNav(item.labelKey)}
-                aria-label={tNav(item.labelKey)}
-                style={{ textAlign: 'center', padding: 8, minHeight: 44 }}
-              >
-                <Box
-                  style={{
-                    borderRadius: radius.sm,
-                    background: active ? colors.primarySoft : 'transparent',
-                    padding: '8px 4px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <item.Icon color={iconColor} />
-                </Box>
-              </UnstyledButton>
-            );
-          })}
-        </Group>
+        <RoleTabBar
+          items={guestNav.map((item) => ({
+            label: tNav(item.labelKey),
+            href: item.href,
+            Icon: item.Icon,
+          }))}
+          isActive={(href) => activeHref === href}
+        />
       </AppShell.Footer>
     </AppShell>
   );

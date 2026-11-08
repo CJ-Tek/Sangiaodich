@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { FeeSettingsForm } from '@/components/admin/FeeSettingsForm';
@@ -9,6 +10,8 @@ import { Paper, Stack, Text } from '@mantine/core';
 import { colors, radius } from '@/config/design-tokens';
 import { mapPaymentInfo } from '@/lib/platform/payment-info';
 import type { SubscriptionPlan } from '@/lib/engines/subscription-plans';
+
+export const generateMetadata = pageTitle('admin.fees');
 
 export default async function AdminFeesPage({
   searchParams,

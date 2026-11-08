@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { Alert, Stack } from '@mantine/core';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
@@ -28,6 +29,8 @@ import {
 } from '@/lib/engines/subscription-payment';
 import { isSubscriptionActive } from '@/lib/engines/subscription';
 import { todayDateOnly } from '@/lib/dates';
+
+export const generateMetadata = pageTitle('sale.settings');
 
 export default async function SaleSettingsPage({
   searchParams,

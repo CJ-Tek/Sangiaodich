@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { Badge, Group, Paper, Stack, Text } from '@mantine/core';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -15,6 +16,8 @@ import { formatDateTime, formatVnd, planDurationLabel } from '@/lib/i18n/format'
 import type { AppLocale } from '@/lib/i18n/routing';
 import type { SubscriptionPlan } from '@/lib/engines/subscription-plans';
 import { colors, radius } from '@/config/design-tokens';
+
+export const generateMetadata = pageTitle('admin.payments');
 
 export default async function AdminPaymentsPage() {
   await requireRole(['ADMIN']);

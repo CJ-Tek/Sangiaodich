@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { pageTitle } from '@/lib/seo/page-title';
 import { getTranslations } from 'next-intl/server';
 import { Stack } from '@mantine/core';
 import { loadAssetNightBoard } from '@/lib/engines/asset-night-board';
@@ -20,6 +21,8 @@ function asCostRow(
   }
   return value as { cost_weekday: number; cost_weekend: number };
 }
+
+export const generateMetadata = pageTitle('owner.assets');
 
 export default async function EditOwnerAssetPage({
   params,

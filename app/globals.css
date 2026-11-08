@@ -6,7 +6,7 @@
   --vbnb-border-strong: #dcddd6;
   --vbnb-text: #161616;
   --vbnb-text-secondary: #5f625d;
-  --vbnb-text-muted: #8b8d87;
+  --vbnb-text-muted: #6b6e68;
   --vbnb-primary: #10a18e;
   --vbnb-primary-dark: #0d8777;
   --vbnb-primary-soft: #ecf7f6;
@@ -107,6 +107,86 @@ a {
 
 .mantine-AppShell-navbar .vbnb-shell-nav-link[data-active]:hover {
   background-color: #d4eeeb !important;
+}
+
+/* Header text links (VI/EN, Account): visual size unchanged, hit area grows. */
+.vbnb-hit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  min-width: 32px;
+  padding: 0 4px;
+  border-radius: 8px;
+}
+
+.vbnb-hit:focus-visible {
+  outline: 2px solid var(--vbnb-primary);
+  outline-offset: 1px;
+}
+
+/* Mobile role tab bar: icon + label. */
+.vbnb-tabbar-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 56px;
+  padding: 6px 2px;
+  border-radius: 10px;
+  color: var(--vbnb-text-secondary);
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.vbnb-tabbar-item[data-active] {
+  color: var(--vbnb-primary);
+}
+
+.vbnb-tabbar-item__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 28px;
+  border-radius: 999px;
+  transition: background-color 200ms var(--vbnb-ease);
+}
+
+.vbnb-tabbar-item[data-active] .vbnb-tabbar-item__icon {
+  background-color: var(--vbnb-primary-soft);
+}
+
+.vbnb-tabbar-item__label {
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 500;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vbnb-tabbar-item[data-active] .vbnb-tabbar-item__label {
+  font-weight: 600;
+}
+
+/* Touch targets on phones: ≥ 44px for default controls (WCAG 2.5.5). */
+@media (max-width: 48em) {
+  .vbnb-hit {
+    min-height: 44px;
+    min-width: 36px;
+  }
+
+  .mantine-Button-root {
+    --button-height-sm: 2.75rem;
+    --button-height-xs: 2.25rem;
+  }
+
+  .mantine-Input-wrapper {
+    --input-height-sm: 2.75rem;
+  }
 }
 
 /* Keep every table header under the app bar while the page scrolls. */

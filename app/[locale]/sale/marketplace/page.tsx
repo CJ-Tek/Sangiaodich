@@ -1,4 +1,5 @@
 import { localeRedirect } from '@/lib/i18n/navigation';
+import { pageTitle } from '@/lib/seo/page-title';
 import { getTranslations } from 'next-intl/server';
 import { Suspense } from 'react';
 import { getSessionProfile } from '@/lib/auth/session';
@@ -37,6 +38,8 @@ function marketplaceHref(
   const qs = params.toString();
   return qs ? `/sale/marketplace?${qs}` : '/sale/marketplace';
 }
+
+export const generateMetadata = pageTitle('sale.marketplace');
 
 export default async function SaleMarketplacePage({
   searchParams,

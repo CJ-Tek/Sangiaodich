@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { pageTitle } from '@/lib/seo/page-title';
 import { getTranslations } from 'next-intl/server';
 import { localeRedirect } from '@/lib/i18n/navigation';
 import { getSessionProfile } from '@/lib/auth/session';
@@ -6,6 +7,8 @@ import { PageHeader } from '@/components/ui/PageHeader';
 import { GuestBookingDetailCard } from '@/components/me/GuestBookingDetailCard';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
 import { loadGuestBookingDetail } from '@/lib/engines/guest-bookings';
+
+export const generateMetadata = pageTitle('guest.bookingDetail');
 
 export default async function GuestBookingDetailPage({
   params,

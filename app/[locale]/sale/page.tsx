@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { Text, Stack, Group, SimpleGrid, Paper } from '@mantine/core';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
@@ -28,6 +29,8 @@ function sumMargin(
     0
   );
 }
+
+export const generateMetadata = pageTitle('sale.nav', 'home');
 
 export default async function SaleHomePage({
   searchParams,

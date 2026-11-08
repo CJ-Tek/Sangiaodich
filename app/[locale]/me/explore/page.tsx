@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { localeRedirect } from '@/lib/i18n/navigation';
 import { Suspense } from 'react';
 import { SimpleGrid } from '@mantine/core';
@@ -16,6 +17,8 @@ import {
   toAssetCardData,
 } from '@/lib/engines/explore-assets';
 import { parseExploreAdvancedParams } from '@/lib/engines/explore-filters';
+
+export const generateMetadata = pageTitle('guest.explore');
 
 export default async function GuestExplorePage({
   searchParams,

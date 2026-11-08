@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { localeRedirect } from '@/lib/i18n/navigation';
 import { getSessionProfile } from '@/lib/auth/session';
 import { LandingHeader } from '@/components/landing/LandingHeader';
@@ -22,6 +23,8 @@ import {
 import { parseExploreAdvancedParams } from '@/lib/engines/explore-filters';
 
 export const revalidate = 60;
+
+export const generateMetadata = pageTitle('marketplace.page');
 
 export default async function MarketplacePage({
   searchParams,

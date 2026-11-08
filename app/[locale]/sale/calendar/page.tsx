@@ -1,4 +1,5 @@
 import { Box, Stack, Text } from '@mantine/core';
+import { pageTitle } from '@/lib/seo/page-title';
 import { getTranslations } from 'next-intl/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { isSimpleUi } from '@/lib/engines/ui-mode';
@@ -27,6 +28,8 @@ import { NightBoardSearch } from '@/components/inventory/NightBoardSearch';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { colors, radius } from '@/config/design-tokens';
 import type { NightBoardColumn } from '@/lib/engines/night-board-display';
+
+export const generateMetadata = pageTitle('sale.calendar');
 
 export default async function SaleCalendarPage({
   searchParams,

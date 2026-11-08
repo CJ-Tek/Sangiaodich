@@ -13,11 +13,13 @@ import {
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Link, usePathname } from '@/lib/i18n/navigation';
-import { colors, radius } from '@/config/design-tokens';
+import { colors } from '@/config/design-tokens';
 import { shellNavLinkClass } from '@/components/shells/shell-nav-link-styles';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { VbnbLogo } from '@/components/brand/VbnbLogo';
+import { ShellContent } from '@/components/shells/ShellContent';
+import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 
 export type NavItem = {
@@ -48,6 +50,7 @@ export function DesktopRoleShell({
 }) {
   const [opened, { toggle }] = useDisclosure();
   const pathname = usePathname();
+  const t = useTranslations('common');
 
   const resolvedSections: NavSection[] =
     sections ?? (nav ? [{ items: nav }] : []);
@@ -99,9 +102,13 @@ export function DesktopRoleShell({
             <LanguageSwitcher compact />
             {headerExtra}
             {accountHref ? (
-              <UnstyledButton component={Link} href={accountHref}>
+              <UnstyledButton
+                component={Link}
+                href={accountHref}
+                className="vbnb-hit"
+              >
                 <Text size="sm" c="dimmed">
-                  Tài khoản
+                  {t('account')}
                 </Text>
               </UnstyledButton>
             ) : (
@@ -157,7 +164,9 @@ export function DesktopRoleShell({
         </Stack>
       </AppShell.Navbar>
 
-      <AppShell.Main>{children}</AppShell.Main>
+      <AppShell.Main>
+        <ShellContent>{children}</ShellContent>
+      </AppShell.Main>
     </AppShell>
   );
 }

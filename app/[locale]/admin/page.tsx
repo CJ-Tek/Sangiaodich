@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { Group, Paper, SimpleGrid, Stack, Text } from '@mantine/core';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LinkButton } from '@/components/ui/LinkButton';
@@ -8,6 +9,8 @@ import { loadAdminOverviewStats } from '@/lib/engines/admin-overview';
 import { formatVnd } from '@/lib/i18n/format';
 import type { AppLocale } from '@/lib/i18n/routing';
 import { colors, radius } from '@/config/design-tokens';
+
+export const generateMetadata = pageTitle('admin.overview');
 
 export default async function AdminHomePage() {
   const t = await getTranslations('admin.overview');

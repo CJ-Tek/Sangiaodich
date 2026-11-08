@@ -1,4 +1,5 @@
 import { getLocale, getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { formatDateRange, formatDay } from '@/lib/i18n/format';
 import type { AppLocale } from '@/lib/i18n/routing';
 import { createClient } from '@/lib/supabase/server';
@@ -12,6 +13,8 @@ import { listActivePlansForRole } from '@/lib/engines/subscription-payment';
 import { getPendingIntentForProfile } from '@/lib/engines/subscription-payment';
 import { isSubscriptionActive } from '@/lib/engines/subscription';
 import { todayDateOnly } from '@/lib/dates';
+
+export const generateMetadata = pageTitle('owner.subscription');
 
 export default async function OwnerSubscriptionPage() {
   const t = await getTranslations('owner.subscription');

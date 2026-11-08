@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { loadAssetNightBoard } from '@/lib/engines/asset-night-board';
 import { stayRanges } from '@/lib/engines/inventory';
 import { getSessionProfile } from '@/lib/auth/session';
@@ -16,6 +17,8 @@ import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { SectionTitle } from '@/components/ui/SectionTitle';
 import { colors, radius } from '@/config/design-tokens';
+
+export const generateMetadata = pageTitle('sale.marketplace');
 
 export default async function SaleAssetDetailPage({
   params,
