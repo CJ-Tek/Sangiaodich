@@ -246,8 +246,8 @@ export default async function HomePage({ params }: PageProps) {
         <Suspense fallback={null}>
           <PricingSectionStream />
         </Suspense>
-        <FaqSection />
         <FeaturedStays assets={featured} />
+        <FaqSection />
         <FinalCTA showGuestSignup={!role} />
       </main>
       <LandingFooter />

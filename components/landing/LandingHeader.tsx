@@ -45,6 +45,19 @@ export function LandingHeader({
     return href === '/marketplace' && pathname === '/marketplace';
   }
 
+  function onLogoClick(event: React.MouseEvent<HTMLAnchorElement>) {
+    close();
+    if (pathname !== '/') return;
+    event.preventDefault();
+    const reduceMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
+    window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+    if (window.location.hash) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  }
+
   function onNavClick(
     event: React.MouseEvent<HTMLAnchorElement>,
     href: string
@@ -69,6 +82,7 @@ export function LandingHeader({
         <UnstyledButton
           component={Link}
           href="/"
+          onClick={onLogoClick}
           aria-label={tCommon('homeAriaLabel')}
           style={{ justifySelf: 'start' }}
         >
