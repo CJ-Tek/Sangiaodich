@@ -67,7 +67,9 @@ function UserCard({
 }) {
   const t = useTranslations('admin.users');
   const tErrors = useTranslations('errors');
-  const { formatDateTime } = useFormat();
+  const tRoles = useTranslations('common.roles');
+  const tStatus = useTranslations('common.subscriptionStatus');
+  const { formatDateTime, formatDay } = useFormat();
   const sub = user.subscription;
   const coversToday = sub
     ? isSubscriptionActive({
@@ -91,7 +93,7 @@ function UserCard({
           <Text fw={600}>
             {user.full_name}{' '}
             <Text span size="sm" c="dimmed" fw={500}>
-              · {user.role}
+              · {tRoles(user.role)}
             </Text>
           </Text>
           <Text size="sm" c="dimmed" mt={4}>
@@ -119,9 +121,12 @@ function UserCard({
           >
             {!sub
               ? t('noSub')
-              : periodLapsed
-                ? t('lapsedUntil', { date: sub.period_end })
-                : `${sub.status} → ${sub.period_end}`}
+              : periodLapsed || sub.status === 'EXPIRED'
+                ? t('lapsedUntil', { date: formatDay(sub.period_end) })
+                : t('statusUntil', {
+                    status: tStatus(sub.status),
+                    date: formatDay(sub.period_end),
+                  })}
           </Badge>
 
           {mode === 'active' ? (

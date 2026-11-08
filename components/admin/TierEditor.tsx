@@ -8,8 +8,8 @@ import {
   Stack,
   Text,
   TextInput,
-  Title,
 } from '@mantine/core';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { notifications } from '@mantine/notifications';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -119,9 +119,9 @@ export function TierEditor({
   return (
     <Stack gap="sm">
       {!compact ? (
-        <Title order={5}>
+        <SectionTitle level="card" order={2}>
           {form.id ? t('editTier') : t('addTierTitle')}
-        </Title>
+        </SectionTitle>
       ) : null}
       <NumberInput
         label={t('sort')}

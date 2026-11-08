@@ -1,4 +1,5 @@
-import { Paper, Stack, Text, Title } from '@mantine/core';
+import { Paper, Stack, Text } from '@mantine/core';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { getTranslations } from 'next-intl/server';
 import { colors, radius } from '@/config/design-tokens';
 import type { ResolvedSaleDiscountProgress } from '@/lib/engines/sale-pricing';
@@ -28,9 +29,7 @@ export async function SaleMembershipPanel({
         radius={radius.lg}
         style={{ border: `1px solid ${colors.border}` }}
       >
-        <Title order={5} fw={600} mb="md">
-          {t('perAsset')}
-        </Title>
+        <SectionTitle mb="md">{t('perAsset')}</SectionTitle>
         {!progress.assets.length ? (
           <Text size="sm" c="dimmed">
             {t('noCheckout')}

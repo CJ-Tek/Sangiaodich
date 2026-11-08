@@ -96,7 +96,7 @@ export function SaleBookingsList({
 }) {
   const t = useTranslations('sale.bookings');
   const locale = useLocale();
-  const { formatNumber } = useFormat();
+  const { formatNumber, formatDateRange } = useFormat();
   const cityOptions = vnCityOptions(locale);
   const [query, setQuery] = useState('');
   const [owner, setOwner] = useState<string | null>(null);
@@ -280,13 +280,13 @@ export function SaleBookingsList({
                             {b.villaTitle}
                           </Text>
                           <Text size="xs" c="dimmed">
-                            {b.check_in} → {b.check_out}
+                            {formatDateRange(b.check_in, b.check_out)}
                           </Text>
                         </Table.Td>
                         <Table.Td>
                           <Text size="sm">{b.guestName || '—'}</Text>
                         </Table.Td>
-                        <Table.Td style={{ background: 'var(--mantine-color-teal-light)' }}>
+                        <Table.Td style={{ background: colors.primarySoft }}>
                           <Text size="sm" fw={600}>
                             {formatNumber(b.list)}
                           </Text>
@@ -304,8 +304,8 @@ export function SaleBookingsList({
                         <Table.Td
                           style={{
                             background: guestPaidFull
-                              ? 'var(--mantine-color-teal-light)'
-                              : '#FFF3BF',
+                              ? colors.primarySoft
+                              : colors.warningSoft,
                           }}
                         >
                           <Text size="sm" fw={600}>
@@ -315,8 +315,8 @@ export function SaleBookingsList({
                         <Table.Td
                           style={{
                             background: salePaidFull
-                              ? 'var(--mantine-color-teal-light)'
-                              : '#FFF3BF',
+                              ? colors.primarySoft
+                              : colors.warningSoft,
                           }}
                         >
                           <Text size="sm" fw={600}>
@@ -327,8 +327,8 @@ export function SaleBookingsList({
                           style={{
                             background:
                               guestShort === 0
-                                ? 'var(--mantine-color-teal-light)'
-                                : '#FFF3BF',
+                                ? colors.primarySoft
+                                : colors.warningSoft,
                           }}
                         >
                           <Text size="sm" fw={600}>

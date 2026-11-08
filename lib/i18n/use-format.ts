@@ -3,7 +3,9 @@
 import { useLocale } from 'next-intl';
 import {
   formatDate,
+  formatDateRange,
   formatDateTime,
+  formatDay,
   formatDecimal,
   formatNumber,
   formatVnd,
@@ -26,6 +28,11 @@ export function useFormat() {
       value: Date | string | number,
       options?: Intl.DateTimeFormatOptions
     ) => formatDate(value, locale, options),
+    formatDay: (value: Date | string | number) => formatDay(value, locale),
+    formatDateRange: (
+      start: Date | string | number,
+      end: Date | string | number
+    ) => formatDateRange(start, end, locale),
     formatDecimal: (amount: number, options?: Intl.NumberFormatOptions) =>
       formatDecimal(amount, locale, options),
     planDurationLabel: (months: number) => planDurationLabel(months, locale),

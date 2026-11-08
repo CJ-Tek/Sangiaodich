@@ -3,7 +3,7 @@
 import { MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { DatesProvider } from '@mantine/dates';
-import { theme } from '@/config/theme';
+import { cssVariablesResolver, theme } from '@/config/theme';
 import { ServiceWorkerRegister } from '@/components/pwa/ServiceWorkerRegister';
 import type { AppLocale } from '@/lib/i18n/routing';
 import 'dayjs/locale/vi';
@@ -22,7 +22,11 @@ export function AppProviders({
   locale: AppLocale;
 }) {
   return (
-    <MantineProvider theme={theme} defaultColorScheme="light">
+    <MantineProvider
+      theme={theme}
+      defaultColorScheme="light"
+      cssVariablesResolver={cssVariablesResolver}
+    >
       <DatesProvider
         settings={{ locale: dayjsLocale[locale], firstDayOfWeek: 1 }}
       >

@@ -16,10 +16,12 @@ import { SaveCustomerButton } from '@/components/sale/SavedCustomerActions';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { colors, radius } from '@/config/design-tokens';
 import type { SaleLead } from '@/lib/engines/sale-leads';
+import { useFormat } from '@/lib/i18n/use-format';
 import { foldVn } from '@/lib/search/vn-fold';
 
 export function SaleLeadsList({ leads }: { leads: SaleLead[] }) {
   const t = useTranslations('sale.leads');
+  const { formatDay } = useFormat();
   const [query, setQuery] = useState('');
 
   const filtered = useMemo(() => {
@@ -42,7 +44,7 @@ export function SaleLeadsList({ leads }: { leads: SaleLead[] }) {
     if (mins < 60) return t('minsAgo', { mins });
     const hours = Math.floor(mins / 60);
     if (hours < 24) return t('hoursAgo', { hours });
-    return new Date(iso).toLocaleDateString('vi-VN');
+    return formatDay(iso);
   }
 
   const q = query.trim();

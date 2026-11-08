@@ -16,6 +16,7 @@ import { JetBrains_Mono, Plus_Jakarta_Sans } from 'next/font/google';
 import { routing, type AppLocale } from '@/lib/i18n/routing';
 import { AppProviders } from '@/components/providers/AppProviders';
 import { ogImage, siteUrl } from '@/lib/seo/site';
+import { colors } from '@/config/design-tokens';
 
 const fontSans = Plus_Jakarta_Sans({
   subsets: ['latin', 'latin-ext', 'vietnamese'],
@@ -91,7 +92,7 @@ export async function generateMetadata({
 }
 
 export const viewport: Viewport = {
-  themeColor: '#10a18e',
+  themeColor: colors.primary,
   width: 'device-width',
   initialScale: 1,
 };

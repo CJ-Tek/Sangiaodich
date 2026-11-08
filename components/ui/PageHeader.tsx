@@ -34,14 +34,14 @@ export function PageHeader({
       ) : null}
       <Group justify="space-between" align="flex-start" gap="md" wrap="wrap">
         <Title
-          order={2}
-          fw={600}
+          order={1}
           className="vbnb-text-balance"
           style={{
             color: colors.textPrimary,
             letterSpacing: typography.title.letterSpacing,
             fontSize: typography.title.fontSize,
             lineHeight: typography.title.lineHeight,
+            fontWeight: typography.title.fontWeight,
           }}
         >
           {title}

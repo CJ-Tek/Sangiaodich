@@ -1,4 +1,6 @@
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { formatDateRange, formatDay } from '@/lib/i18n/format';
+import type { AppLocale } from '@/lib/i18n/routing';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -13,6 +15,8 @@ import { todayDateOnly } from '@/lib/dates';
 
 export default async function OwnerSubscriptionPage() {
   const t = await getTranslations('owner.subscription');
+  const tStatus = await getTranslations('common.subscriptionStatus');
+  const locale = (await getLocale()) as AppLocale;
   const profile = await getSessionProfile();
   const admin = await createClient();
   const { data: sub } = await admin
@@ -51,15 +55,23 @@ export default async function OwnerSubscriptionPage() {
               <Text size="sm" c="dimmed">
                 {t('status')}
               </Text>
-              <Text fw={600} c={active ? 'vbnbGreen.6' : undefined}>
-                {sub.status}
+              <Text fw={600} c={active ? 'vbnbGreen.7' : 'red.8'}>
+                {tStatus(
+                  active
+                    ? 'ACTIVE'
+                    : sub.status === 'PENDING_PAYMENT'
+                      ? 'PENDING_PAYMENT'
+                      : 'EXPIRED'
+                )}
               </Text>
               <Text size="sm" c="dimmed">
-                {sub.period_start} → {sub.period_end}
+                {formatDateRange(sub.period_start, sub.period_end, locale)}
               </Text>
               {active ? (
                 <Text size="sm" c="dimmed">
-                  {t('extendNote', { periodEnd: sub.period_end })}
+                  {t('extendNote', {
+                    periodEnd: formatDay(sub.period_end, locale),
+                  })}
                 </Text>
               ) : null}
             </Stack>

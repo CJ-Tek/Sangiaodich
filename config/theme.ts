@@ -1,6 +1,10 @@
 'use client';
 
-import { createTheme, MantineColorsTuple } from '@mantine/core';
+import {
+  createTheme,
+  type CSSVariablesResolver,
+  type MantineColorsTuple,
+} from '@mantine/core';
 import { colors, fonts, motion, radius, shadows } from './design-tokens';
 
 const primary: MantineColorsTuple = [
@@ -17,6 +21,15 @@ const primary: MantineColorsTuple = [
 ];
 
 const transition = `${motion.normal}ms ${motion.easing}`;
+
+/** Mantine's default dimmed gray (#868e96) is ~3.2:1 — below WCAG AA for body text. */
+export const cssVariablesResolver: CSSVariablesResolver = () => ({
+  variables: {},
+  light: {
+    '--mantine-color-dimmed': colors.textMuted,
+  },
+  dark: {},
+});
 
 export const theme = createTheme({
   primaryColor: 'vbnbGreen',

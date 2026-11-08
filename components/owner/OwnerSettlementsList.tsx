@@ -85,7 +85,7 @@ export function OwnerSettlementsList({
   const t = useTranslations('owner.settlements');
   const tStatus = useTranslations('bookingStatus');
   const locale = useLocale();
-  const { formatNumber, formatDateTime } = useFormat();
+  const { formatNumber, formatDateTime, formatDateRange } = useFormat();
   const cityOptions = vnCityOptions(locale);
 
   const PAYOUT_BADGE = {
@@ -259,7 +259,7 @@ export function OwnerSettlementsList({
                           {b.villaTitle || t('assetFallback')}
                         </Text>
                         <Text size="xs" c="dimmed">
-                          {b.check_in} → {b.check_out}
+                          {formatDateRange(b.check_in, b.check_out)}
                           {b.location ? ` · ${b.location}` : ''}
                         </Text>
                       </Table.Td>
@@ -276,7 +276,7 @@ export function OwnerSettlementsList({
                           <Text size="sm">{b.saleName || t('saleUnknown')}</Text>
                         </Group>
                       </Table.Td>
-                      <Table.Td style={{ background: 'var(--mantine-color-teal-light)' }}>
+                      <Table.Td style={{ background: colors.primarySoft }}>
                         <Text size="sm" fw={600}>
                           {formatNumber(b.ownerEarn)}
                         </Text>
@@ -294,8 +294,8 @@ export function OwnerSettlementsList({
                       <Table.Td
                         style={{
                           background: collectedShort
-                            ? '#FFF3BF'
-                            : 'var(--mantine-color-teal-light)',
+                            ? colors.warningSoft
+                            : colors.primarySoft,
                         }}
                       >
                         <Text size="sm" fw={600}>

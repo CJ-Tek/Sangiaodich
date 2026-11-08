@@ -19,6 +19,17 @@ const messages = {
     "logout": "Log out",
     "copy": "Copy",
     "copied": "Copied",
+    "roles": {
+      "OWNER": "Owner",
+      "SALE": "Sale",
+      "GUEST": "Guest",
+      "ADMIN": "Admin"
+    },
+    "subscriptionStatus": {
+      "ACTIVE": "Active",
+      "EXPIRED": "Expired",
+      "PENDING_PAYMENT": "Awaiting payment"
+    },
     "uiMode": {
       "label": "Interface mode",
       "simple": "Simple",
@@ -1014,6 +1025,7 @@ const messages = {
       "trashSince": "Trashed since {date}",
       "noSub": "No sub",
       "lapsedUntil": "Expired {date}",
+      "statusUntil": "{status} · until {date}",
       "removeSub": "Remove sub",
       "trash": "Trash",
       "restore": "Restore",

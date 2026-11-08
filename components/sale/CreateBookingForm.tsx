@@ -5,12 +5,12 @@ import {
   NumberInput,
   Stack,
   Text,
-  Title,
   Group,
   Paper,
   Stepper,
   Divider,
 } from '@mantine/core';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { DatePickerInput } from '@mantine/dates';
 import { notifications } from '@mantine/notifications';
 import { useTranslations } from 'next-intl';
@@ -61,7 +61,7 @@ export function CreateBookingForm({
 }) {
   const router = useRouter();
   const t = useTranslations('sale.createBooking');
-  const { formatNumber } = useFormat();
+  const { formatNumber, formatDateRange } = useFormat();
   const [step, setStep] = useState(0);
   const [guest, setGuest] = useState<GuestOption | null>(null);
   const guestId = guest?.value ?? null;
@@ -242,9 +242,9 @@ export function CreateBookingForm({
           <Text size="sm" c="dimmed">
             {t('stepProperty')}
           </Text>
-          <Title order={4} fw={600} mt={4}>
+          <SectionTitle level="card" mt={4}>
             {assetTitle || t('selectedAsset')}
-          </Title>
+          </SectionTitle>
           <Group mt="md" gap="xl">
             <div>
               <Text size="xs" c="dimmed">
@@ -449,9 +449,7 @@ export function CreateBookingForm({
       {step === 4 ? (
         <Paper p="md" radius={radius.lg} style={{ border: `1px solid ${colors.border}` }}>
           <Stack gap="sm">
-            <Title order={5} fw={600}>
-              {t('stepReview')}
-            </Title>
+            <SectionTitle level="card">{t('stepReview')}</SectionTitle>
             <Text size="sm">
               <Text span c="dimmed">
                 {t('summaryProperty')}{' '}
@@ -468,7 +466,7 @@ export function CreateBookingForm({
               <Text span c="dimmed">
                 {t('summaryDates')}{' '}
               </Text>
-              {range[0]} → {range[1]}
+              {range[0] && range[1] ? formatDateRange(range[0], range[1]) : '—'}
             </Text>
             <Text size="sm">
               <Text span c="dimmed">

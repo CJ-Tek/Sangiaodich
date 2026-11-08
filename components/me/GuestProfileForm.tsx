@@ -9,8 +9,8 @@ import {
   Stack,
   Text,
   TextInput,
-  Title,
 } from '@mantine/core';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { notifications } from '@mantine/notifications';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/lib/i18n/navigation';
@@ -104,9 +104,7 @@ export function GuestProfileForm({
             {(form.fullName || '?').slice(0, 1).toUpperCase()}
           </Avatar>
           <div style={{ flex: 1 }}>
-            <Title order={4} fw={600}>
-              {t('personalInfo')}
-            </Title>
+            <SectionTitle>{t('personalInfo')}</SectionTitle>
             <Text size="sm" c="dimmed" mt={4}>
               {t('personalInfoDesc')}
             </Text>

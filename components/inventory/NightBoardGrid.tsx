@@ -58,18 +58,8 @@ import { OwnerSaleRatingForm } from '@/components/owner/OwnerSaleRatingForm';
 import type { GuestOption } from '@/lib/engines/sale-guest-search';
 import type { SaleRatingRecord } from '@/lib/engines/sale-ratings';
 
-const LOCKED_TONE = {
-  bg: colors.dangerSoft,
-  text: colors.danger,
-  border: '#E8D0D0',
-};
-
-/** Closed nights — stronger than muted gray so they read as unavailable. */
-const CLOSED_TONE = {
-  bg: '#6B6E68',
-  text: '#FFFFFF',
-  border: '#4A4D48',
-};
+const LOCKED_TONE = bookingStatusColors.maintenance;
+const CLOSED_TONE = bookingStatusColors.closed;
 
 function cellTone(status: NightStatus) {
   if (status === 'locked') return LOCKED_TONE;
@@ -101,7 +91,7 @@ export function NightBoardGrid({
 }) {
   const router = useRouter();
   const t = useTranslations('inventory');
-  const { formatNumber } = useFormat();
+  const { formatNumber, formatDateRange } = useFormat();
   const today = todayDateOnly();
   const audience = role === 'OWNER' ? 'owner' : 'sale';
   const isDesktop = useMediaQuery('(min-width: 1024px)') === true;
@@ -740,7 +730,8 @@ export function NightBoardGrid({
       >
         <Stack>
           <Text size="sm">
-            {holdNights} đêm · {holdOpen?.checkIn} → {holdOpen?.checkOut}
+            {holdNights} đêm ·{' '}
+            {holdOpen ? formatDateRange(holdOpen.checkIn, holdOpen.checkOut) : null}
           </Text>
           {holdPreview ? (
             <Text size="xs" c="dimmed">

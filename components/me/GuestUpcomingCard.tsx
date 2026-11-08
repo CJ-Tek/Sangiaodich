@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { BookingStatusBadge } from '@/components/bookings/BookingStatusBadge';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
 import { SurfaceCard } from '@/components/ui/SurfaceCard';
+import { useFormat } from '@/lib/i18n/use-format';
 import type { GuestUpcomingBooking } from '@/lib/engines/guest-overview';
 
 export function GuestUpcomingCard({
@@ -13,6 +14,7 @@ export function GuestUpcomingCard({
   upcoming: GuestUpcomingBooking | null;
 }) {
   const t = useTranslations('guest.upcoming');
+  const { formatDateRange } = useFormat();
 
   return (
     <SurfaceCard>
@@ -33,7 +35,7 @@ export function GuestUpcomingCard({
               <div>
                 <Text fw={600}>{upcoming.assetTitle}</Text>
                 <Text size="sm" c="dimmed" mt={4}>
-                  {upcoming.checkIn} → {upcoming.checkOut}
+                  {formatDateRange(upcoming.checkIn, upcoming.checkOut)}
                 </Text>
               </div>
               <BookingStatusBadge status={upcoming.status} />

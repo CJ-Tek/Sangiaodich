@@ -51,6 +51,12 @@ export const bookingStatusColors = {
     text: colors.textMuted,
     border: colors.border,
   },
+  /** Owner-closed nights — darker than blocked gray so they read as unavailable. */
+  closed: {
+    bg: '#6B6E68',
+    text: '#FFFFFF',
+    border: '#4A4D48',
+  },
 } as const;
 
 export type BookingStatusKey = keyof typeof bookingStatusColors;

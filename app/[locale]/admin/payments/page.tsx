@@ -19,6 +19,7 @@ import { colors, radius } from '@/config/design-tokens';
 export default async function AdminPaymentsPage() {
   await requireRole(['ADMIN']);
   const t = await getTranslations('admin.payments');
+  const tRoles = await getTranslations('common.roles');
   const locale = (await getLocale()) as AppLocale;
 
   const [mismatches, events, plans] = await Promise.all([
@@ -41,6 +42,7 @@ export default async function AdminPaymentsPage() {
             <MismatchCard
               key={row.intentId}
               row={row}
+              roleLabel={tRoles(row.role)}
               plans={plans}
               locale={locale}
               t={t}
@@ -100,11 +102,13 @@ type PaymentsTranslator = Awaited<ReturnType<typeof getTranslations<'admin.payme
 
 function MismatchCard({
   row,
+  roleLabel,
   plans,
   locale,
   t,
 }: {
   row: MismatchIntentRow;
+  roleLabel: string;
   plans: SubscriptionPlan[];
   locale: AppLocale;
   t: PaymentsTranslator;
@@ -120,7 +124,7 @@ function MismatchCard({
           <Text fw={600} size="sm">
             {row.fullName}{' '}
             <Text span c="dimmed" fw={400}>
-              · {row.role}
+              · {roleLabel}
               {row.phone ? ` · ${row.phone}` : ''}
             </Text>
           </Text>

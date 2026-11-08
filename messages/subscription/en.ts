@@ -10,7 +10,7 @@ export const subscriptionEn = {
       'Tap a plan to generate a QR code — amount and transfer memo are pre-filled, no manual entry.',
     pendingTitle: 'Awaiting payment',
     pendingDesc:
-      'After transfer, this page updates within 1–3 minutes — no refresh needed. If still not ACTIVE after 15 minutes, contact Admin.',
+      'After transfer, this page updates within 1–3 minutes — no refresh needed. If still not activated after 15 minutes, contact Admin.',
     selectedPlan: 'Selected plan',
     qrScanHint:
       'Scan QR with your banking app — transfer memo includes code {paymentCode}.',
@@ -35,13 +35,13 @@ export const subscriptionEn = {
     qrAlt: 'Payment QR',
   },
   statusBanner: {
-    activeTitle: 'Active',
-    inactiveTitle: 'Not active',
-    activeStatus: 'ACTIVE',
-    inactiveStatus: 'INACTIVE',
-    defaultActiveDesc: 'Subscription is active',
-    defaultInactiveDesc: 'Subscription INACTIVE — access limited',
+    activeTitle: 'Plan active',
+    expiredTitle: 'Plan expired',
+    inactiveTitle: 'No active plan',
+    defaultActiveDesc: 'All features are available',
+    defaultInactiveDesc: 'Some features are locked — renew to continue',
     periodUntil: 'until {date}',
+    expiredSince: 'since {date}',
     defaultActiveAction: 'Membership',
     defaultInactiveAction: 'Renew',
   },

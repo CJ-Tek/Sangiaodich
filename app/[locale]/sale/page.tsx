@@ -1,5 +1,5 @@
 import { getLocale, getTranslations } from 'next-intl/server';
-import { Text, Stack, Title, Group, SimpleGrid, Paper } from '@mantine/core';
+import { Text, Stack, Group, SimpleGrid, Paper } from '@mantine/core';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { saleHasActiveSub } from '@/lib/engines/booking-service';
@@ -9,6 +9,7 @@ import { quoteAssetCosts } from '@/lib/engines/pricing';
 import { parseYearMonth, todayDateOnly } from '@/lib/dates';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LinkButton } from '@/components/ui/LinkButton';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { StatCard } from '@/components/ui/StatCard';
 import { SubscriptionStatusBanner } from '@/components/ui/SubscriptionStatusBanner';
 import { AssetCard } from '@/components/marketplace/AssetCard';
@@ -16,7 +17,7 @@ import { BookingStatusBadge } from '@/components/bookings/BookingStatusBadge';
 import { SalePeriodFilter } from '@/components/sale/SalePeriodFilter';
 import { colors, radius } from '@/config/design-tokens';
 import { Link } from '@/lib/i18n/navigation';
-import { formatVnd } from '@/lib/i18n/format';
+import { formatDateRange, formatVnd } from '@/lib/i18n/format';
 import type { AppLocale } from '@/lib/i18n/routing';
 
 function sumMargin(
@@ -155,9 +156,7 @@ export default async function SaleHomePage({
 
       <Stack gap="md">
         <Group justify="space-between">
-          <Title order={4} fw={600}>
-            {t('needsAction')}
-          </Title>
+          <SectionTitle>{t('needsAction')}</SectionTitle>
           {unreadLeads > 0 ? (
             <LinkButton href="/sale/leads" variant="light" color="vbnbGreen" size="xs">
               {unreadLeads > UNREAD_LEAD_CAP
@@ -196,7 +195,7 @@ export default async function SaleHomePage({
                           {asset?.title || t('bookingFallback')}
                         </Text>
                         <Text size="sm" c="dimmed">
-                          {b.check_in} → {b.check_out}
+                          {formatDateRange(b.check_in, b.check_out, locale)}
                         </Text>
                       </div>
                       <BookingStatusBadge status={b.status} />
@@ -212,9 +211,7 @@ export default async function SaleHomePage({
       {active ? (
         <Stack gap="md">
           <Group justify="space-between">
-            <Title order={4} fw={600}>
-              {t('marketplaceOpportunities')}
-            </Title>
+            <SectionTitle>{t('marketplaceOpportunities')}</SectionTitle>
             <LinkButton href="/sale/marketplace" variant="subtle" color="vbnbGreen">
               {t('viewAll')}
             </LinkButton>

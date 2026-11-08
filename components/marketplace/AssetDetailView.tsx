@@ -1,4 +1,5 @@
-import { SimpleGrid, Stack, Title, Paper } from '@mantine/core';
+import { SimpleGrid, Stack, Paper } from '@mantine/core';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { getTranslations } from 'next-intl/server';
 import { MarketplaceCalendar } from '@/components/marketplace/MarketplaceCalendar';
 import { AssetCtas } from '@/components/marketplace/AssetCtas';
@@ -49,9 +50,7 @@ export async function AssetDetailView({
             radius={radius.lg}
             style={{ border: `1px solid ${colors.border}` }}
           >
-            <Title order={4} fw={600} mb="md">
-              {t('availability')}
-            </Title>
+            <SectionTitle mb="md">{t('availability')}</SectionTitle>
             <MarketplaceCalendar
               month={new Date()}
               board={asset.nightBoard}

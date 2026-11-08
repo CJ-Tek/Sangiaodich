@@ -67,7 +67,7 @@ export function OwnerPendingList({
   const t = useTranslations('owner.pending');
   const tf = useTranslations('owner.settlements');
   const locale = useLocale();
-  const { formatNumber, formatDateTime } = useFormat();
+  const { formatNumber, formatDateTime, formatDateRange } = useFormat();
   const cityOptions = vnCityOptions(locale);
 
   const [query, setQuery] = useState('');
@@ -203,7 +203,7 @@ export function OwnerPendingList({
                           {b.villaTitle || t('asset')}
                         </Text>
                         <Text size="xs" c="dimmed">
-                          {b.checkIn} → {b.checkOut}
+                          {formatDateRange(b.checkIn, b.checkOut)}
                           {b.location ? ` · ${b.location}` : ''}
                         </Text>
                       </Table.Td>

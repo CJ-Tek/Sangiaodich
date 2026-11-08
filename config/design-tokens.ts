@@ -8,7 +8,8 @@ export const colors = {
 
   textPrimary: '#161616',
   textSecondary: '#5F625D',
-  textMuted: '#8B8D87',
+  /** ≥ 4.5:1 on background, surface and surfaceMuted (WCAG AA body text). */
+  textMuted: '#6B6E68',
 
   primary: '#10A18E',
   primaryDark: '#0D8777',
@@ -44,6 +45,20 @@ export const typography = {
     lineHeight: 1.2,
     letterSpacing: '-0.025em',
     fontWeight: 700,
+  },
+  /** In-app block heading under the page title (h2). */
+  section: {
+    fontSize: '1.125rem',
+    lineHeight: 1.35,
+    letterSpacing: '-0.015em',
+    fontWeight: 600,
+  },
+  /** Heading inside a card or list item (h3). */
+  cardTitle: {
+    fontSize: '1rem',
+    lineHeight: 1.4,
+    letterSpacing: '-0.01em',
+    fontWeight: 600,
   },
   subtitle: {
     fontSize: '1.0625rem',

@@ -1,5 +1,7 @@
 import { Paper, Text, Stack } from '@mantine/core';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { formatDateRange, formatDay } from '@/lib/i18n/format';
+import type { AppLocale } from '@/lib/i18n/routing';
 import { colors, radius } from '@/config/design-tokens';
 import { SubscriptionPlanPicker } from '@/components/subscription/SubscriptionPlanPicker';
 import type { PendingCheckout } from '@/components/subscription/SubscriptionPlanPicker';
@@ -23,6 +25,13 @@ export async function SaleSubscriptionPanel({
   gatewayEnabled: boolean;
 }) {
   const t = await getTranslations('sale.subscription');
+  const tStatus = await getTranslations('common.subscriptionStatus');
+  const locale = (await getLocale()) as AppLocale;
+  const statusKey = active
+    ? 'ACTIVE'
+    : status === 'PENDING_PAYMENT'
+      ? 'PENDING_PAYMENT'
+      : 'EXPIRED';
 
   return (
     <Stack gap="md" maw={640}>
@@ -36,18 +45,22 @@ export async function SaleSubscriptionPanel({
             <Text size="sm" c="dimmed">
               {t('status')}
             </Text>
-            <Text fw={600} c={active ? 'vbnbGreen.6' : undefined}>
-              {status}
+            <Text fw={600} c={active ? 'vbnbGreen.7' : 'red.8'}>
+              {tStatus(statusKey)}
             </Text>
             <Text size="sm" c="dimmed">
               {t('currentPeriod')}
             </Text>
             <Text size="sm" fw={500}>
-              {periodStart} → {periodEnd}
+              {periodStart && periodEnd
+                ? formatDateRange(periodStart, periodEnd, locale)
+                : '—'}
             </Text>
             {active ? (
               <Text size="sm" c="dimmed" mt="xs">
-                {t('extendNote', { periodEnd: periodEnd ?? '' })}
+                {t('extendNote', {
+                  periodEnd: periodEnd ? formatDay(periodEnd, locale) : '',
+                })}
               </Text>
             ) : null}
           </Stack>

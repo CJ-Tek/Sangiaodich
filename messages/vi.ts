@@ -19,6 +19,17 @@ const messages = {
     "logout": "Đăng xuất",
     "copy": "Sao chép",
     "copied": "Đã copy",
+    "roles": {
+      "OWNER": "Owner",
+      "SALE": "Sale",
+      "GUEST": "Khách",
+      "ADMIN": "Admin"
+    },
+    "subscriptionStatus": {
+      "ACTIVE": "Đang hoạt động",
+      "EXPIRED": "Hết hạn",
+      "PENDING_PAYMENT": "Chờ thanh toán"
+    },
     "uiMode": {
       "label": "Chế độ giao diện",
       "simple": "Đơn giản",
@@ -1014,6 +1025,7 @@ const messages = {
       "trashSince": "Trash từ {date}",
       "noSub": "Chưa có sub",
       "lapsedUntil": "Hết hạn {date}",
+      "statusUntil": "{status} · đến {date}",
       "removeSub": "Gỡ sub",
       "trash": "Trash",
       "restore": "Khôi phục",

@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { colors, radius } from '@/config/design-tokens';
 import type { GuestBookingListItem } from '@/lib/engines/guest-bookings';
 import { getBookingStatusLabel } from '@/lib/i18n/booking-status';
+import { formatDay } from '@/lib/i18n/format';
 import { useFormat } from '@/lib/i18n/use-format';
 import { useRouter } from '@/lib/i18n/navigation';
 import { foldVn } from '@/lib/search/vn-fold';
@@ -36,7 +37,7 @@ export function GuestBookingsList({
   const t = useTranslations('guest.bookings');
   const tStatus = useTranslations('bookingStatus');
   const router = useRouter();
-  const { formatNumber } = useFormat();
+  const { locale, formatNumber, formatDateRange } = useFormat();
   const [query, setQuery] = useState('');
   const [status, setStatus] = useState<string | null>(null);
   const [pay, setPay] = useState<string | null>(null);
@@ -58,9 +59,11 @@ export function GuestBookingsList({
         if (payKind(r) !== pay) return false;
       }
       if (!q) return true;
-      return foldVn(`${r.assetTitle} ${r.checkIn} ${r.checkOut}`).includes(q);
+      return foldVn(
+        `${r.assetTitle} ${r.checkIn} ${r.checkOut} ${formatDay(r.checkIn, locale)} ${formatDay(r.checkOut, locale)}`
+      ).includes(q);
     });
-  }, [rows, query, status, pay]);
+  }, [rows, query, status, pay, locale]);
 
   const filtersActive = Boolean(query.trim() || status || pay);
 
@@ -134,7 +137,7 @@ export function GuestBookingsList({
                       {b.assetTitle}
                     </Text>
                     <Text size="xs" c="dimmed">
-                      {b.checkIn} → {b.checkOut}
+                      {formatDateRange(b.checkIn, b.checkOut)}
                     </Text>
                   </Table.Td>
                   <Table.Td>
