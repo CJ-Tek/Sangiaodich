@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { SectionTitle } from '@/components/ui/SectionTitle';
+import { LogoutButton } from '@/components/auth/LogoutButton';
 import { SubscriptionPlanPicker } from '@/components/subscription/SubscriptionPlanPicker';
 import { Badge, Group, Paper, Text, Stack } from '@mantine/core';
 import { colors, radius } from '@/config/design-tokens';
@@ -96,6 +97,9 @@ export default async function OwnerSubscriptionPage() {
           initialPending={pending}
           gatewayEnabled={gatewayEnabled}
         />
+        <div className="vbnb-shell-mobile-only">
+          <LogoutButton />
+        </div>
       </Stack>
     </>
   );

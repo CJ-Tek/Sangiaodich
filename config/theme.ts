@@ -126,7 +126,7 @@ export const theme = createTheme({
       defaultProps: { radius: radius.xl },
     },
     Badge: {
-      defaultProps: { radius: radius.sm, size: 'sm' },
+      defaultProps: { radius: radius.sm, size: 'md' },
       styles: {
         root: {
           fontWeight: 600,

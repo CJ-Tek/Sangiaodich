@@ -65,7 +65,9 @@ export default async function OwnerProfilePage() {
             {t('subscription')}
           </LinkAnchor>
         </Text>
-        <LogoutButton />
+        <div className="vbnb-shell-mobile-only">
+          <LogoutButton />
+        </div>
       </Stack>
     </>
   );

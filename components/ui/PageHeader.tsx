@@ -1,4 +1,4 @@
-import { Title, Text, Stack, Group } from '@mantine/core';
+import { Title, Text, Stack, Group, type MantineSpacing } from '@mantine/core';
 import { colors, typography } from '@/config/design-tokens';
 import { Breadcrumbs, type BreadcrumbItem } from '@/components/ui/Breadcrumbs';
 import type { ReactNode } from 'react';
@@ -9,15 +9,18 @@ export function PageHeader({
   eyebrow,
   breadcrumbs,
   action,
+  mb = 'xl',
 }: {
   title: string;
   description?: string;
   eyebrow?: string;
   breadcrumbs?: BreadcrumbItem[];
   action?: ReactNode;
+  /** Pass 0 when the parent Stack already spaces its children. */
+  mb?: MantineSpacing | 0;
 }) {
   return (
-    <Stack gap={8} mb="xl">
+    <Stack gap={8} mb={mb}>
       {breadcrumbs?.length ? <Breadcrumbs items={breadcrumbs} /> : null}
       {eyebrow ? (
         <Text

@@ -146,7 +146,9 @@ export default async function SaleSettingsPage({
             />
           }
         />
-        <LogoutButton />
+        <div className="vbnb-shell-mobile-only">
+          <LogoutButton />
+        </div>
       </Stack>
     </>
   );

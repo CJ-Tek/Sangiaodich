@@ -20,7 +20,7 @@ export default async function AdminHomePage() {
 
   return (
     <Stack gap={40}>
-      <PageHeader title={t('title')} description={t('description')} />
+      <PageHeader title={t('title')} description={t('description')} mb={0} />
 
       <Paper
         p="lg"

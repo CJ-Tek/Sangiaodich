@@ -109,6 +109,17 @@ a {
   background-color: #d4eeeb !important;
 }
 
+/* Owner/Sale shells swap to the tab bar (no sidebar) below 1024px. */
+.vbnb-shell-mobile-only {
+  display: none;
+}
+
+@media (max-width: 1023.98px) {
+  .vbnb-shell-mobile-only {
+    display: block;
+  }
+}
+
 /* Header text links (VI/EN, Account): visual size unchanged, hit area grows. */
 .vbnb-hit {
   display: inline-flex;
@@ -224,6 +235,11 @@ a {
   .vbnb-plan-option:hover:not(:disabled) {
     transform: none;
   }
+}
+
+/* Default badge text at 12px (Mantine md is 11px) so status chips stay legible. */
+.mantine-Badge-root {
+  --badge-fz-md: 0.75rem;
 }
 
 /* Touch targets on phones: ≥ 44px for default controls (WCAG 2.5.5). */

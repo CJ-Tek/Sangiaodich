@@ -7,7 +7,7 @@ import { saleHasActiveSub } from '@/lib/engines/booking-service';
 import { countUnreadLeads, UNREAD_LEAD_CAP } from '@/lib/engines/sale-leads';
 import { resolveSaleAssetDiscounts } from '@/lib/engines/sale-pricing';
 import { quoteAssetCosts } from '@/lib/engines/pricing';
-import { parseYearMonth, todayDateOnly } from '@/lib/dates';
+import { daysBetweenDateOnly, parseYearMonth, todayDateOnly } from '@/lib/dates';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LinkButton } from '@/components/ui/LinkButton';
 import { SectionTitle } from '@/components/ui/SectionTitle';
@@ -118,11 +118,19 @@ export default async function SaleHomePage({
   const firstName =
     profile!.full_name?.split(' ')[0] || t('greetingFallback');
 
+  const today = todayDateOnly();
+  function checkInHint(status: string, checkIn: string) {
+    if (status === 'CHECKED_IN') return t('staying');
+    const days = daysBetweenDateOnly(today, checkIn);
+    return days <= 0 ? t('checkInToday') : t('checkInIn', { days });
+  }
+
   return (
     <Stack gap={40}>
       <PageHeader
         title={t('greeting', { name: firstName })}
         action={<SalePeriodFilter yearMonth={period.yearMonth} />}
+        mb={0}
       />
 
       <SubscriptionStatusBanner
@@ -199,6 +207,10 @@ export default async function SaleHomePage({
                         </Text>
                         <Text size="sm" c="dimmed">
                           {formatDateRange(b.check_in, b.check_out, locale)}
+                          {' · '}
+                          <Text span size="sm" fw={500} c={colors.textSecondary}>
+                            {checkInHint(b.status, b.check_in)}
+                          </Text>
                         </Text>
                       </div>
                       <BookingStatusBadge status={b.status} />
