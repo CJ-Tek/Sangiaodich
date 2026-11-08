@@ -109,6 +109,24 @@ a {
   background-color: #d4eeeb !important;
 }
 
+.vbnb-shell-logo-full {
+  display: block;
+}
+
+.vbnb-shell-logo-mark {
+  display: none;
+}
+
+@media (max-width: 399.98px) {
+  .vbnb-shell-logo-full {
+    display: none;
+  }
+
+  .vbnb-shell-logo-mark {
+    display: block;
+  }
+}
+
 /* Owner/Sale shells swap to the tab bar (no sidebar) below 1024px. */
 .vbnb-shell-mobile-only {
   display: none;
@@ -286,10 +304,57 @@ a {
   .mantine-Button-root {
     --button-height-sm: 2.75rem;
     --button-height-xs: 2.25rem;
+    --button-height-compact-sm: 2.25rem;
+    --button-height-compact-xs: 2rem;
   }
 
   .mantine-Input-wrapper {
     --input-height-sm: 2.75rem;
+  }
+
+  .vbnb-tap-link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+  }
+
+  .mantine-Pagination-control {
+    height: 2.5rem;
+    min-width: 2.5rem;
+  }
+
+  .mantine-Burger-root {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+  }
+
+  /* 21px steppers are untappable; phones get the numeric keyboard instead. */
+  .mantine-NumberInput-controls {
+    display: none;
+  }
+
+  .mantine-Breadcrumbs-breadcrumb {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+  }
+
+  .mantine-PasswordInput-visibilityToggle {
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .vbnb-villa-search-grid .mantine-MultiSelect-inputField,
+  .vbnb-villa-search-grid .mantine-TextInput-input {
+    min-height: 40px;
+  }
+
+  /* Five labelled steps don't fit a phone row; icons + the step panel title carry it. */
+  .vbnb-stepper-compact .mantine-Stepper-stepBody {
+    display: none;
   }
 }
 
@@ -305,6 +370,15 @@ a {
   z-index: 4;
   background-color: var(--vbnb-surface-muted);
   box-shadow: inset 0 -1px 0 var(--vbnb-border);
+}
+
+/* Inside a horizontal scroll box the page-level offset would push headers over the rows. */
+.mantine-TableScrollContainer-scrollContainer .mantine-Table-table > thead > tr > th {
+  position: static;
+}
+
+.vbnb-nowrap {
+  white-space: nowrap;
 }
 
 .vbnb-surface-flat {

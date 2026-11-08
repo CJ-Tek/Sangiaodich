@@ -200,7 +200,7 @@ export function GuestBookingsList({
                       >
                         {b.assetTitle}
                       </Link>
-                      <Text size="xs" c="dimmed">
+                      <Text size="xs" c="dimmed" className="vbnb-nowrap">
                         {formatDateRange(b.checkIn, b.checkOut)}
                       </Text>
                     </Table.Td>

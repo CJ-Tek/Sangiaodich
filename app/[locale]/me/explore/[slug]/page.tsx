@@ -32,7 +32,12 @@ export default async function GuestExploreDetailPage({
   return (
     <>
       <Box mb="md">
-        <LinkAnchor href="/me/explore" size="sm" c="vbnbGreen.6">
+        <LinkAnchor
+          href="/me/explore"
+          size="sm"
+          c="vbnbGreen.6"
+          className="vbnb-tap-link"
+        >
           {t('backToAll')}
         </LinkAnchor>
       </Box>

@@ -113,7 +113,11 @@ export default async function AdminAssetsPage({
                       <Text size="sm" c="dimmed" lineClamp={2}>
                         {a.description?.trim() || t('noDescription')}
                       </Text>
-                      <LinkAnchor href={`/admin/assets/${a.id}`} size="sm">
+                      <LinkAnchor
+                        href={`/admin/assets/${a.id}`}
+                        size="sm"
+                        className="vbnb-tap-link"
+                      >
                         {t('viewDetail')}
                       </LinkAnchor>
                     </Stack>

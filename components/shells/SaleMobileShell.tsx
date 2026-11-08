@@ -19,6 +19,7 @@ import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import { VbnbLogo } from '@/components/brand/VbnbLogo';
 import { RoleTabBar } from '@/components/shells/RoleTabBar';
 import { ShellContent } from '@/components/shells/ShellContent';
+import { ShellLogo } from '@/components/shells/ShellLogo';
 import {
   IconCalendar,
   IconClipboard,
@@ -162,8 +163,8 @@ export function SaleMobileShell({
   return (
     <AppShell header={{ height: 56 }} footer={{ height: 68 }} padding="md">
       <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
-          <VbnbLogo height={24} priority />
+        <Group h="100%" px="md" justify="space-between" wrap="nowrap">
+          <ShellLogo />
           <Group gap={4} wrap="nowrap">
             <LanguageSwitcher compact />
             {headerExtra}

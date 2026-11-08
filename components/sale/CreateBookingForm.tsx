@@ -229,6 +229,7 @@ export function CreateBookingForm({
         color="vbnbGreen"
         size="sm"
         allowNextStepsSelect={false}
+        className="vbnb-stepper-compact"
       >
         <Stepper.Step label={t('stepProperty')} description={t('stepAsset')} />
         <Stepper.Step label={t('stepGuest')} description={t('stepGuestVi')} />

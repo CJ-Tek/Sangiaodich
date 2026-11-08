@@ -67,6 +67,7 @@ export function SaleLeadsList({ leads }: { leads: SaleLead[] }) {
         />
       ) : (
         <Paper radius={radius.lg} style={{ border: `1px solid ${colors.border}` }}>
+          <Table.ScrollContainer minWidth={640} type="native">
           <Table highlightOnHover horizontalSpacing="md" verticalSpacing="sm">
             <Table.Thead style={{ background: colors.surfaceMuted }}>
               <Table.Tr>
@@ -140,6 +141,7 @@ export function SaleLeadsList({ leads }: { leads: SaleLead[] }) {
               ))}
             </Table.Tbody>
           </Table>
+          </Table.ScrollContainer>
         </Paper>
       )}
     </Stack>

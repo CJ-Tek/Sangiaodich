@@ -175,7 +175,7 @@ export function SaleBookingsList({
           value={owner}
           onChange={setOwner}
           data={ownerOptions}
-          w={180}
+          w={{ base: 'calc(50% - 6px)', sm: 180 }}
         />
         <Select
           label={t('filterCity')}
@@ -185,7 +185,7 @@ export function SaleBookingsList({
           value={city}
           onChange={setCity}
           data={cityOptions}
-          w={200}
+          w={{ base: 'calc(50% - 6px)', sm: 200 }}
         />
         <Select
           label={t('filterTransfer')}
@@ -198,7 +198,7 @@ export function SaleBookingsList({
             { value: 'half', label: t('filterTransferHalf') },
             { value: 'full', label: t('filterTransferFull') },
           ] satisfies { value: OwnerTransfer; label: string }[]}
-          w={180}
+          w={{ base: 'calc(50% - 6px)', sm: 180 }}
         />
         <Select
           label={t('filterGuestPay')}
@@ -210,7 +210,7 @@ export function SaleBookingsList({
             { value: 'paid', label: t('filterGuestPaid') },
             { value: 'due', label: t('filterGuestDue') },
           ] satisfies { value: GuestPay; label: string }[]}
-          w={180}
+          w={{ base: 'calc(50% - 6px)', sm: 180 }}
         />
       </Group>
       {!filtered.length ? (
@@ -223,6 +223,7 @@ export function SaleBookingsList({
       ) : (
         <>
           <Paper radius={radius.lg} style={{ border: `1px solid ${colors.border}` }}>
+            <Table.ScrollContainer minWidth={1040} type="native">
             <Table highlightOnHover horizontalSpacing="md" verticalSpacing="sm">
               <Table.Thead style={{ background: colors.surfaceMuted }}>
                 <Table.Tr>
@@ -279,7 +280,7 @@ export function SaleBookingsList({
                           <Text size="sm" fw={600}>
                             {b.villaTitle}
                           </Text>
-                          <Text size="xs" c="dimmed">
+                          <Text size="xs" c="dimmed" className="vbnb-nowrap">
                             {formatDateRange(b.check_in, b.check_out)}
                           </Text>
                         </Table.Td>
@@ -457,6 +458,7 @@ export function SaleBookingsList({
                 })}
               </Table.Tbody>
             </Table>
+            </Table.ScrollContainer>
           </Paper>
           {totalPages > 1 ? (
             <Pagination

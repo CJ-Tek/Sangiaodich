@@ -25,7 +25,12 @@ export function GuestUpcomingCard({
         {!upcoming ? (
           <>
             <Text size="sm">{t('empty')}</Text>
-            <LinkAnchor href="/me/explore" size="sm" c="vbnbGreen.6">
+            <LinkAnchor
+              href="/me/explore"
+              size="sm"
+              c="vbnbGreen.6"
+              className="vbnb-tap-link"
+            >
               {t('explore')}
             </LinkAnchor>
           </>
@@ -44,6 +49,7 @@ export function GuestUpcomingCard({
               href={`/me/bookings/${upcoming.id}`}
               size="sm"
               c="vbnbGreen.6"
+              className="vbnb-tap-link"
             >
               {t('viewDetail')}
             </LinkAnchor>

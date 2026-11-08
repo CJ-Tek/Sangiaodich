@@ -85,20 +85,21 @@ export function DesktopRoleShell({
       padding="lg"
     >
       <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
-          <Group gap="sm">
+        <Group h="100%" px="md" justify="space-between" wrap="nowrap">
+          <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
             <Burger
               opened={opened}
               onClick={toggle}
               hiddenFrom="sm"
               size="sm"
+              aria-label={t('openMenu')}
             />
             <VbnbLogo height={28} priority />
-            <Text size="sm" c="dimmed">
+            <Text size="sm" c="dimmed" visibleFrom="xs">
               {title}
             </Text>
           </Group>
-          <Group gap="md">
+          <Group gap={4} wrap="nowrap">
             <LanguageSwitcher compact />
             {headerExtra}
             {accountHref ? (

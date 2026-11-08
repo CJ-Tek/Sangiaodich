@@ -73,7 +73,7 @@ export function GuestBookingDetailCard({
                 size="sm"
                 c="vbnbGreen.6"
                 mt={6}
-                display="inline-block"
+                className="vbnb-tap-link"
               >
                 {t('viewVilla')}
               </LinkAnchor>

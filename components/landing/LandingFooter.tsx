@@ -116,6 +116,7 @@ export function LandingFooter() {
                   size="sm"
                   c={colors.textSecondary}
                   underline="never"
+                  className="vbnb-tap-link"
                   style={{ lineHeight: typography.body.lineHeight }}
                 >
                   {link.label}
