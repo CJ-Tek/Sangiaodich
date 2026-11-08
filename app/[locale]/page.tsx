@@ -11,6 +11,7 @@ import { PricingSection } from '@/components/landing/PricingSection';
 import { FeaturedStays } from '@/components/landing/FeaturedStays';
 import { FinalCTA } from '@/components/landing/FinalCTA';
 import { FaqSection, type FaqItem } from '@/components/landing/FaqSection';
+import { FacebookFab } from '@/components/landing/FacebookFab';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 import { listAllPlans } from '@/lib/engines/subscription-payment';
 import type { AssetCardData } from '@/components/marketplace/AssetCard';
@@ -89,6 +90,7 @@ async function buildHomeJsonLd(locale: AppLocale) {
         '@type': 'Organization',
         '@id': `${origin}/#organization`,
         name: 'VBNB',
+        legalName: 'Công Ty TNHH Cap Saint Jacques Tek',
         url: origin,
         logo: `${origin}/icons/icon-512.png`,
         description: tSeo('description'),
@@ -249,6 +251,7 @@ export default async function HomePage({ params }: PageProps) {
         <FinalCTA showGuestSignup={!role} />
       </main>
       <LandingFooter />
+      <FacebookFab />
     </>
   );
 }

@@ -15,7 +15,7 @@ const messages = {
     "register": "Đăng ký",
     "getStarted": "Bắt đầu ngay",
     "openMenu": "Mở menu",
-    "copyright": "© {year} VBNB",
+    "copyright": "© {year} VBNB. Thuộc sở hữu của Công Ty TNHH Cap Saint Jacques Tek.",
     "logout": "Đăng xuất",
     "copy": "Sao chép",
     "copied": "Đã copy",
@@ -150,7 +150,7 @@ const messages = {
     },
     "howItWorks": {
       "eyebrow": "VBNB hoạt động như thế nào",
-      "title": "Cùng nhau phát triển đơn giản hơn",
+      "title": "Một sàn, ba bên cùng có lợi",
       "steps": {
         "owner": {
           "title": "Chủ villa đăng tài sản",
@@ -225,8 +225,36 @@ const messages = {
       "saleTab": "Sale",
       "emptyOwner": "Chưa có gói Chủ villa đang bật.",
       "emptySale": "Chưa có gói Sale đang bật.",
-      "ctaOwner": "Đăng ký Chủ villa",
-      "ctaSale": "Đăng ký Sale"
+      "ownerTagline": "Đăng villa và tiếp cận mạng lưới sale đang có khách.",
+      "saleTagline": "Truy cập kho villa, giá vốn và lịch trống để chốt khách nhanh hơn.",
+      "recommended": "Đề xuất",
+      "perMonth": "≈ {amount} / tháng",
+      "save": "Tiết kiệm {amount}",
+      "choosePlan": "Chọn gói này",
+      "benefitsTitleOwner": "Quyền lợi thành viên Chủ villa",
+      "benefitsTitleSale": "Quyền lợi thành viên Sale",
+      "benefits": {
+        "owner": [
+          "Đăng villa lên sàn sau khi admin duyệt",
+          "Tiếp cận mạng lưới sale đang có khách",
+          "Thiết lập giá vốn và lịch trống",
+          "Mở chiết khấu theo số lần check-out cho sale",
+          "Đối soát booking và thanh toán rõ ràng",
+          "Khách không thấy giá vốn trên sàn"
+        ],
+        "sale": [
+          "Truy cập toàn bộ villa trên sàn",
+          "Xem giá vốn và lịch trống real-time",
+          "Tạo booking, giữ chỗ chỉ trong vài phút",
+          "Gửi thông tin thanh toán và theo dõi trạng thái",
+          "Nhận lead và quản lý khách hàng",
+          "Tăng hạng thành viên để có giá vốn tốt hơn"
+        ]
+      },
+      "notes": {
+        "payment": "Thanh toán bằng chuyển khoản VietQR, gói tự kích hoạt trong 1–3 phút.",
+        "guestFree": "Khách hàng sử dụng miễn phí."
+      }
     },
     "featured": {
       "title": "Villa nổi bật",
@@ -237,14 +265,20 @@ const messages = {
     },
     "guestSignup": {
       "ariaLabel": "Tạo tài khoản khách",
+      "badge": "Miễn phí cho khách",
+      "title": "Bạn đang tìm villa cho kỳ nghỉ?",
       "text": "Tạo tài khoản để sale chốt booking và bạn theo dõi được lịch sử.",
-      "cta": "Tạo tài khoản →"
+      "cta": "Tạo tài khoản miễn phí"
     },
     "finalCta": {
       "title": "Sẵn sàng bắt đầu cùng VBNB?",
       "subtitle": "Tham gia cùng hàng ngàn chủ villa và sale chuyên nghiệp trên toàn quốc.",
       "ownerCta": "Tôi là Chủ villa",
       "saleCta": "Tôi là Sale"
+    },
+    "fab": {
+      "label": "Nhắn tin cho VBNB",
+      "ariaLabel": "Liên hệ VBNB qua Facebook"
     },
     "faq": {
       "eyebrow": "Câu hỏi thường gặp",
@@ -278,6 +312,10 @@ const messages = {
     },
     "footer": {
       "tagline": "Nền tảng giao dịch villa hiện đại kết nối Chủ villa, Sale và Khách hàng.",
+      "social": {
+        "facebook": "VBNB trên Facebook",
+        "email": "Gửi email cho VBNB"
+      },
       "columns": {
         "platform": {
           "title": "Nền tảng",

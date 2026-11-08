@@ -159,3 +159,20 @@ export function IconCoins({ size }: { size?: number }) {
     </Svg>
   );
 }
+
+export function IconFacebook({ size }: { size?: number }) {
+  return (
+    <Svg size={size}>
+      <path d="M15.5 3.5h-2a3.5 3.5 0 0 0-3.5 3.5v3H8v3.5h2v7h3.5v-7h2.4l.6-3.5h-3V7.5a1 1 0 0 1 1-1h1.5Z" />
+    </Svg>
+  );
+}
+
+export function IconMail({ size }: { size?: number }) {
+  return (
+    <Svg size={size}>
+      <rect x="3" y="5" width="18" height="14" rx="2.5" />
+      <path d="m3.8 6.8 8.2 6 8.2-6" />
+    </Svg>
+  );
+}

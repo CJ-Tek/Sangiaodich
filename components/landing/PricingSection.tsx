@@ -1,33 +1,29 @@
 'use client';
 
-import { Badge, Box, Group, Stack, Text } from '@mantine/core';
-import { useTranslations } from 'next-intl';
-import { useState } from 'react';
-import { colors, radius, shadows, spacing, typography } from '@/config/design-tokens';
+import { Badge, Box, Group, Stack, Text, Title } from '@mantine/core';
+import { useLocale, useTranslations } from 'next-intl';
+import { useState, type ComponentType } from 'react';
+import { colors, typography } from '@/config/design-tokens';
 import { LinkButton } from '@/components/ui/LinkButton';
 import { Reveal } from '@/components/landing/Reveal';
 import { SectionShell } from '@/components/ui/SectionShell';
-import { SurfaceCard } from '@/components/ui/SurfaceCard';
-import {
-  formatVnd,
-  planDiscount,
-  planDurationLabel,
-  type SubscriptionPlan,
-} from '@/lib/engines/subscription-plans';
+import { IconBriefcase, IconHome } from '@/components/landing/LandingIcons';
+import { planDiscount, type SubscriptionPlan } from '@/lib/engines/subscription-plans';
+import { formatVnd, planDurationLabel } from '@/lib/i18n/format';
+import type { AppLocale } from '@/lib/i18n/routing';
 
 type RoleTab = 'OWNER' | 'SALE';
 
-function featuredPlanId(plans: SubscriptionPlan[]): string | undefined {
-  let best: { id: string; percent: number } | undefined;
-  for (const plan of plans) {
-    const discount = planDiscount(plan);
-    if (discount && (!best || discount.percent > best.percent)) {
-      best = { id: plan.id, percent: discount.percent };
-    }
-  }
-  if (best) return best.id;
-  return plans.length > 2 ? plans[1].id : undefined;
-}
+const FEATURED_MONTHS = 3;
+
+const roles: {
+  id: RoleTab;
+  labelKey: 'ownerTab' | 'saleTab';
+  icon: ComponentType<{ size?: number }>;
+}[] = [
+  { id: 'OWNER', labelKey: 'ownerTab', icon: IconHome },
+  { id: 'SALE', labelKey: 'saleTab', icon: IconBriefcase },
+];
 
 export function PricingSection({
   ownerPlans,
@@ -37,14 +33,11 @@ export function PricingSection({
   salePlans: SubscriptionPlan[];
 }) {
   const t = useTranslations('landing.pricing');
+  const locale = useLocale() as AppLocale;
   const [tab, setTab] = useState<RoleTab>('OWNER');
   const plans = tab === 'OWNER' ? ownerPlans : salePlans;
-  const featuredId = featuredPlanId(plans);
-  const ctaHref =
-    tab === 'OWNER'
-      ? '/login?mode=register&role=OWNER'
-      : '/login?mode=register&role=SALE';
-  const ctaLabel = tab === 'OWNER' ? t('ctaOwner') : t('ctaSale');
+  const registerHref = `/login?mode=register&role=${tab}`;
+  const benefits = t.raw(tab === 'OWNER' ? 'benefits.owner' : 'benefits.sale') as string[];
 
   return (
     <SectionShell
@@ -55,124 +48,150 @@ export function PricingSection({
       align="center"
       tone="surface"
     >
-      <Stack gap={spacing['3xl']} align="center">
-        <Group justify="center">
-          <Box
-            role="tablist"
-            aria-label={t('roleTabAria')}
-            style={{
-              display: 'inline-flex',
-              background: colors.surfaceMuted,
-              borderRadius: radius.lg,
-              padding: spacing.xs,
-              border: `1px solid ${colors.border}`,
-            }}
-          >
-            {(
-              [
-                { id: 'OWNER' as const, label: t('ownerTab') },
-                { id: 'SALE' as const, label: t('saleTab') },
-              ] as const
-            ).map((item) => {
-              const active = tab === item.id;
+      <Stack gap={40} align="center">
+        <Stack gap={12} align="center">
+          <div className="vbnb-pricing__switch" role="tablist" aria-label={t('roleTabAria')}>
+            {roles.map(({ id, labelKey, icon: Icon }) => {
+              const active = tab === id;
               return (
-                <Box
-                  key={item.id}
-                  component="button"
+                <button
+                  key={id}
                   type="button"
                   role="tab"
                   aria-selected={active}
-                  onClick={() => setTab(item.id)}
-                  style={{
-                    border: 0,
-                    cursor: 'pointer',
-                    background: active ? colors.surface : 'transparent',
-                    color: active ? colors.primary : colors.textSecondary,
-                    fontWeight: active ? 600 : 500,
-                    fontSize: typography.body.fontSize,
-                    fontFamily: 'inherit',
-                    padding: `${spacing.sm + 2}px ${spacing.xl}px`,
-                    borderRadius: radius.md,
-                    boxShadow: active ? shadows.card : 'none',
-                  }}
+                  className="vbnb-pricing__switch-btn"
+                  data-active={active || undefined}
+                  onClick={() => setTab(id)}
                 >
-                  {item.label}
-                </Box>
+                  <Icon size={18} />
+                  {t(labelKey)}
+                </button>
               );
             })}
-          </Box>
-        </Group>
+          </div>
+          <Text key={tab} size="sm" c={colors.textSecondary} ta="center" className="vbnb-pricing__swap">
+            {t(tab === 'OWNER' ? 'ownerTagline' : 'saleTagline')}
+          </Text>
+        </Stack>
 
         {!plans.length ? (
           <Text ta="center" c={colors.textMuted} size="sm">
             {tab === 'OWNER' ? t('emptyOwner') : t('emptySale')}
           </Text>
         ) : (
-          <div className="vbnb-grid vbnb-grid-4" style={{ width: '100%' }}>
+          <div key={tab} className="vbnb-grid vbnb-grid-4 vbnb-pricing__grid vbnb-pricing__swap">
             {plans.map((plan, index) => (
-              <Reveal key={plan.id} delay={index * 70}>
-                <PlanCard plan={plan} featured={plan.id === featuredId} />
+              <Reveal key={plan.id} delay={index * 70} className="vbnb-pricing__cell">
+                <PlanCard
+                  plan={plan}
+                  locale={locale}
+                  featured={plan.months === FEATURED_MONTHS}
+                  href={registerHref}
+                />
               </Reveal>
             ))}
           </div>
         )}
 
-        <LinkButton href={ctaHref} color="vbnbGreen" size="md" h={48} px={28}>
-          {ctaLabel}
-        </LinkButton>
+        <Reveal className="vbnb-pricing__benefits">
+          <div key={tab} className="vbnb-pricing__swap vbnb-pricing__benefits-inner">
+            <div>
+              <Title
+                order={3}
+                fw={700}
+                mb={16}
+                style={{ fontSize: '1.125rem', letterSpacing: '-0.01em' }}
+              >
+                {t(tab === 'OWNER' ? 'benefitsTitleOwner' : 'benefitsTitleSale')}
+              </Title>
+              <ul className="vbnb-pricing__benefit-list">
+                {benefits.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </div>
+            <ul className="vbnb-pricing__notes">
+              <li>{t('notes.payment')}</li>
+              <li>{t('notes.guestFree')}</li>
+            </ul>
+          </div>
+        </Reveal>
       </Stack>
     </SectionShell>
   );
 }
 
-function PlanCard({ plan, featured }: { plan: SubscriptionPlan; featured?: boolean }) {
+function PlanCard({
+  plan,
+  locale,
+  featured,
+  href,
+}: {
+  plan: SubscriptionPlan;
+  locale: AppLocale;
+  featured: boolean;
+  href: string;
+}) {
+  const t = useTranslations('landing.pricing');
   const discount = planDiscount(plan);
-  const title = plan.label || planDurationLabel(plan.months);
+  const title = locale === 'vi' && plan.label ? plan.label : planDurationLabel(plan.months, locale);
+  const perMonth = Math.round(plan.amount / plan.months);
 
   return (
-    <SurfaceCard
-      p="xl"
-      h="100%"
-      style={{
-        ...(featured
-          ? {
-              borderColor: colors.primary,
-              boxShadow: `0 0 0 1px ${colors.primary}, ${shadows.cardHover}`,
-            }
-          : {}),
-      }}
-    >
-      <Stack gap="md" h="100%">
-        <Group justify="space-between" align="center" wrap="nowrap">
-          <Text fw={600} c={colors.textPrimary}>
-            {title}
+    <Box className="vbnb-pricing__card" data-featured={featured || undefined}>
+      {featured ? <span className="vbnb-pricing__ribbon">{t('recommended')}</span> : null}
+
+      <Group justify="space-between" align="center" wrap="nowrap">
+        <Text fw={700} c={colors.textPrimary} style={{ fontSize: '1.0625rem' }}>
+          {title}
+        </Text>
+        {discount ? (
+          <Badge size="md" color="red" variant="light">
+            −{discount.percent}%
+          </Badge>
+        ) : null}
+      </Group>
+
+      <Stack gap={4}>
+        <Text
+          fw={700}
+          c={colors.textPrimary}
+          className="vbnb-tabular-nums"
+          style={{
+            fontSize: 'clamp(1.75rem, 2.4vw, 2.125rem)',
+            letterSpacing: typography.data.letterSpacing,
+            lineHeight: 1.1,
+          }}
+        >
+          {formatVnd(plan.amount, locale)}
+        </Text>
+        {discount ? (
+          <Text size="sm" c="dimmed" td="line-through" className="vbnb-tabular-nums">
+            {formatVnd(discount.compareAt, locale)}
           </Text>
-          {discount ? (
-            <Badge size="sm" color="red" variant="light">
-              −{discount.percent}%
-            </Badge>
-          ) : null}
-        </Group>
-        <Stack gap={4} mt="auto">
-          <Text
-            fw={typography.data.fontWeight}
-            c="vbnbGreen.6"
-            className="vbnb-tabular-nums"
-            style={{
-              fontSize: typography.data.fontSize,
-              letterSpacing: typography.data.letterSpacing,
-              lineHeight: typography.data.lineHeight,
-            }}
-          >
-            {formatVnd(plan.amount)}
+        ) : null}
+        <Text size="sm" c={colors.textSecondary} className="vbnb-tabular-nums">
+          {t('perMonth', { amount: formatVnd(perMonth, locale) })}
+        </Text>
+        {discount ? (
+          <Text size="sm" fw={600} c="vbnbGreen.6" className="vbnb-tabular-nums">
+            {t('save', { amount: formatVnd(discount.saveAmount, locale) })}
           </Text>
-          {discount ? (
-            <Text size="sm" c="dimmed" td="line-through" className="vbnb-tabular-nums">
-              {formatVnd(discount.compareAt)}
-            </Text>
-          ) : null}
-        </Stack>
+        ) : null}
       </Stack>
-    </SurfaceCard>
+
+      <LinkButton
+        href={href}
+        color="vbnbGreen"
+        variant={featured ? 'filled' : 'default'}
+        fullWidth
+        size="md"
+        h={46}
+        mt="auto"
+        style={featured ? undefined : { borderColor: colors.borderStrong, color: colors.textPrimary }}
+      >
+        {t('choosePlan')}
+      </LinkButton>
+    </Box>
   );
 }

@@ -61,16 +61,9 @@ export function LandingHeader({
   return (
     <Box
       component="header"
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: zIndex.sticky,
-        height: 64,
-        background: scrolled ? 'rgba(250, 250, 248, 0.94)' : 'transparent',
-        borderBottom: scrolled ? `1px solid ${colors.border}` : '1px solid transparent',
-        backdropFilter: scrolled ? 'blur(10px)' : 'none',
-        transition: `background ${motion.normal}ms ${motion.easing}, border-color ${motion.normal}ms ${motion.easing}`,
-      }}
+      className="vbnb-glass-header"
+      data-scrolled={scrolled || undefined}
+      style={{ zIndex: zIndex.sticky }}
     >
       <div className="vbnb-landing-container vbnb-landing-header__bar">
         <UnstyledButton

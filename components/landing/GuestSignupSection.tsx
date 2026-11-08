@@ -1,44 +1,43 @@
 'use client';
 
-import { Group, Text } from '@mantine/core';
+import { Box, Text, Title } from '@mantine/core';
 import { useTranslations } from 'next-intl';
-import { colors, radius } from '@/config/design-tokens';
-import { LinkAnchor } from '@/components/ui/LinkAnchor';
+import { colors } from '@/config/design-tokens';
+import { IconArrowRight, IconSun } from '@/components/landing/LandingIcons';
+import { LinkButton } from '@/components/ui/LinkButton';
 
-/** Compact guest prompt shown above FinalCTA, which only speaks to owners and sales. */
+/** Guest prompt shown above FinalCTA, which only speaks to owners and sales. */
 export function GuestSignupCard() {
   const t = useTranslations('landing.guestSignup');
 
   return (
-    <Group
-      component="aside"
-      aria-label={t('ariaLabel')}
-      justify="space-between"
-      align="center"
-      gap="sm"
-      wrap="wrap"
-      px={{ base: 20, sm: 28 }}
-      py={18}
-      mb={24}
-      style={{
-        background: colors.primarySoft,
-        border: `1px solid ${colors.border}`,
-        borderRadius: radius.lg,
-      }}
-    >
-      <Text c={colors.textPrimary} style={{ fontSize: '0.9375rem' }}>
-        {t('text')}
-      </Text>
-      <LinkAnchor
+    <Box component="aside" aria-label={t('ariaLabel')} className="vbnb-guest-card">
+      <div className="vbnb-guest-card__icon" aria-hidden>
+        <IconSun size={26} />
+      </div>
+
+      <div className="vbnb-guest-card__body">
+        <span className="vbnb-guest-card__badge">{t('badge')}</span>
+        <Title order={3} fw={700} c={colors.textPrimary} style={{ fontSize: '1.1875rem', lineHeight: 1.35 }}>
+          {t('title')}
+        </Title>
+        <Text c={colors.textSecondary} style={{ fontSize: '0.9375rem', lineHeight: 1.55 }}>
+          {t('text')}
+        </Text>
+      </div>
+
+      <LinkButton
         href="/login?mode=register&role=GUEST"
-        fw={600}
-        c="vbnbGreen.6"
-        underline="hover"
-        py={6}
-        display="inline-block"
+        color="vbnbGreen"
+        variant="light"
+        size="md"
+        h={46}
+        px={20}
+        rightSection={<IconArrowRight size={18} />}
+        className="vbnb-guest-card__cta"
       >
         {t('cta')}
-      </LinkAnchor>
-    </Group>
+      </LinkButton>
+    </Box>
   );
 }

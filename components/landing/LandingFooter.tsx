@@ -1,11 +1,19 @@
 'use client';
 
-import { Box, SimpleGrid, Stack, Text } from '@mantine/core';
+import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import { useTranslations } from 'next-intl';
+import type { ComponentType } from 'react';
 import { colors, spacing, typography } from '@/config/design-tokens';
+import { socialLinks, type SocialNetwork } from '@/config/social-links';
 import { containerClassName } from '@/components/landing/landing-media';
+import { IconFacebook, IconMail } from '@/components/landing/LandingIcons';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
 import { VbnbLogo } from '@/components/brand/VbnbLogo';
+
+const socialItems: { network: SocialNetwork; icon: ComponentType<{ size?: number }> }[] = [
+  { network: 'facebook', icon: IconFacebook },
+  { network: 'email', icon: IconMail },
+];
 
 export function LandingFooter() {
   const t = useTranslations('landing.footer');
@@ -77,6 +85,24 @@ export function LandingFooter() {
             <Text size="sm" c={colors.textSecondary} style={{ lineHeight: typography.body.lineHeight }}>
               {t('tagline')}
             </Text>
+            <Group gap={spacing.sm} mt={spacing.xs}>
+              {socialItems.map(({ network, icon: Icon }) => {
+                const href = socialLinks[network];
+                const external = href.startsWith('http');
+                return (
+                  <a
+                    key={network}
+                    className="vbnb-social-link"
+                    href={href || undefined}
+                    aria-label={t(`social.${network}`)}
+                    title={t(`social.${network}`)}
+                    {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                  >
+                    <Icon size={18} />
+                  </a>
+                );
+              })}
+            </Group>
           </Stack>
           {columns.map((col) => (
             <Stack key={col.title} gap={spacing.sm}>
@@ -100,6 +126,7 @@ export function LandingFooter() {
         </SimpleGrid>
         <Text
           size="xs"
+          ta="center"
           c={colors.textSecondary}
           mt={spacing['4xl']}
           pt={spacing.xl}

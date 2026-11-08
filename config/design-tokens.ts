@@ -37,13 +37,13 @@ export const typography = {
     fontSize: 'clamp(2rem, 4vw, 2.75rem)',
     lineHeight: 1.12,
     letterSpacing: '-0.03em',
-    fontWeight: 600,
+    fontWeight: 700,
   },
   title: {
     fontSize: 'clamp(1.375rem, 2.5vw, 1.75rem)',
     lineHeight: 1.2,
     letterSpacing: '-0.025em',
-    fontWeight: 600,
+    fontWeight: 700,
   },
   subtitle: {
     fontSize: '1.0625rem',

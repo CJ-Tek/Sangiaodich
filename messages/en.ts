@@ -15,7 +15,7 @@ const messages = {
     "register": "Sign up",
     "getStarted": "Get started",
     "openMenu": "Open menu",
-    "copyright": "© {year} VBNB",
+    "copyright": "© {year} VBNB. Owned by Cap Saint Jacques Tek Co., Ltd.",
     "logout": "Log out",
     "copy": "Copy",
     "copied": "Copied",
@@ -150,7 +150,7 @@ const messages = {
     },
     "howItWorks": {
       "eyebrow": "How VBNB works",
-      "title": "Grow together, more simply",
+      "title": "One marketplace, everyone wins",
       "steps": {
         "owner": {
           "title": "Owners list properties",
@@ -225,8 +225,36 @@ const messages = {
       "saleTab": "Sale",
       "emptyOwner": "No active villa owner plans.",
       "emptySale": "No active sale plans.",
-      "ctaOwner": "Sign up as owner",
-      "ctaSale": "Sign up as sale"
+      "ownerTagline": "List your villa and reach sales who already have guests.",
+      "saleTagline": "Access villas, cost prices, and availability to close guests faster.",
+      "recommended": "Recommended",
+      "perMonth": "≈ {amount} / month",
+      "save": "Save {amount}",
+      "choosePlan": "Choose this plan",
+      "benefitsTitleOwner": "Villa owner membership benefits",
+      "benefitsTitleSale": "Sale membership benefits",
+      "benefits": {
+        "owner": [
+          "List villas on the marketplace after admin approval",
+          "Reach a network of sales who already have guests",
+          "Set cost prices and availability",
+          "Offer check-out-based discounts to sales",
+          "Clear booking and payment reconciliation",
+          "Guests never see cost prices on the marketplace"
+        ],
+        "sale": [
+          "Access every villa on the marketplace",
+          "See cost prices and availability in real time",
+          "Create bookings and hold dates in minutes",
+          "Send payment details and track status",
+          "Receive leads and manage customers",
+          "Climb membership tiers for better cost prices"
+        ]
+      },
+      "notes": {
+        "payment": "Pay by VietQR bank transfer; plans activate automatically in 1–3 minutes.",
+        "guestFree": "Free for guests."
+      }
     },
     "featured": {
       "title": "Featured villas",
@@ -237,14 +265,20 @@ const messages = {
     },
     "guestSignup": {
       "ariaLabel": "Create guest account",
+      "badge": "Free for guests",
+      "title": "Planning a villa getaway?",
       "text": "Create an account so sales can close bookings and you can track history.",
-      "cta": "Create account →"
+      "cta": "Create a free account"
     },
     "finalCta": {
       "title": "Ready to get started with VBNB?",
       "subtitle": "Join thousands of villa owners and professional sales nationwide.",
       "ownerCta": "I am a villa owner",
       "saleCta": "I am a sale"
+    },
+    "fab": {
+      "label": "Message VBNB",
+      "ariaLabel": "Contact VBNB on Facebook"
     },
     "faq": {
       "eyebrow": "Frequently asked questions",
@@ -278,6 +312,10 @@ const messages = {
     },
     "footer": {
       "tagline": "Modern villa marketplace connecting Owners, Sales, and Guests.",
+      "social": {
+        "facebook": "VBNB on Facebook",
+        "email": "Email VBNB"
+      },
       "columns": {
         "platform": {
           "title": "Platform",
