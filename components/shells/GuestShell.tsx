@@ -1,19 +1,14 @@
 'use client';
 
-import {
-  AppShell,
-  Box,
-  Group,
-  Text,
-  Title,
-  UnstyledButton,
-} from '@mantine/core';
+import { AppShell, Group, Text, UnstyledButton } from '@mantine/core';
+import { RoleTabBar } from '@/components/shells/RoleTabBar';
 import { useMediaQuery } from '@mantine/hooks';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/lib/i18n/navigation';
 import { colors, radius } from '@/config/design-tokens';
 import { guestNav, guestNavHref } from '@/components/shells/guest-nav';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import { VbnbLogo } from '@/components/brand/VbnbLogo';
 
 export function GuestShell({
   children,
@@ -47,7 +42,7 @@ export function GuestShell({
   return (
     <AppShell
       header={{ height: 64 }}
-      footer={isCompact && !isLoginPage ? { height: 64 } : undefined}
+      footer={isCompact && !isLoginPage ? { height: 68 } : undefined}
       padding="md"
     >
       <AppShell.Header>
@@ -61,9 +56,7 @@ export function GuestShell({
         >
           <Group gap="xl">
             <UnstyledButton component={Link} href="/">
-              <Title order={3} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
-                VBNB
-              </Title>
+              <VbnbLogo height={28} priority />
             </UnstyledButton>
             {!isCompact && !isLoginPage ? (
             <Group gap="md">
@@ -78,7 +71,7 @@ export function GuestShell({
                     <Text
                       size="sm"
                       fw={active ? 600 : 500}
-                      c={active ? colors.primaryDark : colors.textSecondary}
+                      c={active ? colors.primary : colors.textSecondary}
                     >
                       {tNav(item.labelKey)}
                     </Text>
@@ -88,18 +81,24 @@ export function GuestShell({
             </Group>
             ) : null}
           </Group>
-          <Group gap="sm">
+          <Group gap={4} wrap="nowrap">
             <LanguageSwitcher compact />
             {isLoggedIn ? (
-              <UnstyledButton component={Link} href="/me/profile">
+              <UnstyledButton
+                component={Link}
+                href="/me/profile"
+                className="vbnb-hit"
+                visibleFrom="lg"
+              >
                 <Text size="sm" c="dimmed">
                   {tShell('account')}
                 </Text>
               </UnstyledButton>
-            ) : (
+            ) : isLoginPage ? null : (
               <UnstyledButton
                 component={Link}
                 href="/login"
+                ml={4}
                 style={{
                   background: colors.primary,
                   color: '#fff',
@@ -107,6 +106,7 @@ export function GuestShell({
                   padding: '8px 14px',
                   fontSize: 14,
                   fontWeight: 500,
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {tShell('login')}
@@ -116,40 +116,20 @@ export function GuestShell({
         </Group>
       </AppShell.Header>
 
-      <AppShell.Main pb={isCompact && !isLoginPage ? 80 : 24}>
+      <AppShell.Main pb={isCompact && !isLoginPage ? 84 : 24}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>{children}</div>
       </AppShell.Main>
 
       {isCompact && !isLoginPage ? (
         <AppShell.Footer>
-          <Group h="100%" px={4} grow gap={0}>
-            {items.map((item) => {
-              const active = activeTarget === item.target;
-              const iconColor = active ? colors.primaryDark : colors.textSecondary;
-              return (
-                <UnstyledButton
-                  key={item.href}
-                  component={Link}
-                  href={item.target}
-                  title={tNav(item.labelKey)}
-                  aria-label={tNav(item.labelKey)}
-                  style={{ textAlign: 'center', padding: 8, minHeight: 44 }}
-                >
-                  <Box
-                    style={{
-                      borderRadius: radius.sm,
-                      background: active ? colors.primarySoft : 'transparent',
-                      padding: '8px 4px',
-                      display: 'flex',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <item.Icon color={iconColor} />
-                  </Box>
-                </UnstyledButton>
-              );
-            })}
-          </Group>
+          <RoleTabBar
+            items={items.map((item) => ({
+              label: tNav(item.labelKey),
+              href: item.target,
+              Icon: item.Icon,
+            }))}
+            isActive={(href) => activeTarget === href}
+          />
         </AppShell.Footer>
       ) : null}
     </AppShell>

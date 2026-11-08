@@ -15,10 +15,22 @@ const messages = {
     "register": "Đăng ký",
     "getStarted": "Bắt đầu ngay",
     "openMenu": "Mở menu",
-    "copyright": "© {year} VBNB",
+    "copyright": "© {year} VBNB. Thuộc sở hữu của Công Ty TNHH Cap Saint Jacques Tek.",
     "logout": "Đăng xuất",
+    "account": "Tài khoản",
     "copy": "Sao chép",
     "copied": "Đã copy",
+    "roles": {
+      "OWNER": "Owner",
+      "SALE": "Sale",
+      "GUEST": "Khách",
+      "ADMIN": "Admin"
+    },
+    "subscriptionStatus": {
+      "ACTIVE": "Đang hoạt động",
+      "EXPIRED": "Hết hạn",
+      "PENDING_PAYMENT": "Chờ thanh toán"
+    },
     "uiMode": {
       "label": "Chế độ giao diện",
       "simple": "Đơn giản",
@@ -32,11 +44,27 @@ const messages = {
     }
   },
   "nav": {
-    "exploreVillas": "Khám phá villas",
+    "exploreVillas": "Khám phá villa",
     "forOwners": "Dành cho Chủ villa",
     "forSales": "Dành cho Sale",
     "pricing": "Bảng giá",
     "aboutUs": "Về chúng tôi"
+  },
+  "seo": {
+    "home": {
+      "title": "VBNB – Sàn giao dịch villa kết nối Chủ villa, Sale & Khách hàng",
+      "description": "Sàn giao dịch villa thông minh: chủ villa tăng booking, sale xem giá vốn & lịch trống real-time để chốt đơn, khách đặt villa với tư vấn tận tâm.",
+      "keywords": [
+        "sàn giao dịch villa",
+        "cho thuê villa",
+        "đặt villa",
+        "booking villa",
+        "quản lý villa",
+        "sale villa",
+        "villa Đà Lạt",
+        "villa Vũng Tàu"
+      ]
+    }
   },
   "login": {
     "subtitle": "Tạo tài khoản — chọn đúng role (không đổi sau này).",
@@ -48,6 +76,7 @@ const messages = {
     "passwordLabel": "Mật khẩu",
     "rememberAccount": "Lưu tài khoản",
     "loginButton": "Đăng nhập",
+    "togglePassword": "Hiện hoặc ẩn mật khẩu",
     "roleQuestion": "Bạn tham gia với vai trò nào?",
     "roleFixedNote": "Role gắn cố định với tài khoản — không đổi sau khi đăng ký.",
     "continue": "Tiếp tục",
@@ -107,17 +136,34 @@ const messages = {
         "Sale không cần tự tìm kiếm khách và chủ nhà",
         "Khách hàng được hưởng dịch vụ tốt hơn từ sale có tâm"
       ],
-      "exploreCta": "Khám phá villas",
+      "exploreCta": "Khám phá villa",
       "learnMoreCta": "Tìm hiểu thêm",
       "imageAlt": "Villa hiện đại với hồ bơi"
     },
-    "trustStrip": {
-      "ariaLabel": "Đối tác tin tưởng",
-      "tagline": "Được tin tưởng bởi chủ villa và sales chuyên nghiệp"
+    "commitments": {
+      "ariaLabel": "Cam kết của VBNB",
+      "items": {
+        "transparency": {
+          "title": "Giá vốn minh bạch",
+          "body": "Giá vốn, lịch trống và đối soát rõ ràng cho Chủ villa và Sale."
+        },
+        "realtime": {
+          "title": "Lịch trống real-time",
+          "body": "Sale xem lịch trống và giá vốn tức thì trước khi chốt khách."
+        },
+        "safety": {
+          "title": "Ghi nhận thanh toán rõ ràng",
+          "body": "Các bên chuyển khoản trực tiếp, VBNB ghi nhận từng khoản."
+        },
+        "free": {
+          "title": "Khách dùng miễn phí",
+          "body": "Khách tìm villa và được sale tư vấn mà không mất phí."
+        }
+      }
     },
     "howItWorks": {
       "eyebrow": "VBNB hoạt động như thế nào",
-      "title": "Cùng nhau phát triển đơn giản hơn",
+      "title": "Một sàn, ba bên cùng có lợi",
       "steps": {
         "owner": {
           "title": "Chủ villa đăng tài sản",
@@ -192,8 +238,36 @@ const messages = {
       "saleTab": "Sale",
       "emptyOwner": "Chưa có gói Chủ villa đang bật.",
       "emptySale": "Chưa có gói Sale đang bật.",
-      "ctaOwner": "Đăng ký Chủ villa",
-      "ctaSale": "Đăng ký Sale"
+      "ownerTagline": "Đăng villa và tiếp cận mạng lưới sale đang có khách.",
+      "saleTagline": "Truy cập kho villa, giá vốn và lịch trống để chốt khách nhanh hơn.",
+      "recommended": "Đề xuất",
+      "perMonth": "≈ {amount} / tháng",
+      "save": "Tiết kiệm {amount}",
+      "choosePlan": "Chọn gói này",
+      "benefitsTitleOwner": "Quyền lợi thành viên Chủ villa",
+      "benefitsTitleSale": "Quyền lợi thành viên Sale",
+      "benefits": {
+        "owner": [
+          "Đăng villa lên sàn sau khi admin duyệt",
+          "Tiếp cận mạng lưới sale đang có khách",
+          "Thiết lập giá vốn và lịch trống",
+          "Mở chiết khấu theo số lần check-out cho sale",
+          "Đối soát booking và thanh toán rõ ràng",
+          "Khách không thấy giá vốn trên sàn"
+        ],
+        "sale": [
+          "Truy cập toàn bộ villa trên sàn",
+          "Xem giá vốn và lịch trống real-time",
+          "Tạo booking, giữ chỗ chỉ trong vài phút",
+          "Gửi thông tin thanh toán và theo dõi trạng thái",
+          "Nhận lead và quản lý khách hàng",
+          "Tăng hạng thành viên để có giá vốn tốt hơn"
+        ]
+      },
+      "notes": {
+        "payment": "Thanh toán bằng chuyển khoản VietQR, gói tự kích hoạt trong 1–3 phút.",
+        "guestFree": "Khách hàng sử dụng miễn phí."
+      }
     },
     "featured": {
       "title": "Villa nổi bật",
@@ -204,8 +278,10 @@ const messages = {
     },
     "guestSignup": {
       "ariaLabel": "Tạo tài khoản khách",
+      "badge": "Miễn phí cho khách",
+      "title": "Bạn đang tìm villa cho kỳ nghỉ?",
       "text": "Tạo tài khoản để sale chốt booking và bạn theo dõi được lịch sử.",
-      "cta": "Tạo tài khoản →"
+      "cta": "Tạo tài khoản miễn phí"
     },
     "finalCta": {
       "title": "Sẵn sàng bắt đầu cùng VBNB?",
@@ -213,12 +289,50 @@ const messages = {
       "ownerCta": "Tôi là Chủ villa",
       "saleCta": "Tôi là Sale"
     },
+    "fab": {
+      "label": "Nhắn tin cho VBNB",
+      "ariaLabel": "Liên hệ VBNB qua Facebook"
+    },
+    "faq": {
+      "eyebrow": "Câu hỏi thường gặp",
+      "title": "Giải đáp nhanh về VBNB",
+      "items": [
+        {
+          "question": "VBNB là gì?",
+          "answer": "VBNB là sàn giao dịch villa thông minh kết nối Chủ villa, Sale và Khách hàng. Chủ villa đăng tài sản với giá vốn và lịch trống, Sale truy cập toàn bộ villa để tư vấn và tạo booking, còn khách hàng được phục vụ bởi sale phù hợp."
+        },
+        {
+          "question": "Chủ villa đăng villa lên VBNB như thế nào?",
+          "answer": "Đăng ký tài khoản Chủ villa, chọn gói thành viên rồi tạo tài sản với hình ảnh, tiện nghi, giá vốn và lịch trống. Villa sẽ hiển thị trên sàn sau khi admin duyệt."
+        },
+        {
+          "question": "Sale tăng thu nhập trên VBNB như thế nào?",
+          "answer": "Sale xem giá vốn weekday/weekend và lịch trống theo thời gian thực, tạo booking cho khách chỉ trong vài phút và tối ưu lợi nhuận trên mỗi đơn. Check-out càng nhiều trên một căn, giá vốn càng tốt nếu Chủ villa đã mở chiết khấu."
+        },
+        {
+          "question": "Khách hàng đặt villa trên VBNB như thế nào?",
+          "answer": "Khách tìm villa theo địa điểm, tiện nghi, ngân sách và ngày ở, sau đó kết nối với sale để được tư vấn và chốt booking. Giá không hiển thị công khai trên danh sách. Tạo tài khoản khách để theo dõi lịch sử booking."
+        },
+        {
+          "question": "Phí tham gia VBNB là bao nhiêu?",
+          "answer": "Chủ villa và Sale trả phí thành viên theo gói 1 tháng, 3 tháng, 6 tháng hoặc 1 năm, gói càng dài ưu đãi càng nhiều. Xem chi tiết ở mục Bảng giá. Khách hàng sử dụng miễn phí."
+        },
+        {
+          "question": "Giao dịch trên VBNB có an toàn không?",
+          "answer": "VBNB không giữ tiền: khách, Sale và Chủ villa chuyển khoản trực tiếp cho nhau qua VietQR. Mỗi khoản được ghi nhận trên hệ thống và bên nhận xác nhận đã nhận tiền, nên các bên luôn đối soát được. VBNB có quyền khóa tài khoản khi phát hiện dấu hiệu gian lận."
+        }
+      ]
+    },
     "footer": {
       "tagline": "Nền tảng giao dịch villa hiện đại kết nối Chủ villa, Sale và Khách hàng.",
+      "social": {
+        "facebook": "VBNB trên Facebook",
+        "email": "Gửi email cho VBNB"
+      },
       "columns": {
         "platform": {
           "title": "Nền tảng",
-          "exploreVillas": "Khám phá villas",
+          "exploreVillas": "Khám phá villa",
           "howItWorks": "Cách hoạt động",
           "pricing": "Bảng giá",
           "membership": "Thành viên"
@@ -259,7 +373,7 @@ const messages = {
       "tagsLabel": "Thuộc tính",
       "tagsPlaceholder": "Hồ bơi, wifi, gần biển...",
       "tagsAria": "Thuộc tính villa",
-      "submit": "Tìm kiếm villas",
+      "submit": "Tìm kiếm villa",
       "advancedToggle": "Tìm kiếm nâng cao",
       "budgetLabel": "Ngân sách / đêm",
       "budgetFrom": "Từ",
@@ -277,11 +391,13 @@ const messages = {
   },
   "marketplace": {
     "page": {
-      "title": "Khám phá villas",
+      "title": "Khám phá villa",
       "description": "Lọc theo địa điểm và thuộc tính chủ nhà đã đăng. Không hiển thị giá.",
       "emptyTitle": "Không tìm thấy",
       "emptyDescription": "Thử từ khóa khác, bớt thuộc tính, hoặc nới ngân sách / số khách.",
-      "clearFilters": "Xóa bộ lọc"
+      "clearFilters": "Xóa bộ lọc",
+      "emptyCatalogTitle": "Chưa có villa nào trên sàn",
+      "emptyCatalogDescription": "Villa sẽ xuất hiện ở đây khi chủ nhà đăng và được duyệt. Bạn quay lại sau nhé."
     },
     "signup": {
       "text": "Tạo tài khoản để sale chốt booking và bạn theo dõi được lịch sử.",
@@ -778,12 +894,12 @@ const messages = {
     "APARTMENT": "Căn hộ"
   },
   "subscriptionLocked": {
-    "expiredTitle": "Subscription hết hạn",
-    "pendingTitle": "Chờ kích hoạt",
-    "pendingDesc": "Chọn gói trên trang Subscription, quét QR (nội dung CK đã sẵn) để kích hoạt.",
-    "expiredDesc": "Kỳ phí đã hết. Chọn gói và thanh toán để mở lại.",
-    "inactiveDesc": "Subscription chưa ACTIVE. Vào Subscription để chọn gói.",
-    "lapsedLabel": "Hết hạn {date}",
+    "expiredTitle": "Gói đã hết hạn",
+    "pendingTitle": "Chờ kích hoạt gói",
+    "pendingDesc": "Chọn gói và quét QR (nội dung chuyển khoản đã điền sẵn) để kích hoạt.",
+    "expiredDesc": "Trang này cần gói còn hạn. Chọn gói và thanh toán để mở lại.",
+    "inactiveDesc": "Bạn chưa có gói đang hoạt động. Chọn gói để bắt đầu.",
+    "lapsedLabel": "Hết hạn từ {date}",
     "statusLabel": "Trạng thái: {status}",
     "choosePlan": "Chọn gói & thanh toán",
     "profile": "Hồ sơ cá nhân"
@@ -836,24 +952,24 @@ const messages = {
         "overview": "Tổng quan",
         "assets": "Duyệt căn",
         "users": "Người dùng",
-        "fees": "Phí & TT",
+        "fees": "Phí & thanh toán",
         "payments": "Thanh toán",
-        "membership": "Membership"
+        "membership": "Hạng thành viên"
       }
     },
     "overview": {
       "title": "Admin",
-      "description": "Pending actions first — cấu hình sàn.",
+      "description": "Việc cần xử lý trước, sau đó đến cấu hình sàn.",
       "pendingAssets": "Căn chờ duyệt",
       "reviewQueue": "Hàng đợi duyệt",
       "revenue": "Doanh thu",
       "revenueAll": "Tổng đã thu",
-      "revenueAllHint": "SePay + Admin mark paid",
-      "revenueMonthHint": "User trả phí trong tháng",
+      "revenueAllHint": "Qua SePay và ghi nhận thủ công",
+      "revenueMonthHint": "Phí người dùng trả trong tháng",
       "monthLabel": "Tháng {month}/{year}",
       "users": "Người dùng",
-      "activePaid": "Đang active",
-      "activePaidHint": "Owner/Sale còn hạn sub",
+      "activePaid": "Đang có gói",
+      "activePaidHint": "Owner/Sale còn hạn gói",
       "guests": "Khách",
       "owners": "Owner",
       "sales": "Sale",
@@ -865,34 +981,34 @@ const messages = {
     },
     "assets": {
       "title": "Duyệt căn",
-      "description": "Mở chi tiết để xem ảnh + mô tả, rồi duyệt. PENDING_REVIEW → ACTIVE lên sàn.",
+      "description": "Mở chi tiết để xem ảnh và mô tả rồi duyệt. Căn được duyệt sẽ lên sàn.",
       "searchLabel": "Tìm kiếm",
       "searchPlaceholder": "Tên villa, địa điểm, owner, mô tả...",
       "searchButton": "Tìm",
       "filterAll": "Tất cả",
       "filterPending": "Chờ duyệt",
-      "filterActive": "Đang active",
+      "filterActive": "Đang bán",
       "filterReject": "Từ chối",
       "filterSuspend": "Tạm ngưng",
       "emptyNotFound": "Không tìm thấy",
-      "emptyNoAssets": "Không có asset",
+      "emptyNoAssets": "Không có căn",
       "emptySearchHint": "Thử từ khóa khác hoặc đổi trạng thái.",
-      "emptyPendingHint": "Chưa có listing chờ duyệt.",
-      "emptyStatusHint": "Không có asset ở trạng thái này.",
+      "emptyPendingHint": "Chưa có căn chờ duyệt.",
+      "emptyStatusHint": "Không có căn ở trạng thái này.",
       "clearFilters": "Xóa bộ lọc",
       "ownerLabel": "Owner",
       "imagesCount": "{count} ảnh",
       "noDescription": "Chưa có mô tả.",
       "viewDetail": "Xem chi tiết",
-      "itemLabel": "asset",
+      "itemLabel": "căn",
       "backToList": "← Duyệt căn",
       "noImagesTitle": "Chưa có ảnh",
       "noImagesBody": "Owner chưa upload hình. Nên yêu cầu bổ sung trước khi duyệt.",
       "noDescTitle": "Chưa có mô tả",
-      "noDescBody": "Listing chưa có description.",
+      "noDescBody": "Căn chưa có mô tả.",
       "decisionTitle": "Quyết định",
-      "decisionHint": "Duyệt → ACTIVE lên sàn. Từ chối / Suspend cần ghi lý do.",
-      "reasonLabel": "Lý do (reject/suspend)",
+      "decisionHint": "Duyệt để căn lên sàn. Từ chối hoặc tạm ngưng cần ghi lý do.",
+      "reasonLabel": "Lý do (khi từ chối / tạm ngưng)",
       "approve": "Duyệt",
       "reject": "Từ chối",
       "suspend": "Tạm ngưng",
@@ -900,44 +1016,45 @@ const messages = {
     },
     "users": {
       "title": "Người dùng",
-      "description": "Quản lý theo role, gỡ subscription, trash/restore. Mark paid là fallback khi SePay chưa nhận được.",
+      "description": "Quản lý người dùng theo vai trò, gỡ gói, đưa vào hoặc khôi phục từ thùng rác. Chỉ ghi nhận thanh toán thủ công khi SePay chưa nhận được.",
       "searchLabel": "Tìm kiếm",
       "searchPlaceholder": "Tên, SĐT hoặc email...",
       "tabs": {
         "OWNER": "Owner",
         "SALE": "Sale",
-        "GUEST": "Guest",
+        "GUEST": "Khách",
         "ADMIN": "Admin",
-        "TRASH": "Trash"
+        "TRASH": "Thùng rác"
       },
-      "trashSince": "Trash từ {date}",
-      "noSub": "Chưa có sub",
+      "trashSince": "Trong thùng rác từ {date}",
+      "noSub": "Chưa có gói",
       "lapsedUntil": "Hết hạn {date}",
-      "removeSub": "Gỡ sub",
-      "trash": "Trash",
+      "statusUntil": "{status} · đến {date}",
+      "removeSub": "Gỡ gói",
+      "trash": "Đưa vào thùng rác",
       "restore": "Khôi phục",
       "hardDelete": "Xóa vĩnh viễn",
-      "cannotTrashSelf": "Không thể đưa chính tài khoản đang đăng nhập vào trash",
-      "confirmRemoveSub": "Gỡ subscription ACTIVE của user này?",
-      "confirmTrash": "Đưa user vào trash? (có thể khôi phục sau)",
-      "confirmRestore": "Khôi phục user khỏi trash?",
+      "cannotTrashSelf": "Không thể đưa chính tài khoản đang đăng nhập vào thùng rác",
+      "confirmRemoveSub": "Gỡ gói đang hoạt động của người dùng này?",
+      "confirmTrash": "Đưa người dùng vào thùng rác? (có thể khôi phục sau)",
+      "confirmRestore": "Khôi phục người dùng khỏi thùng rác?",
       "failed": "Thất bại",
-      "removedSub": "Đã gỡ subscription",
-      "trashed": "Đã đưa vào trash",
+      "removedSub": "Đã gỡ gói",
+      "trashed": "Đã đưa vào thùng rác",
       "restored": "Đã khôi phục",
       "emptySearch": "Không tìm thấy “{query}”",
-      "emptyTrash": "Trash trống",
+      "emptyTrash": "Thùng rác trống",
       "emptyRole": "Chưa có {role}",
-      "emptySearchHint": "Thử từ khóa khác hoặc đổi tab role / Trash.",
-      "emptyTrashHint": "User soft-delete sẽ hiện ở đây để khôi phục.",
-      "emptyRoleHint": "User thuộc role này sẽ hiện tại đây.",
-      "userCount": "{count} user"
+      "emptySearchHint": "Thử từ khóa khác hoặc đổi tab vai trò / thùng rác.",
+      "emptyTrashHint": "Người dùng bị xóa tạm sẽ hiện ở đây để khôi phục.",
+      "emptyRoleHint": "Người dùng thuộc vai trò này sẽ hiện ở đây.",
+      "userCount": "{count} người dùng"
     },
     "fees": {
-      "title": "Fees & thanh toán",
-      "description": "Gói subscription (1/3/6/12) + STK / VietQR. Owner & Sale chọn gói trên trang Subscription.",
+      "title": "Phí & thanh toán",
+      "description": "Giá các gói phí sàn (1/3/6/12 tháng) và tài khoản nhận tiền. Owner và Sale chọn gói ở trang Phí sàn.",
       "tabs": {
-        "subscription": "Gói subscription",
+        "subscription": "Gói phí sàn",
         "payout": "Tài khoản nhận tiền"
       },
       "subscriptionHint": "Giá từng gói do Admin set. Số tiền CK phải khớp chính xác mới kích hoạt. Kỳ hạn tính theo tháng lịch.",
@@ -952,7 +1069,7 @@ const messages = {
       "planDiscountTag": "Tag: −{percent}%",
       "savePlan": "Lưu gói",
       "savedPlan": "Đã lưu gói {label}",
-      "paymentHint": "Owner/Sale thấy thông tin này trên trang Subscription khi chờ kích hoạt hoặc gia hạn. Giá gói chỉnh ở tab Gói subscription.",
+      "paymentHint": "Owner/Sale thấy thông tin này ở trang Phí sàn khi chờ kích hoạt hoặc gia hạn. Giá gói chỉnh ở tab Gói phí sàn.",
       "bankName": "Ngân hàng",
       "vietqrBank": "Mã ngân hàng VietQR",
       "vietqrBankHint": "Chọn ngân hàng để tạo QR động. Nếu trống sẽ lấy tên Ngân hàng ở trên. Gõ tên hoặc mã để tìm.",
@@ -963,7 +1080,7 @@ const messages = {
       "qrAlt": "QR thanh toán",
       "chooseQr": "Chọn ảnh QR",
       "removeQr": "Xóa QR",
-      "qrUrl": "QR image URL",
+      "qrUrl": "Link ảnh QR",
       "qrUrlHint": "Tùy chọn — dán link nếu không upload file.",
       "transferNote": "Ghi chú hướng dẫn",
       "transferNoteHint": "VD: Sau khi CK, nhắn Admin kèm ảnh biên lai.",
@@ -975,26 +1092,26 @@ const messages = {
       "paymentSaved": "Đã lưu thông tin thanh toán"
     },
     "membership": {
-      "title": "Membership",
-      "description": "Guest: ngưỡng book và GMV để lên hạng. Chiết khấu cost Sale do Owner set trên từng asset (mặc định 0%).",
-      "addTier": "Thêm tier mới",
-      "editTier": "Sửa tier",
-      "addTierTitle": "Thêm tier",
-      "tierRequirement": "#{sort} · cần {books} books + {gmv} GMV để lên hạng",
+      "title": "Hạng thành viên",
+      "description": "Khách: số booking và tổng chi tiêu cần đạt để lên hạng. Chiết khấu giá vốn cho Sale do Owner đặt theo từng căn (mặc định 0%).",
+      "addTier": "Thêm hạng mới",
+      "editTier": "Sửa hạng",
+      "addTierTitle": "Thêm hạng",
+      "tierRequirement": "#{sort} · cần {books} booking + {gmv} chi tiêu để lên hạng",
       "sort": "Thứ tự",
       "labelField": "Nhãn",
       "minBooks": "Tối thiểu booking",
-      "minGmv": "GMV tối thiểu",
-      "saveTier": "Lưu tier",
-      "saveTierFailed": "Lưu tier thất bại",
-      "tierSaved": "Đã lưu tier",
+      "minGmv": "Chi tiêu tối thiểu",
+      "saveTier": "Lưu hạng",
+      "saveTierFailed": "Lưu hạng thất bại",
+      "tierSaved": "Đã lưu hạng",
       "connectionFailed": "Không kết nối được máy chủ. Thử lại."
     },
     "payments": {
       "title": "Thanh toán cần xử lý",
-      "description": "Tiền đã vào nhưng chưa tự kích hoạt được: lệch số tiền, thiếu mã CK, hoặc webhook lỗi. Xử lý bằng Mark paid sau khi đối soát sao kê.",
+      "description": "Tiền đã vào nhưng chưa tự kích hoạt được: lệch số tiền, thiếu mã chuyển khoản hoặc webhook lỗi. Đối soát sao kê rồi ghi nhận thanh toán thủ công.",
       "mismatchTitle": "Lệch số tiền",
-      "mismatchHint": "Intent đã nhận CK nhưng số tiền không khớp giá gói. Chuyển đúng số tiền với cùng mã vẫn tự kích hoạt được.",
+      "mismatchHint": "Đã nhận chuyển khoản nhưng số tiền không khớp giá gói. Chuyển đúng số tiền với cùng mã vẫn tự kích hoạt được.",
       "mismatchEmpty": "Không có giao dịch lệch tiền.",
       "webhookTitle": "Webhook chưa xử lý xong",
       "webhookHint": "Mỗi lần SePay gửi lại, hệ thống sẽ tự thử lại các giao dịch này.",
@@ -1002,14 +1119,23 @@ const messages = {
       "paymentCode": "Mã CK {code}",
       "planLabel": "gói {plan}",
       "needAmount": "Cần {expected} · nhận {received}",
-      "noPaymentCode": "Không có mã CK",
+      "noPaymentCode": "Thiếu mã chuyển khoản",
       "unprocessed": "Chưa xử lý",
-      "sepayId": "SePay #{id}"
+      "sepayId": "SePay #{id}",
+      "sources": {
+        "bank_webhook": "Ngân hàng",
+        "gateway_ipn": "Cổng SePay"
+      },
+      "notes": {
+        "NO_PAYMENT_CODE": "Nội dung chuyển khoản không có mã",
+        "INTENT_NOT_FOUND": "Không tìm thấy mã thanh toán khớp"
+      }
     },
     "markPaid": {
       "noPlans": "Chưa có gói",
-      "button": "Mark paid",
+      "button": "Ghi nhận đã trả",
       "menuLabel": "Chọn gói kích hoạt",
+      "confirm": "Ghi nhận đã nhận {amount} và kích hoạt gói {plan}? Chỉ làm sau khi đã đối soát sao kê.",
       "success": "Đã kích hoạt / gia hạn theo gói"
     }
   },
@@ -1027,7 +1153,7 @@ const messages = {
     "terms": {
       "slug": "terms",
       "title": "Điều khoản sử dụng",
-      "updated": "12/08/2026",
+      "updated": "08/11/2026",
       "intro": "Khi tạo tài khoản trên VBNB, bạn xác nhận đã đọc và đồng ý với các điều khoản dưới đây. Điều khoản áp dụng cho Khách hàng, Sale và Chủ nhà (Owner).",
       "sections": [
         {
@@ -1041,8 +1167,9 @@ const messages = {
         {
           "heading": "Cảnh báo lừa đảo và chiếm dụng tiền",
           "paragraphs": [
-            "Nghiêm cấm giả mạo danh tính, tạo booking ảo, yêu cầu chuyển khoản ngoài luồng VBNB, chiếm dụng tiền cọc / thanh toán, hoặc bất kỳ hành vi nhằm chiếm đoạt tài sản của bên khác.",
-            "Khi có dấu hiệu gian lận, VBNB có quyền khóa tài khoản ngay và cung cấp thông tin liên quan cho cơ quan có thẩm quyền theo pháp luật Việt Nam."
+            "VBNB không làm trung gian nhận, giữ hay chuyển tiền. Khách hàng, Sale và Chủ nhà chuyển khoản trực tiếp cho nhau; VBNB chỉ ghi nhận và hiển thị trạng thái các khoản thanh toán do các bên xác nhận.",
+            "Người dùng tự chịu trách nhiệm kiểm tra thông tin người nhận (họ tên, số tài khoản, nội dung chuyển khoản) và đối chiếu với thông tin hiển thị trên VBNB trước khi chuyển tiền. VBNB không chịu trách nhiệm đối với các khoản tiền chuyển nhầm, bị chiếm dụng hoặc bị lừa đảo giữa các bên.",
+            "Nghiêm cấm giả mạo danh tính, tạo booking ảo, chiếm dụng tiền cọc / thanh toán, hoặc bất kỳ hành vi nhằm chiếm đoạt tài sản của bên khác. Khi có dấu hiệu gian lận, VBNB có quyền khóa tài khoản ngay và cung cấp thông tin liên quan cho cơ quan có thẩm quyền theo pháp luật Việt Nam."
           ]
         },
         {

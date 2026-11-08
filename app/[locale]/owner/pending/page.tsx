@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 import { getSessionProfile } from '@/lib/auth/session';
 import { isSimpleUi } from '@/lib/engines/ui-mode';
@@ -12,6 +13,8 @@ import {
   loadSaleRatingComments,
 } from '@/lib/engines/sale-ratings';
 import { getTranslations } from 'next-intl/server';
+
+export const generateMetadata = pageTitle('owner.pending');
 
 export default async function OwnerPendingBookingsPage() {
   const t = await getTranslations('owner.pending');

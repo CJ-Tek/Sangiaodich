@@ -1,8 +1,11 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { AdminUsersPanel } from '@/components/admin/AdminUsersPanel';
 import { listAdminUsers } from '@/lib/engines/admin-user-management';
 import { getSessionProfile } from '@/lib/auth/session';
+
+export const generateMetadata = pageTitle('admin.users');
 
 export default async function AdminUsersPage({
   searchParams,

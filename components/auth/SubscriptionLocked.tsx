@@ -1,10 +1,12 @@
 'use client';
 
-import { Button, Paper, Stack, Text, Title } from '@mantine/core';
+import { Button, Paper, Stack, Text } from '@mantine/core';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/lib/i18n/navigation';
 import { colors, radius } from '@/config/design-tokens';
 import { isSubscriptionActive } from '@/lib/engines/subscription';
+import { SectionTitle } from '@/components/ui/SectionTitle';
+import { useFormat } from '@/lib/i18n/use-format';
 
 export function SubscriptionLocked({
   role,
@@ -19,6 +21,8 @@ export function SubscriptionLocked({
   email?: string | null;
 }) {
   const t = useTranslations('subscriptionLocked');
+  const tStatus = useTranslations('common.subscriptionStatus');
+  const { formatDay } = useFormat();
   const coversToday =
     Boolean(status && periodEnd) &&
     isSubscriptionActive({ status: status!, periodEnd: periodEnd! });
@@ -40,9 +44,9 @@ export function SubscriptionLocked({
         style={{ border: `1px solid ${colors.border}` }}
       >
         <Stack gap="md">
-          <Title order={2} fw={600} style={{ letterSpacing: '-0.02em' }}>
+          <SectionTitle order={1}>
             {isExpired ? t('expiredTitle') : t('pendingTitle')}
-          </Title>
+          </SectionTitle>
           <Text c="dimmed" size="sm">
             {isPending
               ? t('pendingDesc')
@@ -50,10 +54,12 @@ export function SubscriptionLocked({
                 ? t('expiredDesc')
                 : t('inactiveDesc')}
           </Text>
-          <Text size="sm" fw={500} c="vbnbGreen.6">
-            {periodLapsed && periodEnd
-              ? t('lapsedLabel', { date: periodEnd })
-              : t('statusLabel', { status: status || 'PENDING_PAYMENT' })}
+          <Text size="sm" fw={500} c={isExpired ? 'red.8' : 'dimmed'}>
+            {isExpired && periodEnd
+              ? t('lapsedLabel', { date: formatDay(periodEnd) })
+              : t('statusLabel', {
+                  status: tStatus(status || 'PENDING_PAYMENT'),
+                })}
           </Text>
           <Button component={Link} href={subHref} color="vbnbGreen">
             {t('choosePlan')}

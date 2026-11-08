@@ -7,17 +7,19 @@ import {
   NavLink,
   Stack,
   Text,
-  Title,
   UnstyledButton,
   Divider,
   Box,
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { Link, usePathname } from '@/lib/i18n/navigation';
-import { colors, radius } from '@/config/design-tokens';
+import { colors } from '@/config/design-tokens';
 import { shellNavLinkClass } from '@/components/shells/shell-nav-link-styles';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import { VbnbLogo } from '@/components/brand/VbnbLogo';
+import { ShellContent } from '@/components/shells/ShellContent';
+import { useTranslations } from 'next-intl';
 import type { ReactNode } from 'react';
 
 export type NavItem = {
@@ -48,6 +50,7 @@ export function DesktopRoleShell({
 }) {
   const [opened, { toggle }] = useDisclosure();
   const pathname = usePathname();
+  const t = useTranslations('common');
 
   const resolvedSections: NavSection[] =
     sections ?? (nav ? [{ items: nav }] : []);
@@ -82,28 +85,31 @@ export function DesktopRoleShell({
       padding="lg"
     >
       <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
-          <Group gap="sm">
+        <Group h="100%" px="md" justify="space-between" wrap="nowrap">
+          <Group gap="xs" wrap="nowrap" style={{ minWidth: 0 }}>
             <Burger
               opened={opened}
               onClick={toggle}
               hiddenFrom="sm"
               size="sm"
+              aria-label={t('openMenu')}
             />
-            <Title order={3} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
-              VBNB
-            </Title>
-            <Text size="sm" c="dimmed">
+            <VbnbLogo height={28} priority />
+            <Text size="sm" c="dimmed" visibleFrom="xs">
               {title}
             </Text>
           </Group>
-          <Group gap="md">
+          <Group gap={4} wrap="nowrap">
             <LanguageSwitcher compact />
             {headerExtra}
             {accountHref ? (
-              <UnstyledButton component={Link} href={accountHref}>
+              <UnstyledButton
+                component={Link}
+                href={accountHref}
+                className="vbnb-hit"
+              >
                 <Text size="sm" c="dimmed">
-                  Tài khoản
+                  {t('account')}
                 </Text>
               </UnstyledButton>
             ) : (
@@ -159,7 +165,9 @@ export function DesktopRoleShell({
         </Stack>
       </AppShell.Navbar>
 
-      <AppShell.Main>{children}</AppShell.Main>
+      <AppShell.Main>
+        <ShellContent>{children}</ShellContent>
+      </AppShell.Main>
     </AppShell>
   );
 }

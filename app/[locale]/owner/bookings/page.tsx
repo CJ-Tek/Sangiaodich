@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 import { getSessionProfile } from '@/lib/auth/session';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -14,6 +15,8 @@ import {
 } from '@/lib/engines/sale-ratings';
 
 const SETTLED = ['CONFIRMED', 'CHECKED_IN', 'CHECKED_OUT'] as const;
+
+export const generateMetadata = pageTitle('owner.settlements');
 
 export default async function OwnerSettlementsPage() {
   const profile = await getSessionProfile();

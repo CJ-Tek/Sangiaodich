@@ -1,7 +1,8 @@
 import { getLocale, getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { Badge, Group, Paper, Stack, Text } from '@mantine/core';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { EmptyState } from '@/components/ui/EmptyState';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { MarkPaidButton } from '@/components/admin/MarkPaidButton';
 import { requireRole } from '@/lib/auth/session';
 import {
@@ -11,14 +12,22 @@ import {
   type UnresolvedEventRow,
 } from '@/lib/engines/admin-payment-ops';
 import { listAllPlans } from '@/lib/engines/subscription-payment';
-import { formatDateTime, formatVnd, planDurationLabel } from '@/lib/i18n/format';
+import {
+  formatDateTime,
+  formatDay,
+  formatVnd,
+  planDurationLabel,
+} from '@/lib/i18n/format';
 import type { AppLocale } from '@/lib/i18n/routing';
 import type { SubscriptionPlan } from '@/lib/engines/subscription-plans';
 import { colors, radius } from '@/config/design-tokens';
 
+export const generateMetadata = pageTitle('admin.payments');
+
 export default async function AdminPaymentsPage() {
   await requireRole(['ADMIN']);
   const t = await getTranslations('admin.payments');
+  const tRoles = await getTranslations('common.roles');
   const locale = (await getLocale()) as AppLocale;
 
   const [mismatches, events, plans] = await Promise.all([
@@ -30,7 +39,7 @@ export default async function AdminPaymentsPage() {
   return (
     <>
       <PageHeader title={t('title')} description={t('description')} />
-      <Stack gap="xl" maw={860}>
+      <Stack gap="xl">
         <Section
           title={t('mismatchTitle')}
           hint={t('mismatchHint')}
@@ -41,6 +50,7 @@ export default async function AdminPaymentsPage() {
             <MismatchCard
               key={row.intentId}
               row={row}
+              roleLabel={tRoles(row.role)}
               plans={plans}
               locale={locale}
               t={t}
@@ -80,18 +90,26 @@ function Section({
     <Stack gap="sm">
       <div>
         <Group gap="xs" align="center">
-          <Text fw={600}>{title}</Text>
+          <SectionTitle>{title}</SectionTitle>
           {count ? (
-            <Badge color="red" variant="light" size="sm">
+            <Badge color="red" variant="light">
               {count}
             </Badge>
           ) : null}
         </Group>
-        <Text size="sm" c="dimmed">
+        <Text size="sm" c="dimmed" mt={4}>
           {hint}
         </Text>
       </div>
-      {count ? <Stack gap="sm">{children}</Stack> : <EmptyState title={empty} />}
+      {count ? (
+        <Stack gap="sm">{children}</Stack>
+      ) : (
+        <Card>
+          <Text size="sm" c="dimmed">
+            {empty}
+          </Text>
+        </Card>
+      )}
     </Stack>
   );
 }
@@ -100,11 +118,13 @@ type PaymentsTranslator = Awaited<ReturnType<typeof getTranslations<'admin.payme
 
 function MismatchCard({
   row,
+  roleLabel,
   plans,
   locale,
   t,
 }: {
   row: MismatchIntentRow;
+  roleLabel: string;
   plans: SubscriptionPlan[];
   locale: AppLocale;
   t: PaymentsTranslator;
@@ -120,7 +140,7 @@ function MismatchCard({
           <Text fw={600} size="sm">
             {row.fullName}{' '}
             <Text span c="dimmed" fw={400}>
-              · {row.role}
+              · {roleLabel}
               {row.phone ? ` · ${row.phone}` : ''}
             </Text>
           </Text>
@@ -145,10 +165,8 @@ function MismatchCard({
             ) : null}
           </Text>
           <Text size="xs" c="dimmed">
-            {formatDateTime(row.updatedAt, locale, {
-              dateStyle: 'short',
-              timeStyle: 'short',
-            })}
+            {formatDay(row.updatedAt, locale)}{' '}
+            {formatDateTime(row.updatedAt, locale, { timeStyle: 'short' })}
           </Text>
         </Stack>
         <MarkPaidButton profileId={row.profileId} plans={rolePlans} />
@@ -170,22 +188,31 @@ function EventCard({
     <Card>
       <Stack gap={4}>
         <Group gap="xs" wrap="wrap">
-          <Badge size="sm" variant="light" color="gray">
-            {row.source}
-          </Badge>
           <Text size="sm" fw={600}>
             {row.paymentCode || t('noPaymentCode')}
           </Text>
           {row.transferAmount == null ? null : (
-            <Text size="sm">{formatVnd(row.transferAmount, locale)}</Text>
+            <Text size="sm" className="vbnb-tabular-nums">
+              {formatVnd(row.transferAmount, locale)}
+            </Text>
           )}
+          <Badge variant="light" color="gray">
+            {t.has(`sources.${row.source}`)
+              ? t(`sources.${row.source}`)
+              : row.source}
+          </Badge>
         </Group>
+        <Text size="sm" c="dimmed">
+          {row.note
+            ? t.has(`notes.${row.note}`)
+              ? t(`notes.${row.note}`)
+              : row.note
+            : t('unprocessed')}
+        </Text>
         <Text size="xs" c="dimmed">
-          {row.note || t('unprocessed')} · {t('sepayId', { id: row.sepayId })} ·{' '}
-          {formatDateTime(row.createdAt, locale, {
-            dateStyle: 'short',
-            timeStyle: 'short',
-          })}
+          {t('sepayId', { id: row.sepayId })} ·{' '}
+          {formatDay(row.createdAt, locale)}{' '}
+          {formatDateTime(row.createdAt, locale, { timeStyle: 'short' })}
         </Text>
       </Stack>
     </Card>

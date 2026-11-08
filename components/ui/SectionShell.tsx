@@ -1,5 +1,6 @@
-import { Box, Stack, Text, Title } from '@mantine/core';
-import { colors, layout, spacing, typography } from '@/config/design-tokens';
+import { Box, Text, Title } from '@mantine/core';
+import { colors, typography } from '@/config/design-tokens';
+import { Reveal } from '@/components/landing/Reveal';
 import type { ReactNode } from 'react';
 
 export function SectionShell({
@@ -9,30 +10,54 @@ export function SectionShell({
   eyebrow,
   children,
   large = false,
+  align = 'left',
+  tone = 'default',
+  headingId,
   containerClassName = 'vbnb-landing-container',
 }: {
   id?: string;
-  title?: string;
-  description?: string;
+  title?: ReactNode;
+  description?: ReactNode;
   eyebrow?: string;
   children: ReactNode;
   large?: boolean;
+  align?: 'left' | 'center';
+  /** `surface` = white band with hairline borders, to alternate with the page background. */
+  tone?: 'default' | 'surface';
+  headingId?: string;
   containerClassName?: string;
 }) {
+  const resolvedHeadingId = headingId ?? (id ? `${id}-heading` : undefined);
+  const sectionClass = [
+    'vbnb-landing-section',
+    large ? 'vbnb-landing-section--lg' : '',
+    tone === 'surface' ? 'vbnb-landing-section--surface' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
     <Box
       component="section"
       id={id}
-      className={large ? 'vbnb-landing-section vbnb-landing-section--lg' : 'vbnb-landing-section'}
+      className={sectionClass}
+      aria-labelledby={title ? resolvedHeadingId : undefined}
     >
-      <Stack gap={spacing['3xl']} className={containerClassName}>
+      <div className={containerClassName}>
         {title || description || eyebrow ? (
-          <Stack gap="sm" maw={layout.contentMax * 0.55}>
+          <Reveal
+            className={
+              align === 'center'
+                ? 'vbnb-section-head vbnb-section-head--center'
+                : 'vbnb-section-head'
+            }
+          >
             {eyebrow ? <span className="vbnb-eyebrow">{eyebrow}</span> : null}
             {title ? (
               <Title
+                id={resolvedHeadingId}
                 order={2}
-                fw={600}
+                fw={typography.title.fontWeight}
                 className="vbnb-text-balance"
                 style={{
                   fontSize: typography.title.fontSize,
@@ -47,19 +72,19 @@ export function SectionShell({
             {description ? (
               <Text
                 size="md"
+                className="vbnb-text-balance"
                 style={{
                   color: colors.textSecondary,
                   lineHeight: typography.body.lineHeight,
-                  maxWidth: `${layout.proseMax}rem`,
                 }}
               >
                 {description}
               </Text>
             ) : null}
-          </Stack>
+          </Reveal>
         ) : null}
         {children}
-      </Stack>
+      </div>
     </Box>
   );
 }

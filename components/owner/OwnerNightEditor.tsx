@@ -1,6 +1,7 @@
 'use client';
 
-import { Box, Group, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { notifications } from '@mantine/notifications';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/lib/i18n/navigation';
@@ -14,17 +15,8 @@ import {
   type AssetNightBoard,
 } from '@/lib/engines/inventory';
 
-const BOOKED = {
-  bg: colors.dangerSoft,
-  text: colors.danger,
-  border: '#E8D0D0',
-};
-
-const CLOSED = {
-  bg: '#6B6E68',
-  text: '#FFFFFF',
-  border: '#4A4D48',
-};
+const BOOKED = bookingStatusColors.maintenance;
+const CLOSED = bookingStatusColors.closed;
 
 export function OwnerNightEditor({
   assetId,
@@ -91,9 +83,7 @@ export function OwnerNightEditor({
   return (
     <Stack gap="sm">
       <Group justify="space-between">
-        <Title order={5} fw={600}>
-          {t('title')}
-        </Title>
+        <SectionTitle>{t('title')}</SectionTitle>
         <Group gap="xs">
           <Text
             size="sm"

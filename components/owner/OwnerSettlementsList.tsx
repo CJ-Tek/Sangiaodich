@@ -85,7 +85,7 @@ export function OwnerSettlementsList({
   const t = useTranslations('owner.settlements');
   const tStatus = useTranslations('bookingStatus');
   const locale = useLocale();
-  const { formatNumber, formatDateTime } = useFormat();
+  const { formatNumber, formatDateTime, formatDateRange } = useFormat();
   const cityOptions = vnCityOptions(locale);
 
   const PAYOUT_BADGE = {
@@ -177,7 +177,7 @@ export function OwnerSettlementsList({
             value,
             label: getBookingStatusLabel(value, tStatus),
           }))}
-          w={180}
+          w={{ base: 'calc(50% - 6px)', sm: 180 }}
         />
         <Select
           label={t('filterCity')}
@@ -187,7 +187,7 @@ export function OwnerSettlementsList({
           value={city}
           onChange={setCity}
           data={cityOptions}
-          w={200}
+          w={{ base: 'calc(50% - 6px)', sm: 200 }}
         />
         <Select
           label={t('filterSale')}
@@ -196,7 +196,7 @@ export function OwnerSettlementsList({
           value={sale}
           onChange={setSale}
           data={saleOptions}
-          w={180}
+          w={{ base: 'calc(50% - 6px)', sm: 180 }}
         />
       </Group>
       {!filtered.length ? (
@@ -218,6 +218,7 @@ export function OwnerSettlementsList({
         />
       ) : (
         <Paper radius={radius.lg} style={{ border: `1px solid ${colors.border}` }}>
+          <Table.ScrollContainer minWidth={900} type="native">
           <Table highlightOnHover horizontalSpacing="md" verticalSpacing="sm">
             <Table.Thead style={{ background: colors.surfaceMuted }}>
               <Table.Tr>
@@ -258,8 +259,8 @@ export function OwnerSettlementsList({
                         <Text size="sm" fw={600}>
                           {b.villaTitle || t('assetFallback')}
                         </Text>
-                        <Text size="xs" c="dimmed">
-                          {b.check_in} → {b.check_out}
+                        <Text size="xs" c="dimmed" className="vbnb-nowrap">
+                          {formatDateRange(b.check_in, b.check_out)}
                           {b.location ? ` · ${b.location}` : ''}
                         </Text>
                       </Table.Td>
@@ -276,7 +277,7 @@ export function OwnerSettlementsList({
                           <Text size="sm">{b.saleName || t('saleUnknown')}</Text>
                         </Group>
                       </Table.Td>
-                      <Table.Td style={{ background: 'var(--mantine-color-teal-light)' }}>
+                      <Table.Td style={{ background: colors.primarySoft }}>
                         <Text size="sm" fw={600}>
                           {formatNumber(b.ownerEarn)}
                         </Text>
@@ -294,8 +295,8 @@ export function OwnerSettlementsList({
                       <Table.Td
                         style={{
                           background: collectedShort
-                            ? '#FFF3BF'
-                            : 'var(--mantine-color-teal-light)',
+                            ? colors.warningSoft
+                            : colors.primarySoft,
                         }}
                       >
                         <Text size="sm" fw={600}>
@@ -398,6 +399,7 @@ export function OwnerSettlementsList({
               })}
             </Table.Tbody>
           </Table>
+          </Table.ScrollContainer>
         </Paper>
       )}
     </Stack>

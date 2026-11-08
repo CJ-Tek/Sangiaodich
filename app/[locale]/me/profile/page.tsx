@@ -1,11 +1,14 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { localeRedirect } from '@/lib/i18n/navigation';
-import { Stack } from '@mantine/core';
+import { Box, Stack } from '@mantine/core';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { GuestProfileForm } from '@/components/me/GuestProfileForm';
+
+export const generateMetadata = pageTitle('guest.profile');
 
 export default async function GuestProfilePage() {
   const t = await getTranslations('guest.profile');
@@ -33,7 +36,9 @@ export default async function GuestProfilePage() {
             avatarUrl: row?.avatar_url || '',
           }}
         />
-        <LogoutButton />
+        <Box hiddenFrom="md">
+          <LogoutButton />
+        </Box>
       </Stack>
     </>
   );

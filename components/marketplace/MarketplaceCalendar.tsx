@@ -23,17 +23,8 @@ import {
   type NightStatus,
 } from '@/lib/engines/inventory';
 
-const BOOKED_TONE = {
-  bg: colors.dangerSoft,
-  text: colors.danger,
-  border: '#E8D0D0',
-} as const;
-
-const CLOSED_TONE = {
-  bg: '#6B6E68',
-  text: '#FFFFFF',
-  border: '#4A4D48',
-} as const;
+const BOOKED_TONE = bookingStatusColors.maintenance;
+const CLOSED_TONE = bookingStatusColors.closed;
 
 export type CalendarVariant = 'guest' | 'sale' | 'owner';
 
@@ -174,8 +165,8 @@ function MonthNavButton({
       disabled={disabled}
       onClick={onClick}
       style={{
-        width: 28,
-        height: 28,
+        width: 36,
+        height: 36,
         display: 'grid',
         placeItems: 'center',
         borderRadius: radius.md,

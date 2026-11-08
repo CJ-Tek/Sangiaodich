@@ -1,22 +1,35 @@
 'use client';
 
-import { createTheme, MantineColorsTuple } from '@mantine/core';
+import {
+  createTheme,
+  type CSSVariablesResolver,
+  type MantineColorsTuple,
+} from '@mantine/core';
 import { colors, fonts, motion, radius, shadows } from './design-tokens';
 
 const primary: MantineColorsTuple = [
   colors.primarySoft,
-  '#D5E0D6',
-  '#B8C9BA',
-  '#9BB29F',
-  '#7E9A83',
+  '#D4EEEB',
+  '#A9DDD6',
+  '#7ECCC2',
+  '#53BBAE',
+  '#2DAC9C',
   colors.primary,
   colors.primaryDark,
-  '#2E3D32',
-  '#1F2A23',
-  '#141C17',
+  '#0B6D61',
+  '#08544A',
 ];
 
 const transition = `${motion.normal}ms ${motion.easing}`;
+
+/** Mantine's default dimmed gray (#868e96) is ~3.2:1 — below WCAG AA for body text. */
+export const cssVariablesResolver: CSSVariablesResolver = () => ({
+  variables: {},
+  light: {
+    '--mantine-color-dimmed': colors.textMuted,
+  },
+  dark: {},
+});
 
 export const theme = createTheme({
   primaryColor: 'vbnbGreen',
@@ -113,7 +126,7 @@ export const theme = createTheme({
       defaultProps: { radius: radius.xl },
     },
     Badge: {
-      defaultProps: { radius: radius.sm, size: 'sm' },
+      defaultProps: { radius: radius.sm, size: 'md' },
       styles: {
         root: {
           fontWeight: 600,

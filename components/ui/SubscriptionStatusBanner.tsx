@@ -5,6 +5,7 @@ import { useTranslations } from 'next-intl';
 import { LinkButton } from '@/components/ui/LinkButton';
 import { SurfaceCard } from '@/components/ui/SurfaceCard';
 import { colors, motion, radius, shadows, typography } from '@/config/design-tokens';
+import { useFormat } from '@/lib/i18n/use-format';
 
 export function SubscriptionStatusBanner({
   active,
@@ -24,12 +25,21 @@ export function SubscriptionStatusBanner({
   inactiveActionLabel?: string;
 }) {
   const t = useTranslations('subscription.statusBanner');
+  const { formatDay } = useFormat();
   const bg = active ? colors.primarySoft : colors.dangerSoft;
   const accent = active ? colors.success : colors.danger;
-  const title = active ? t('activeTitle') : t('inactiveTitle');
+  const expired = !active && Boolean(periodEnd);
+  const title = active
+    ? t('activeTitle')
+    : expired
+      ? t('expiredTitle')
+      : t('inactiveTitle');
   const description = active
     ? activeDescription || t('defaultActiveDesc')
     : inactiveDescription || t('defaultInactiveDesc');
+  const periodNote = periodEnd
+    ? t(active ? 'periodUntil' : 'expiredSince', { date: formatDay(periodEnd) })
+    : null;
 
   return (
     <SurfaceCard
@@ -63,9 +73,11 @@ export function SubscriptionStatusBanner({
               }}
             >
               {title}
-              <Text component="span" fw={500} c="dimmed" ml={8}>
-                {active ? t('activeStatus') : t('inactiveStatus')}
-              </Text>
+              {periodNote ? (
+                <Text component="span" fw={500} c="dimmed" ml={8}>
+                  {periodNote}
+                </Text>
+              ) : null}
             </Text>
             <Text
               size="sm"
@@ -75,7 +87,6 @@ export function SubscriptionStatusBanner({
               }}
             >
               {description}
-              {periodEnd ? ` · ${t('periodUntil', { date: periodEnd })}` : ''}
             </Text>
           </Stack>
         </Group>

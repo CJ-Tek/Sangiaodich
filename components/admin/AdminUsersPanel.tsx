@@ -3,6 +3,7 @@
 import {
   Badge,
   Button,
+  Divider,
   Group,
   Pagination,
   Stack,
@@ -67,7 +68,9 @@ function UserCard({
 }) {
   const t = useTranslations('admin.users');
   const tErrors = useTranslations('errors');
-  const { formatDateTime } = useFormat();
+  const tRoles = useTranslations('common.roles');
+  const tStatus = useTranslations('common.subscriptionStatus');
+  const { formatDateTime, formatDay } = useFormat();
   const sub = user.subscription;
   const coversToday = sub
     ? isSubscriptionActive({
@@ -91,7 +94,7 @@ function UserCard({
           <Text fw={600}>
             {user.full_name}{' '}
             <Text span size="sm" c="dimmed" fw={500}>
-              · {user.role}
+              · {tRoles(user.role)}
             </Text>
           </Text>
           <Text size="sm" c="dimmed" mt={4}>
@@ -119,9 +122,12 @@ function UserCard({
           >
             {!sub
               ? t('noSub')
-              : periodLapsed
-                ? t('lapsedUntil', { date: sub.period_end })
-                : `${sub.status} → ${sub.period_end}`}
+              : periodLapsed || sub.status === 'EXPIRED'
+                ? t('lapsedUntil', { date: formatDay(sub.period_end) })
+                : t('statusUntil', {
+                    status: tStatus(sub.status),
+                    date: formatDay(sub.period_end),
+                  })}
           </Badge>
 
           {mode === 'active' ? (
@@ -146,16 +152,17 @@ function UserCard({
                   ) : null}
                 </>
               )}
+              <Divider orientation="vertical" mx={4} />
               {isSelf ? (
                 <Tooltip label={t('cannotTrashSelf')}>
-                  <Button size="xs" variant="light" color="red" disabled>
+                  <Button size="xs" variant="subtle" color="red" disabled>
                     {t('trash')}
                   </Button>
                 </Tooltip>
               ) : (
                 <Button
                   size="xs"
-                  variant="light"
+                  variant="subtle"
                   color="red"
                   loading={loading}
                   onClick={() => onAction('soft_delete_user', user.id)}

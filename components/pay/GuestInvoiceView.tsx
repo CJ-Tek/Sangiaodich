@@ -61,7 +61,7 @@ function formatCountdown(ms: number) {
 
 export function GuestInvoiceView(props: GuestInvoiceViewProps) {
   const t = useTranslations('pay.invoice');
-  const { formatNumber, formatVnd } = useFormat();
+  const { formatNumber, formatVnd, formatDateRange } = useFormat();
   const payee = props.payee === 'OWNER' ? 'OWNER' : 'SALE';
   const amounts = guestInvoiceAmounts({
     listPrice: props.listPrice,
@@ -112,7 +112,7 @@ export function GuestInvoiceView(props: GuestInvoiceViewProps) {
       <div>
         <Title order={3}>{props.villaTitle}</Title>
         <Text size="sm" c="dimmed" mt={4}>
-          {props.checkIn} → {props.checkOut}
+          {formatDateRange(props.checkIn, props.checkOut)}
         </Text>
         <Text size="sm" mt={4}>
           {payee === 'OWNER'

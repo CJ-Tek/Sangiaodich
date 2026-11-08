@@ -6,10 +6,12 @@ import { LinkAnchor } from '@/components/ui/LinkAnchor';
 import { SaveCustomerButton } from '@/components/sale/SavedCustomerActions';
 import { SurfaceCard } from '@/components/ui/SurfaceCard';
 import { colors } from '@/config/design-tokens';
+import { useFormat } from '@/lib/i18n/use-format';
 import type { SaleLead } from '@/lib/engines/sale-leads';
 
 export function LeadCard({ lead }: { lead: SaleLead }) {
   const t = useTranslations('sale.leads');
+  const { formatDay } = useFormat();
 
   function timeAgo(iso: string) {
     const diff = Date.now() - new Date(iso).getTime();
@@ -18,7 +20,7 @@ export function LeadCard({ lead }: { lead: SaleLead }) {
     if (mins < 60) return t('minsAgo', { mins });
     const hours = Math.floor(mins / 60);
     if (hours < 24) return t('hoursAgo', { hours });
-    return new Date(iso).toLocaleDateString('vi-VN');
+    return formatDay(iso);
   }
 
   return (

@@ -5,7 +5,7 @@ export const ownerEn = {
     pending: 'Pending',
     settlements: 'Settlements',
     newAsset: 'New asset',
-    subscription: 'Subscription',
+    subscription: 'Platform fee',
     profile: 'Profile',
     calendar: 'Calendar',
     platformFee: 'Platform fee',
@@ -22,18 +22,18 @@ export const ownerEn = {
   home: {
     greeting: 'Hello, {name}',
     greetingFallback: 'Owner',
-    description: 'Portfolio overview — P&L from confirmed bookings.',
+    description: 'Your properties and earnings from confirmed bookings.',
     settlements: 'Settlements',
     newAsset: 'New asset',
-    subActiveDesc: 'Owner account activated',
-    subInactiveDesc: 'No active plan — renew to list properties',
-    subActiveAction: 'Subscription',
+    subActiveDesc: 'Your properties are visible on the marketplace',
+    subInactiveDesc: 'Renew to list properties and receive new bookings',
+    subActiveAction: 'Platform fee',
     subInactiveAction: 'Renew',
     noPayoutTitle: 'No payout account configured',
     noPayoutDesc:
       'Sales need your account to transfer cost. Listing is not blocked — add bank details in Profile.',
     openProfile: 'Open profile',
-    pnl: 'Owner P&L',
+    pnl: 'Owner earnings',
     lifetimeHint: 'Lifetime confirmed',
     settledBookings: 'Settled bookings',
     settledHint: 'Confirmed',
@@ -43,7 +43,7 @@ export const ownerEn = {
   assets: {
     title: 'Properties',
     description:
-      'CRUD + weekday/weekend cost + per-asset sale discounts. Submit for review to go live.',
+      'Manage properties, weekday / weekend cost and sale discounts. Submit for review to go live.',
     newAsset: 'New asset',
     emptyTitle: 'No assets yet',
     emptyDesc: 'Create your first listing to submit for review.',
@@ -254,12 +254,13 @@ export const ownerEn = {
     noPayoutDesc:
       'Sales need your account to transfer cost after collecting from guests. Applies to all your assets.',
     seeAlso: 'See also:',
-    subscription: 'Subscription',
+    subscription: 'Platform fee',
   },
   subscription: {
-    title: 'Subscription',
+    title: 'Platform fee',
     description:
-      'Choose a plan to keep listings live. Early renewal extends current expiry (calendar months).',
+      'Choose a plan to keep your properties on the marketplace. Early renewal extends your current expiry date.',
+    currentPlan: 'Current plan',
     status: 'Status',
     extendNote: 'New plan extends current expiry {periodEnd}.',
     noPeriod:

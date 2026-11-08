@@ -1,10 +1,19 @@
 'use client';
 
-import { Box, SimpleGrid, Stack, Text } from '@mantine/core';
+import { Box, Group, SimpleGrid, Stack, Text } from '@mantine/core';
 import { useTranslations } from 'next-intl';
+import type { ComponentType } from 'react';
 import { colors, spacing, typography } from '@/config/design-tokens';
+import { socialLinks, type SocialNetwork } from '@/config/social-links';
 import { containerClassName } from '@/components/landing/landing-media';
+import { IconFacebook, IconMail } from '@/components/landing/LandingIcons';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
+import { VbnbLogo } from '@/components/brand/VbnbLogo';
+
+const socialItems: { network: SocialNetwork; icon: ComponentType<{ size?: number }> }[] = [
+  { network: 'facebook', icon: IconFacebook },
+  { network: 'email', icon: IconMail },
+];
 
 export function LandingFooter() {
   const t = useTranslations('landing.footer');
@@ -26,7 +35,7 @@ export function LandingFooter() {
         { label: t('columns.owner.listVilla'), href: '/login?mode=register&role=OWNER' },
         { label: t('columns.owner.guide'), href: '/#owner' },
         { label: t('columns.owner.policy'), href: '/terms' },
-        { label: t('columns.owner.faq'), href: '/#owner' },
+        { label: t('columns.owner.faq'), href: '/#faq' },
       ],
     },
     {
@@ -65,19 +74,35 @@ export function LandingFooter() {
         background: colors.background,
       }}
     >
-      <Box className={containerClassName} py={spacing['4xl']} pb={spacing['3xl']}>
-        <SimpleGrid cols={{ base: 2, sm: 3, md: 6 }} spacing={{ base: spacing['2xl'], md: spacing.xl }}>
-          <Stack gap={spacing.sm}>
-            <Text
-              fw={700}
-              c="vbnbGreen.6"
-              style={{ letterSpacing: typography.title.letterSpacing, fontSize: typography.subtitle.fontSize }}
-            >
-              {tCommon('appName')}
-            </Text>
+      <Box className={containerClassName} pt={spacing['5xl']} pb={spacing['2xl']}>
+        <SimpleGrid
+          cols={{ base: 2, sm: 3, md: 7 }}
+          spacing={{ base: spacing['2xl'], md: spacing.xl }}
+          verticalSpacing={spacing['2xl']}
+        >
+          <Stack gap={spacing.md} style={{ gridColumn: 'span 2' }} maw={300}>
+            <VbnbLogo height={28} alt={tCommon('appName')} />
             <Text size="sm" c={colors.textSecondary} style={{ lineHeight: typography.body.lineHeight }}>
               {t('tagline')}
             </Text>
+            <Group gap={spacing.sm} mt={spacing.xs}>
+              {socialItems.map(({ network, icon: Icon }) => {
+                const href = socialLinks[network];
+                const external = href.startsWith('http');
+                return (
+                  <a
+                    key={network}
+                    className="vbnb-social-link"
+                    href={href || undefined}
+                    aria-label={t(`social.${network}`)}
+                    title={t(`social.${network}`)}
+                    {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                  >
+                    <Icon size={18} />
+                  </a>
+                );
+              })}
+            </Group>
           </Stack>
           {columns.map((col) => (
             <Stack key={col.title} gap={spacing.sm}>
@@ -91,6 +116,7 @@ export function LandingFooter() {
                   size="sm"
                   c={colors.textSecondary}
                   underline="never"
+                  className="vbnb-tap-link"
                   style={{ lineHeight: typography.body.lineHeight }}
                 >
                   {link.label}
@@ -99,7 +125,14 @@ export function LandingFooter() {
             </Stack>
           ))}
         </SimpleGrid>
-        <Text size="xs" c={colors.textMuted} mt={spacing['3xl']}>
+        <Text
+          size="xs"
+          ta="center"
+          c={colors.textSecondary}
+          mt={spacing['4xl']}
+          pt={spacing.xl}
+          style={{ borderTop: `1px solid ${colors.border}` }}
+        >
           {tCommon('copyright', { year: new Date().getFullYear() })}
         </Text>
       </Box>

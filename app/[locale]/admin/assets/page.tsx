@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { Badge, Group, Image, Paper, Stack, Text } from '@mantine/core';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -10,11 +11,13 @@ import { adminAssetStatusTone } from '@/components/admin/admin-asset-status';
 import { isPropertyType, propertyTypeLabel } from '@/config/asset-tags';
 import { colors, radius } from '@/config/design-tokens';
 
-const PLACEHOLDER = 'https://placehold.co/240x160/F3F3EF/536B58?text=VBNB';
+const PLACEHOLDER = 'https://placehold.co/240x160/F3F3EF/10A18E?text=VBNB';
 
 function ownerNameOf(profiles: unknown): string {
   return (profiles as { full_name?: string } | null)?.full_name || '';
 }
+
+export const generateMetadata = pageTitle('admin.assets');
 
 export default async function AdminAssetsPage({
   searchParams,
@@ -110,7 +113,11 @@ export default async function AdminAssetsPage({
                       <Text size="sm" c="dimmed" lineClamp={2}>
                         {a.description?.trim() || t('noDescription')}
                       </Text>
-                      <LinkAnchor href={`/admin/assets/${a.id}`} size="sm">
+                      <LinkAnchor
+                        href={`/admin/assets/${a.id}`}
+                        size="sm"
+                        className="vbnb-tap-link"
+                      >
                         {t('viewDetail')}
                       </LinkAnchor>
                     </Stack>

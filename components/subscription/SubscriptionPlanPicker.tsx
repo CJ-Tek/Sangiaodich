@@ -17,8 +17,8 @@ import { notifications } from '@mantine/notifications';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/lib/i18n/navigation';
 import { useEffect, useState, useTransition } from 'react';
-import { colors, motion, radius, shadows } from '@/config/design-tokens';
 import { SurfaceCard } from '@/components/ui/SurfaceCard';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import {
   formatVnd,
   planDiscount,
@@ -177,9 +177,9 @@ export function SubscriptionPlanPicker({
   return (
     <Stack gap="md">
       <div>
-        <Text fw={600} mb={4}>
+        <SectionTitle level="card" order={2} mb={4}>
           {t('choosePlanTitle')}
-        </Text>
+        </SectionTitle>
         <Text size="sm" c="dimmed">
           {t('choosePlanDesc')}
         </Text>
@@ -193,25 +193,14 @@ export function SubscriptionPlanPicker({
           return (
             <UnstyledButton
               key={plan.id}
+              className="vbnb-plan-option"
+              data-selected={selected || undefined}
+              aria-pressed={selected}
               onClick={() => selectPlan(plan)}
               disabled={Boolean(loadingPlanId)}
-              style={{
-                border: `2px solid ${
-                  selected ? colors.primary : colors.border
-                }`,
-                background: selected ? colors.primarySoft : colors.surface,
-                boxShadow: selected ? shadows.cardHover : shadows.card,
-                cursor: loadingPlanId ? 'wait' : 'pointer',
-                textAlign: 'left',
-                width: '100%',
-                minHeight: 96,
-                borderRadius: radius.lg,
-                padding: 16,
-                position: 'relative',
-                transition: `box-shadow ${motion.normal}ms ${motion.easing}, border-color ${motion.normal}ms ${motion.easing}, background ${motion.normal}ms ${motion.easing}`,
-              }}
+              style={{ cursor: loadingPlanId ? 'wait' : 'pointer' }}
             >
-              <Stack gap={4}>
+              <Stack gap={4} style={{ flex: 1 }}>
                 <Group justify="space-between" align="flex-start" wrap="nowrap">
                   <Text size="sm" fw={600}>
                     {plan.label || planDurationLabel(plan.months)}
@@ -219,7 +208,12 @@ export function SubscriptionPlanPicker({
                   {loading ? <Loader size={14} color="vbnbGreen" /> : null}
                 </Group>
                 {discount ? (
-                  <Badge size="sm" color="red" variant="light" w="fit-content">
+                  <Badge
+                    size="sm"
+                    color="vbnbGreen"
+                    variant="light"
+                    w="fit-content"
+                  >
                     −{discount.percent}%
                   </Badge>
                 ) : null}
@@ -232,6 +226,9 @@ export function SubscriptionPlanPicker({
                   </Text>
                 ) : null}
               </Stack>
+              <Text size="xs" fw={600} className="vbnb-plan-option__cta">
+                {selected ? t('selectedPlanShort') : t('choosePlanCta')}
+              </Text>
             </UnstyledButton>
           );
         })}

@@ -14,7 +14,7 @@ import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { useTranslations } from 'next-intl';
 import { colors, motion, radius, shadows } from '@/config/design-tokens';
 
-const PLACEHOLDER = 'https://placehold.co/1400x900/F3F3EF/536B58?text=VBNB';
+const PLACEHOLDER = 'https://placehold.co/1400x900/F3F3EF/10A18E?text=VBNB';
 
 function ChevronLeftIcon() {
   return (

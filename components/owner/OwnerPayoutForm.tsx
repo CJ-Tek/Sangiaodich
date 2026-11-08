@@ -15,6 +15,7 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from '@/lib/i18n/navigation';
 import { useState } from 'react';
 import { SurfaceCard } from '@/components/ui/SurfaceCard';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { VietQrBankSelect } from '@/components/ui/VietQrBankSelect';
 import type { OwnerPayoutInfo } from '@/lib/owner/payout-info';
 
@@ -99,7 +100,7 @@ export function OwnerPayoutForm({
     <SurfaceCard>
       <Stack gap="md">
         <div>
-          <Text fw={600}>{t('title')}</Text>
+          <SectionTitle>{t('title')}</SectionTitle>
           <Text size="sm" c="dimmed" mt={4}>
             {audience === 'sale' ? t('descSale') : t('descOwner')}
           </Text>

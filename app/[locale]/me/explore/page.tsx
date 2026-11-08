@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { localeRedirect } from '@/lib/i18n/navigation';
 import { Suspense } from 'react';
 import { SimpleGrid } from '@mantine/core';
@@ -16,6 +17,8 @@ import {
   toAssetCardData,
 } from '@/lib/engines/explore-assets';
 import { parseExploreAdvancedParams } from '@/lib/engines/explore-filters';
+
+export const generateMetadata = pageTitle('guest.explore');
 
 export default async function GuestExplorePage({
   searchParams,
@@ -49,6 +52,15 @@ export default async function GuestExplorePage({
     tags: selectedTags,
     ...advanced,
   };
+  const filtersActive = Boolean(
+    keyword ||
+      selectedTags.length ||
+      advanced.budgetMin ||
+      advanced.budgetMax ||
+      advanced.guests ||
+      advanced.checkIn ||
+      advanced.checkOut
+  );
   const {
     assets,
     total,
@@ -88,12 +100,20 @@ export default async function GuestExplorePage({
         defaultCheckOut={advanced.checkOut}
       />
       {!assets.length ? (
-        <EmptyState
-          title={tPage('emptyTitle')}
-          description={tPage('emptyDescription')}
-          actionLabel={tPage('clearFilters')}
-          href="/me/explore"
-        />
+        filtersActive ? (
+          <EmptyState
+            title={tPage('emptyTitle')}
+            description={tPage('emptyDescription')}
+            actionLabel={tPage('clearFilters')}
+            href="/me/explore"
+            actionVariant="default"
+          />
+        ) : (
+          <EmptyState
+            title={tPage('emptyCatalogTitle')}
+            description={tPage('emptyCatalogDescription')}
+          />
+        )
       ) : (
         <>
           <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xl" mt="xl">

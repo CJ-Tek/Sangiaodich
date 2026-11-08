@@ -1,41 +1,16 @@
 import { getLocale, getTranslations } from 'next-intl/server';
-import { Group, Paper, SimpleGrid, Stack, Text, Title } from '@mantine/core';
+import { pageTitle } from '@/lib/seo/page-title';
+import { Group, Paper, SimpleGrid, Stack, Text } from '@mantine/core';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { LinkButton } from '@/components/ui/LinkButton';
+import { SectionTitle } from '@/components/ui/SectionTitle';
+import { StatCard } from '@/components/ui/StatCard';
 import { loadAdminOverviewStats } from '@/lib/engines/admin-overview';
 import { formatVnd } from '@/lib/i18n/format';
 import type { AppLocale } from '@/lib/i18n/routing';
 import { colors, radius } from '@/config/design-tokens';
 
-function StatCard({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: string | number;
-  hint?: string;
-}) {
-  return (
-    <Paper
-      p="lg"
-      radius={radius.lg}
-      style={{ border: `1px solid ${colors.border}` }}
-    >
-      <Text size="sm" c="dimmed">
-        {label}
-      </Text>
-      <Title order={3} fw={600} mt={4}>
-        {value}
-      </Title>
-      {hint ? (
-        <Text size="xs" c="dimmed" mt={4}>
-          {hint}
-        </Text>
-      ) : null}
-    </Paper>
-  );
-}
+export const generateMetadata = pageTitle('admin.overview');
 
 export default async function AdminHomePage() {
   const t = await getTranslations('admin.overview');
@@ -45,7 +20,7 @@ export default async function AdminHomePage() {
 
   return (
     <Stack gap={40}>
-      <PageHeader title={t('title')} description={t('description')} />
+      <PageHeader title={t('title')} description={t('description')} mb={0} />
 
       <Paper
         p="lg"
@@ -75,9 +50,7 @@ export default async function AdminHomePage() {
       </Paper>
 
       <div>
-        <Text fw={600} mb="sm">
-          {t('revenue')}
-        </Text>
+        <SectionTitle mb="sm">{t('revenue')}</SectionTitle>
         <SimpleGrid cols={{ base: 1, sm: 2 }} spacing="md">
           <StatCard
             label={t('revenueAll')}
@@ -93,9 +66,7 @@ export default async function AdminHomePage() {
       </div>
 
       <div>
-        <Text fw={600} mb="sm">
-          {t('users')}
-        </Text>
+        <SectionTitle mb="sm">{t('users')}</SectionTitle>
         <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md">
           <StatCard
             label={t('activePaid')}
@@ -109,9 +80,7 @@ export default async function AdminHomePage() {
       </div>
 
       <div>
-        <Text fw={600} mb="sm">
-          {t('operations')}
-        </Text>
+        <SectionTitle mb="sm">{t('operations')}</SectionTitle>
         <SimpleGrid cols={{ base: 2, md: 4 }} spacing="md">
           <StatCard label={t('totalAssets')} value={stats.totalAssets} />
           <StatCard label={t('firmBookings')} value={stats.firmBookings} />

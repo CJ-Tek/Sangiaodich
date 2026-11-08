@@ -15,10 +15,22 @@ const messages = {
     "register": "Sign up",
     "getStarted": "Get started",
     "openMenu": "Open menu",
-    "copyright": "© {year} VBNB",
+    "copyright": "© {year} VBNB. Owned by Cap Saint Jacques Tek Co., Ltd.",
     "logout": "Log out",
+    "account": "Account",
     "copy": "Copy",
     "copied": "Copied",
+    "roles": {
+      "OWNER": "Owner",
+      "SALE": "Sale",
+      "GUEST": "Guest",
+      "ADMIN": "Admin"
+    },
+    "subscriptionStatus": {
+      "ACTIVE": "Active",
+      "EXPIRED": "Expired",
+      "PENDING_PAYMENT": "Awaiting payment"
+    },
     "uiMode": {
       "label": "Interface mode",
       "simple": "Simple",
@@ -38,6 +50,22 @@ const messages = {
     "pricing": "Pricing",
     "aboutUs": "About us"
   },
+  "seo": {
+    "home": {
+      "title": "VBNB – Villa marketplace connecting Owners, Sales & Guests",
+      "description": "Smart villa marketplace: owners fill more nights, sales see real-time cost and availability to close bookings, and guests book villas with dedicated advice.",
+      "keywords": [
+        "villa marketplace",
+        "villa rental Vietnam",
+        "book a villa",
+        "villa booking",
+        "villa management",
+        "villa sales",
+        "Da Lat villa",
+        "Vung Tau villa"
+      ]
+    }
+  },
   "login": {
     "subtitle": "Create an account — choose the right role (cannot be changed later).",
     "modeLogin": "Log in",
@@ -48,6 +76,7 @@ const messages = {
     "passwordLabel": "Password",
     "rememberAccount": "Remember account",
     "loginButton": "Log in",
+    "togglePassword": "Show or hide password",
     "roleQuestion": "Which role are you joining as?",
     "roleFixedNote": "Role is fixed to your account — it cannot be changed after registration.",
     "continue": "Continue",
@@ -111,13 +140,30 @@ const messages = {
       "learnMoreCta": "Learn more",
       "imageAlt": "Modern villa with pool"
     },
-    "trustStrip": {
-      "ariaLabel": "Trusted partners",
-      "tagline": "Trusted by villa owners and professional sales"
+    "commitments": {
+      "ariaLabel": "VBNB commitments",
+      "items": {
+        "transparency": {
+          "title": "Transparent cost prices",
+          "body": "Clear cost prices, availability, and reconciliation."
+        },
+        "realtime": {
+          "title": "Real-time availability",
+          "body": "Sales see availability and cost before closing a guest."
+        },
+        "safety": {
+          "title": "Clear payment records",
+          "body": "Parties pay each other directly; VBNB records every payment."
+        },
+        "free": {
+          "title": "Free for guests",
+          "body": "Guests search villas and get advice from sales at no cost."
+        }
+      }
     },
     "howItWorks": {
       "eyebrow": "How VBNB works",
-      "title": "Grow together, more simply",
+      "title": "One marketplace, everyone wins",
       "steps": {
         "owner": {
           "title": "Owners list properties",
@@ -192,8 +238,36 @@ const messages = {
       "saleTab": "Sale",
       "emptyOwner": "No active villa owner plans.",
       "emptySale": "No active sale plans.",
-      "ctaOwner": "Sign up as owner",
-      "ctaSale": "Sign up as sale"
+      "ownerTagline": "List your villa and reach sales who already have guests.",
+      "saleTagline": "Access villas, cost prices, and availability to close guests faster.",
+      "recommended": "Recommended",
+      "perMonth": "≈ {amount} / month",
+      "save": "Save {amount}",
+      "choosePlan": "Choose this plan",
+      "benefitsTitleOwner": "Villa owner membership benefits",
+      "benefitsTitleSale": "Sale membership benefits",
+      "benefits": {
+        "owner": [
+          "List villas on the marketplace after admin approval",
+          "Reach a network of sales who already have guests",
+          "Set cost prices and availability",
+          "Offer check-out-based discounts to sales",
+          "Clear booking and payment reconciliation",
+          "Guests never see cost prices on the marketplace"
+        ],
+        "sale": [
+          "Access every villa on the marketplace",
+          "See cost prices and availability in real time",
+          "Create bookings and hold dates in minutes",
+          "Send payment details and track status",
+          "Receive leads and manage customers",
+          "Climb membership tiers for better cost prices"
+        ]
+      },
+      "notes": {
+        "payment": "Pay by VietQR bank transfer; plans activate automatically in 1–3 minutes.",
+        "guestFree": "Free for guests."
+      }
     },
     "featured": {
       "title": "Featured villas",
@@ -204,8 +278,10 @@ const messages = {
     },
     "guestSignup": {
       "ariaLabel": "Create guest account",
+      "badge": "Free for guests",
+      "title": "Planning a villa getaway?",
       "text": "Create an account so sales can close bookings and you can track history.",
-      "cta": "Create account →"
+      "cta": "Create a free account"
     },
     "finalCta": {
       "title": "Ready to get started with VBNB?",
@@ -213,8 +289,46 @@ const messages = {
       "ownerCta": "I am a villa owner",
       "saleCta": "I am a sale"
     },
+    "fab": {
+      "label": "Message VBNB",
+      "ariaLabel": "Contact VBNB on Facebook"
+    },
+    "faq": {
+      "eyebrow": "Frequently asked questions",
+      "title": "Quick answers about VBNB",
+      "items": [
+        {
+          "question": "What is VBNB?",
+          "answer": "VBNB is a smart villa marketplace connecting villa owners, sales, and guests. Owners list properties with cost prices and availability, sales access every villa to advise guests and create bookings, and guests are served by the right sale."
+        },
+        {
+          "question": "How do villa owners list a villa on VBNB?",
+          "answer": "Sign up as a villa owner, choose a membership plan, then create your property with photos, amenities, cost prices, and availability. Your villa appears on the marketplace after admin approval."
+        },
+        {
+          "question": "How do sales earn more on VBNB?",
+          "answer": "Sales see weekday/weekend cost and availability in real time, create bookings in minutes, and optimize profit on every deal. More check-outs on a property can lower its cost if the owner enabled discounts."
+        },
+        {
+          "question": "How do guests book a villa on VBNB?",
+          "answer": "Guests search villas by location, amenities, budget, and dates, then connect with a sale for advice and to confirm the booking. Prices are not shown publicly on listings. Create a guest account to track your booking history."
+        },
+        {
+          "question": "How much does it cost to join VBNB?",
+          "answer": "Villa owners and sales pay a membership fee on 1-month, 3-month, 6-month, or 1-year plans; longer plans offer bigger savings. See the Pricing section for details. Guests use VBNB for free."
+        },
+        {
+          "question": "Are transactions on VBNB safe?",
+          "answer": "VBNB does not hold money: guests, sales, and villa owners pay each other directly via VietQR. Each payment is recorded in the system and confirmed by the receiver, so every party can reconcile. VBNB may lock accounts when signs of fraud appear."
+        }
+      ]
+    },
     "footer": {
       "tagline": "Modern villa marketplace connecting Owners, Sales, and Guests.",
+      "social": {
+        "facebook": "VBNB on Facebook",
+        "email": "Email VBNB"
+      },
       "columns": {
         "platform": {
           "title": "Platform",
@@ -281,7 +395,9 @@ const messages = {
       "description": "Filter by location and owner-listed amenities. Prices are not shown.",
       "emptyTitle": "No results",
       "emptyDescription": "Try a different keyword, fewer tags, or adjust budget / guest count.",
-      "clearFilters": "Clear filters"
+      "clearFilters": "Clear filters",
+      "emptyCatalogTitle": "No villas on the marketplace yet",
+      "emptyCatalogDescription": "Villas show up here once owners list them and they are approved. Check back soon."
     },
     "signup": {
       "text": "Create an account so sales can finalize bookings and you can track your history.",
@@ -778,12 +894,12 @@ const messages = {
     "APARTMENT": "Apartment"
   },
   "subscriptionLocked": {
-    "expiredTitle": "Subscription expired",
+    "expiredTitle": "Plan expired",
     "pendingTitle": "Awaiting activation",
-    "pendingDesc": "Choose a plan on the Subscription page and scan the QR code (transfer memo included) to activate.",
-    "expiredDesc": "Your billing period has ended. Choose a plan and pay to restore access.",
-    "inactiveDesc": "Subscription is not active. Go to Subscription to choose a plan.",
-    "lapsedLabel": "Expired {date}",
+    "pendingDesc": "Choose a plan and scan the QR code (transfer memo included) to activate.",
+    "expiredDesc": "This page needs an active plan. Choose a plan and pay to restore access.",
+    "inactiveDesc": "You don't have an active plan yet. Choose one to get started.",
+    "lapsedLabel": "Expired since {date}",
     "statusLabel": "Status: {status}",
     "choosePlan": "Choose plan & pay",
     "profile": "Profile"
@@ -913,8 +1029,9 @@ const messages = {
       "trashSince": "Trashed since {date}",
       "noSub": "No sub",
       "lapsedUntil": "Expired {date}",
+      "statusUntil": "{status} · until {date}",
       "removeSub": "Remove sub",
-      "trash": "Trash",
+      "trash": "Move to trash",
       "restore": "Restore",
       "hardDelete": "Delete permanently",
       "cannotTrashSelf": "Cannot trash the currently logged-in account",
@@ -1004,12 +1121,21 @@ const messages = {
       "needAmount": "Need {expected} · received {received}",
       "noPaymentCode": "No payment code",
       "unprocessed": "Unprocessed",
-      "sepayId": "SePay #{id}"
+      "sepayId": "SePay #{id}",
+      "sources": {
+        "bank_webhook": "Bank",
+        "gateway_ipn": "SePay gateway"
+      },
+      "notes": {
+        "NO_PAYMENT_CODE": "Transfer memo has no payment code",
+        "INTENT_NOT_FOUND": "No matching payment code found"
+      }
     },
     "markPaid": {
       "noPlans": "No plans",
       "button": "Mark paid",
       "menuLabel": "Choose plan to activate",
+      "confirm": "Record {amount} as received and activate the {plan} plan? Only do this after checking the bank statement.",
       "success": "Activated / renewed per plan"
     }
   },
@@ -1027,7 +1153,7 @@ const messages = {
     "terms": {
       "slug": "terms",
       "title": "Terms of Service",
-      "updated": "12/08/2026",
+      "updated": "08/11/2026",
       "intro": "By creating an account on VBNB, you confirm that you have read and agree to the terms below. These terms apply to Guests, Sales, and Villa Owners.",
       "sections": [
         {
@@ -1041,8 +1167,9 @@ const messages = {
         {
           "heading": "Fraud and Misappropriation Warning",
           "paragraphs": [
-            "Identity impersonation, fake bookings, requests to transfer money outside VBNB, misappropriation of deposits or payments, or any act intended to seize another party's assets is strictly prohibited.",
-            "When signs of fraud appear, VBNB may lock the account immediately and provide relevant information to competent authorities under Vietnamese law."
+            "VBNB does not act as an intermediary to receive, hold, or transfer money. Guests, Sales, and Owners pay each other directly; VBNB only records and displays the status of payments confirmed by the parties.",
+            "Users are responsible for verifying the recipient's details (name, account number, transfer note) against the information shown on VBNB before sending money. VBNB is not liable for money sent by mistake, misappropriated, or lost to fraud between parties.",
+            "Identity impersonation, fake bookings, misappropriation of deposits or payments, or any act intended to seize another party's assets is strictly prohibited. When signs of fraud appear, VBNB may lock the account immediately and provide relevant information to competent authorities under Vietnamese law."
           ]
         },
         {

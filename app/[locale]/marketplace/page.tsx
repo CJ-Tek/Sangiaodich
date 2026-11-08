@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { localeRedirect } from '@/lib/i18n/navigation';
 import { getSessionProfile } from '@/lib/auth/session';
 import { LandingHeader } from '@/components/landing/LandingHeader';
@@ -22,6 +23,8 @@ import {
 import { parseExploreAdvancedParams } from '@/lib/engines/explore-filters';
 
 export const revalidate = 60;
+
+export const generateMetadata = pageTitle('marketplace.page');
 
 export default async function MarketplacePage({
   searchParams,
@@ -49,6 +52,15 @@ export default async function MarketplacePage({
     tags: selectedTags,
     ...advanced,
   };
+  const filtersActive = Boolean(
+    keyword ||
+      selectedTags.length ||
+      advanced.budgetMin ||
+      advanced.budgetMax ||
+      advanced.guests ||
+      advanced.checkIn ||
+      advanced.checkOut
+  );
   const roleStartedAt = Date.now();
   const rolePromise = getSessionProfile().then((profile) => ({
     value: profile?.role ?? null,
@@ -141,12 +153,20 @@ export default async function MarketplacePage({
           defaultCheckOut={advanced.checkOut}
         />
         {!assets?.length ? (
-          <EmptyState
-            title={t('emptyTitle')}
-            description={t('emptyDescription')}
-            actionLabel={t('clearFilters')}
-            href="/marketplace"
-          />
+          filtersActive ? (
+            <EmptyState
+              title={t('emptyTitle')}
+              description={t('emptyDescription')}
+              actionLabel={t('clearFilters')}
+              href="/marketplace"
+              actionVariant="default"
+            />
+          ) : (
+            <EmptyState
+              title={t('emptyCatalogTitle')}
+              description={t('emptyCatalogDescription')}
+            />
+          )
         ) : (
           <>
             <SimpleGrid cols={{ base: 1, sm: 2, md: 3 }} spacing="xl" mt="xl">

@@ -67,7 +67,7 @@ export function OwnerPendingList({
   const t = useTranslations('owner.pending');
   const tf = useTranslations('owner.settlements');
   const locale = useLocale();
-  const { formatNumber, formatDateTime } = useFormat();
+  const { formatNumber, formatDateTime, formatDateRange } = useFormat();
   const cityOptions = vnCityOptions(locale);
 
   const [query, setQuery] = useState('');
@@ -142,7 +142,7 @@ export function OwnerPendingList({
           value={city}
           onChange={setCity}
           data={cityOptions}
-          w={200}
+          w={{ base: 'calc(50% - 6px)', sm: 200 }}
         />
         <Select
           label={tf('filterSale')}
@@ -151,7 +151,7 @@ export function OwnerPendingList({
           value={sale}
           onChange={setSale}
           data={saleOptions}
-          w={180}
+          w={{ base: 'calc(50% - 6px)', sm: 180 }}
         />
       </Group>
       {!narrowed.length ? (
@@ -163,6 +163,7 @@ export function OwnerPendingList({
         />
       ) : (
         <Paper radius={radius.lg} style={{ border: `1px solid ${colors.border}` }}>
+          <Table.ScrollContainer minWidth={640} type="native">
           <Table highlightOnHover horizontalSpacing="md" verticalSpacing="sm">
             <Table.Thead style={{ background: colors.surfaceMuted }}>
               <Table.Tr>
@@ -202,8 +203,8 @@ export function OwnerPendingList({
                         <Text size="sm" fw={600}>
                           {b.villaTitle || t('asset')}
                         </Text>
-                        <Text size="xs" c="dimmed">
-                          {b.checkIn} → {b.checkOut}
+                        <Text size="xs" c="dimmed" className="vbnb-nowrap">
+                          {formatDateRange(b.checkIn, b.checkOut)}
                           {b.location ? ` · ${b.location}` : ''}
                         </Text>
                       </Table.Td>
@@ -320,6 +321,7 @@ export function OwnerPendingList({
               })}
             </Table.Tbody>
           </Table>
+          </Table.ScrollContainer>
         </Paper>
       )}
     </Stack>

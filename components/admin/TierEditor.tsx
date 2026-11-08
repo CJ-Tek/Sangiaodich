@@ -8,8 +8,8 @@ import {
   Stack,
   Text,
   TextInput,
-  Title,
 } from '@mantine/core';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { notifications } from '@mantine/notifications';
 import { useTranslations } from 'next-intl';
 import { useState } from 'react';
@@ -119,14 +119,15 @@ export function TierEditor({
   return (
     <Stack gap="sm">
       {!compact ? (
-        <Title order={5}>
+        <SectionTitle level="card" order={2}>
           {form.id ? t('editTier') : t('addTierTitle')}
-        </Title>
+        </SectionTitle>
       ) : null}
       <NumberInput
         label={t('sort')}
         value={form.sort}
         onChange={(v) => setForm((f) => ({ ...f, sort: Number(v) || 0 }))}
+        hideControls
       />
       <TextInput
         label={t('labelField')}
@@ -143,6 +144,7 @@ export function TierEditor({
           setForm((f) => ({ ...f, minBooks: Number(v) || 0 }))
         }
         min={0}
+        hideControls
       />
       <NumberInput
         label={t('minGmv')}
@@ -152,12 +154,14 @@ export function TierEditor({
         }
         thousandSeparator="."
         decimalSeparator=","
+        hideControls
       />
       <Button
         color="vbnbGreen"
+        variant={compact ? 'light' : 'filled'}
         loading={loading}
         onClick={save}
-        size={compact ? 'xs' : 'sm'}
+        size="sm"
         w="fit-content"
       >
         {t('saveTier')}

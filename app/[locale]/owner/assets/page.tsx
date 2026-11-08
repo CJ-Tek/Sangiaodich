@@ -1,4 +1,5 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { createClient } from '@/lib/supabase/server';
 import { LIST_VIEW_LIMIT } from '@/lib/supabase/query-guard';
 import { getSessionProfile } from '@/lib/auth/session';
@@ -13,6 +14,8 @@ import { loadAssetDiscountRulesByAssetIds } from '@/lib/engines/sale-pricing';
 
 const ASSET_COLUMNS =
   'id, title, status, slug, location, property_type, bedrooms, bathrooms, asset_costs(cost_weekday, cost_weekend), asset_images(url, sort_order)';
+
+export const generateMetadata = pageTitle('owner.assets');
 
 export default async function OwnerAssetsPage() {
   const t = await getTranslations('owner.assets');

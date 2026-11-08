@@ -12,6 +12,7 @@ import {
   TextInput,
   UnstyledButton,
 } from '@mantine/core';
+import { useTranslations } from 'next-intl';
 import { LinkButton } from '@/components/ui/LinkButton';
 import { colors, radius } from '@/config/design-tokens';
 import type { SaleAssetDiscountProgress } from '@/lib/engines/sale-pricing';
@@ -25,6 +26,7 @@ export function SaleDiscountAssetList({
 }: {
   assets: SaleAssetDiscountProgress[];
 }) {
+  const t = useTranslations('sale.membership');
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<Filter>('all');
   const [shown, setShown] = useState(PAGE_SIZE);
@@ -49,7 +51,8 @@ export function SaleDiscountAssetList({
     <Stack gap="sm">
       <Group gap="xs" wrap="wrap">
         <TextInput
-          placeholder="Tìm căn…"
+          placeholder={t('searchPlaceholder')}
+          aria-label={t('searchPlaceholder')}
           value={query}
           onChange={(e) => {
             setQuery(e.currentTarget.value);
@@ -58,22 +61,28 @@ export function SaleDiscountAssetList({
           style={{ flex: 1, minWidth: 160 }}
         />
         <SegmentedControl
-          size="xs"
+          size="sm"
           value={filter}
           onChange={(v) => {
             setFilter(v as Filter);
             setShown(PAGE_SIZE);
           }}
           data={[
-            { label: `Tất cả (${assets.length})`, value: 'all' },
-            { label: `Được giảm (${discounted})`, value: 'discounted' },
-            { label: `Chưa giảm (${assets.length - discounted})`, value: 'zero' },
+            { label: t('filterAll', { count: assets.length }), value: 'all' },
+            {
+              label: t('filterDiscounted', { count: discounted }),
+              value: 'discounted',
+            },
+            {
+              label: t('filterNone', { count: assets.length - discounted }),
+              value: 'zero',
+            },
           ]}
         />
       </Group>
       {!filtered.length ? (
         <Text size="sm" c="dimmed">
-          Không khớp căn nào.
+          {t('noMatch')}
         </Text>
       ) : (
         <Stack gap={6}>
@@ -94,7 +103,7 @@ export function SaleDiscountAssetList({
                     {a.assetTitle}
                   </Text>
                   <Text size="xs" c="dimmed">
-                    {a.checkoutCount} lần
+                    {t('times', { count: a.checkoutCount })}
                     {a.assetLocation ? ` · ${a.assetLocation}` : ''}
                   </Text>
                 </div>
@@ -113,18 +122,18 @@ export function SaleDiscountAssetList({
         <Button
           variant="subtle"
           color="vbnbGreen"
-          size="xs"
+          size="sm"
           w="fit-content"
           onClick={() => setShown((n) => n + PAGE_SIZE)}
         >
-          Xem thêm {filtered.length - shown} căn
+          {t('showMore', { count: filtered.length - shown })}
         </Button>
       ) : null}
 
       <Modal
         opened={Boolean(selected)}
         onClose={() => setOpenId(null)}
-        title={selected?.assetTitle || 'Căn'}
+        title={selected?.assetTitle || t('assetLabel')}
         centered
       >
         {selected ? (
@@ -135,12 +144,18 @@ export function SaleDiscountAssetList({
               </Text>
             ) : null}
             <Text size="sm">
-              {selected.checkoutCount} check-out · {selected.tierLabel}
+              {t('checkoutTier', {
+                count: selected.checkoutCount,
+                tier: selected.tierLabel ?? '0%',
+              })}
             </Text>
             <Text size="sm" c="dimmed">
               {selected.nextThreshold != null
-                ? `Còn trên ${selected.nextThreshold} lần → ${selected.nextPercent}%`
-                : 'Đã ở mức chiết khấu cao nhất hiện có.'}
+                ? t('nextDiscount', {
+                    threshold: selected.nextThreshold,
+                    percent: selected.nextPercent ?? 0,
+                  })
+                : t('maxDiscount')}
             </Text>
             {selected.assetSlug ? (
               <LinkButton
@@ -148,7 +163,7 @@ export function SaleDiscountAssetList({
                 color="vbnbGreen"
                 size="sm"
               >
-                Xem căn trên sàn
+                {t('viewOnMarketplace')}
               </LinkButton>
             ) : null}
           </Stack>

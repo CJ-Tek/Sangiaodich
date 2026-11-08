@@ -1,9 +1,12 @@
 import { getTranslations } from 'next-intl/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { AssetForm } from '@/components/owner/NewAssetForm';
 import { SurfaceCard } from '@/components/ui/SurfaceCard';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
+
+export const generateMetadata = pageTitle('owner.assetNew');
 
 export default async function NewOwnerAssetPage() {
   const t = await getTranslations('owner.assetNew');

@@ -6,6 +6,7 @@ import { useTranslations } from 'next-intl';
 import { colors, radius, shadows, typography } from '@/config/design-tokens';
 import { landingMedia } from '@/components/landing/landing-media';
 import { SurfaceCard } from '@/components/ui/SurfaceCard';
+import { VbnbLogo } from '@/components/brand/VbnbLogo';
 
 const cards = [
   { title: 'Pine Villa', loc: 'Đà Lạt', img: landingMedia.showcase[0] },
@@ -18,17 +19,15 @@ export function ProductShowcase() {
   const tCommon = useTranslations('common');
 
   return (
-    <Box pos="relative" mih={420}>
-      <SurfaceCard p={0} style={{ boxShadow: shadows.float, overflow: 'hidden' }}>
+    <Box pos="relative" pb={{ base: 0, sm: 32 }}>
+      <SurfaceCard p={0} mr={{ base: 0, sm: 40 }} style={{ boxShadow: shadows.float, overflow: 'hidden' }}>
         <Group
           justify="space-between"
           px="lg"
           py="sm"
           style={{ borderBottom: `1px solid ${colors.border}` }}
         >
-          <Text fw={700} c="vbnbGreen.6" size="sm">
-            {tCommon('appName')}
-          </Text>
+          <VbnbLogo height={18} alt={tCommon('appName')} />
           <Text size="xs" c={colors.textMuted}>
             {t('tagline')}
           </Text>
@@ -87,8 +86,8 @@ export function ProductShowcase() {
         p={0}
         style={{
           position: 'absolute',
-          right: -12,
-          bottom: -28,
+          right: 0,
+          bottom: 0,
           width: 148,
           borderRadius: radius['2xl'],
           boxShadow: shadows.float,
@@ -96,9 +95,7 @@ export function ProductShowcase() {
         }}
       >
         <Box px={10} py={8} style={{ borderBottom: `1px solid ${colors.border}` }}>
-          <Text fw={700} c="vbnbGreen.6" fz={11}>
-            {tCommon('appName')}
-          </Text>
+          <VbnbLogo height={13} alt={tCommon('appName')} />
         </Box>
         <Box pos="relative" h={88}>
           <Image

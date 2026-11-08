@@ -7,7 +7,7 @@ import type { MouseEvent } from 'react';
 import { colors, radius } from '@/config/design-tokens';
 import type { NightBoardColumn } from '@/lib/engines/night-board-display';
 
-const PLACEHOLDER = 'https://placehold.co/400x280/F3F3EF/536B58?text=VBNB';
+const PLACEHOLDER = 'https://placehold.co/400x280/F3F3EF/10A18E?text=VBNB';
 
 export function columnGalleryImages(column: NightBoardColumn): {
   url: string;

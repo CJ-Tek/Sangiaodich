@@ -1,45 +1,43 @@
 'use client';
 
-import { Box, Group, Text } from '@mantine/core';
+import { Box, Text, Title } from '@mantine/core';
 import { useTranslations } from 'next-intl';
-import { colors, spacing } from '@/config/design-tokens';
-import { containerClassName } from '@/components/landing/landing-media';
-import { LinkAnchor } from '@/components/ui/LinkAnchor';
+import { colors } from '@/config/design-tokens';
+import { IconArrowRight, IconSun } from '@/components/landing/LandingIcons';
+import { LinkButton } from '@/components/ui/LinkButton';
 
-/** Landing-spaced wrapper: FinalCTA only speaks to owners and sales. */
-export function GuestSignupSection() {
+/** Guest prompt shown above FinalCTA, which only speaks to owners and sales. */
+export function GuestSignupCard() {
   const t = useTranslations('landing.guestSignup');
 
   return (
-    <Box
-      component="section"
-      aria-label={t('ariaLabel')}
-      className={`${containerClassName} vbnb-surface-flat`}
-      py={spacing.md}
-    >
-      <Group
-        justify="space-between"
-        align="center"
-        gap="sm"
-        wrap="wrap"
-        py="sm"
-        style={{ borderBottom: `1px solid ${colors.border}` }}
-      >
-        <Text size="sm" c={colors.textSecondary}>
+    <Box component="aside" aria-label={t('ariaLabel')} className="vbnb-guest-card">
+      <div className="vbnb-guest-card__icon" aria-hidden>
+        <IconSun size={26} />
+      </div>
+
+      <div className="vbnb-guest-card__body">
+        <span className="vbnb-guest-card__badge">{t('badge')}</span>
+        <Title order={3} fw={700} c={colors.textPrimary} style={{ fontSize: '1.1875rem', lineHeight: 1.35 }}>
+          {t('title')}
+        </Title>
+        <Text c={colors.textSecondary} style={{ fontSize: '0.9375rem', lineHeight: 1.55 }}>
           {t('text')}
         </Text>
-        <LinkAnchor
-          href="/login?mode=register&role=GUEST"
-          size="sm"
-          fw={500}
-          c="vbnbGreen.6"
-          underline="hover"
-          py={6}
-          display="inline-block"
-        >
-          {t('cta')}
-        </LinkAnchor>
-      </Group>
+      </div>
+
+      <LinkButton
+        href="/login?mode=register&role=GUEST"
+        color="vbnbGreen"
+        variant="light"
+        size="md"
+        h={46}
+        px={20}
+        rightSection={<IconArrowRight size={18} />}
+        className="vbnb-guest-card__cta"
+      >
+        {t('cta')}
+      </LinkButton>
     </Box>
   );
 }

@@ -1,11 +1,12 @@
 'use client';
 
-import { Divider, Group, Paper, Stack, Text, Title } from '@mantine/core';
+import { Divider, Group, Paper, Stack, Text, Timeline } from '@mantine/core';
 import { useLocale, useTranslations } from 'next-intl';
 import { BookingStatusBadge } from '@/components/bookings/BookingStatusBadge';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { colors, radius } from '@/config/design-tokens';
-import { formatCurrency, formatDateTime } from '@/lib/i18n/format';
+import { formatCurrency, formatDateRange, formatDay } from '@/lib/i18n/format';
 import type { AppLocale } from '@/lib/i18n/routing';
 import type { GuestBookingDetail } from '@/lib/engines/guest-bookings';
 
@@ -47,9 +48,14 @@ export function GuestBookingDetailCard({
     return formatCurrency(Number(n || 0), locale);
   }
 
+  const lastDoneStep = booking.timeline.reduce(
+    (last, step, i) => (step.at ? i : last),
+    -1
+  );
+
   function moment(iso: string | null) {
     if (!iso) return null;
-    return formatDateTime(iso, locale);
+    return formatDay(iso, locale);
   }
 
   return (
@@ -57,11 +63,9 @@ export function GuestBookingDetailCard({
       <Card>
         <Group justify="space-between" align="flex-start" wrap="wrap">
           <div>
-            <Title order={4} fw={600}>
-              {booking.assetTitle}
-            </Title>
+            <SectionTitle>{booking.assetTitle}</SectionTitle>
             <Text size="sm" c="dimmed" mt={4}>
-              {booking.checkIn} → {booking.checkOut}
+              {formatDateRange(booking.checkIn, booking.checkOut, locale)}
             </Text>
             {booking.assetSlug ? (
               <LinkAnchor
@@ -69,7 +73,7 @@ export function GuestBookingDetailCard({
                 size="sm"
                 c="vbnbGreen.6"
                 mt={6}
-                display="inline-block"
+                className="vbnb-tap-link"
               >
                 {t('viewVilla')}
               </LinkAnchor>
@@ -81,9 +85,9 @@ export function GuestBookingDetailCard({
 
       <Card>
         <Stack gap="xs">
-          <Text fw={600} size="sm">
+          <SectionTitle level="card" order={2}>
             {t('payment')}
-          </Text>
+          </SectionTitle>
           <Row label={t('listPrice')} value={money(booking.listPrice)} />
           <Row
             label={t('collectedSale')}
@@ -97,7 +101,19 @@ export function GuestBookingDetailCard({
             />
           ) : null}
           <Divider my={4} />
-          <Row label={t('remaining')} value={money(booking.remaining)} />
+          <Group justify="space-between" wrap="nowrap" align="baseline">
+            <Text size="sm" fw={600}>
+              {t('remaining')}
+            </Text>
+            <Text
+              fw={700}
+              size="lg"
+              className="vbnb-tabular-nums"
+              c={booking.remaining > 0 ? colors.warningText : 'vbnbGreen.6'}
+            >
+              {money(booking.remaining)}
+            </Text>
+          </Group>
           {booking.refundAmount > 0 ? (
             <Row label={t('refunded')} value={money(booking.refundAmount)} />
           ) : null}
@@ -113,24 +129,40 @@ export function GuestBookingDetailCard({
 
       <Card>
         <Stack gap="xs">
-          <Text fw={600} size="sm">
+          <SectionTitle level="card" order={2}>
             {t('timeline')}
-          </Text>
-          {booking.timeline.map((step) => (
-            <Row
-              key={step.step}
-              label={tTimeline(step.step)}
-              value={moment(step.at) || t('notYet')}
-            />
-          ))}
+          </SectionTitle>
+          <Timeline
+            active={lastDoneStep}
+            bulletSize={16}
+            lineWidth={2}
+            color="vbnbGreen"
+            mt={6}
+          >
+            {booking.timeline.map((step) => (
+              <Timeline.Item
+                key={step.step}
+                color={step.step === 'cancelled' ? 'red' : undefined}
+                title={
+                  <Text size="sm" fw={step.at ? 600 : 500} c={step.at ? undefined : 'dimmed'}>
+                    {tTimeline(step.step)}
+                  </Text>
+                }
+              >
+                <Text size="xs" c="dimmed">
+                  {moment(step.at) || t('notYet')}
+                </Text>
+              </Timeline.Item>
+            ))}
+          </Timeline>
         </Stack>
       </Card>
 
       <Card>
         <Stack gap="xs">
-          <Text fw={600} size="sm">
+          <SectionTitle level="card" order={2}>
             {t('saleContact')}
-          </Text>
+          </SectionTitle>
           {booking.saleName || booking.salePhone ? (
             <>
               <Row label={t('saleName')} value={booking.saleName || '—'} />

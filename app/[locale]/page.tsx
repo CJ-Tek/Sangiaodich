@@ -3,22 +3,127 @@ import { getSessionRoleHint } from '@/lib/auth/session-role';
 import { LandingHeader } from '@/components/landing/LandingHeader';
 import { LandingHashScroll } from '@/components/landing/LandingHashScroll';
 import { HeroSection } from '@/components/landing/HeroSection';
-import { TrustStrip } from '@/components/landing/TrustStrip';
+import { CommitmentStrip } from '@/components/landing/CommitmentStrip';
 import { HowItWorksSection } from '@/components/landing/HowItWorksSection';
 import { SalesFeatureSection } from '@/components/landing/SalesFeatureSection';
 import { OwnerFeatureSection } from '@/components/landing/OwnerFeatureSection';
 import { PricingSection } from '@/components/landing/PricingSection';
 import { FeaturedStays } from '@/components/landing/FeaturedStays';
 import { FinalCTA } from '@/components/landing/FinalCTA';
-import { GuestSignupSection } from '@/components/landing/GuestSignupSection';
+import { FaqSection, type FaqItem } from '@/components/landing/FaqSection';
+import { FacebookFab } from '@/components/landing/FacebookFab';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 import { listAllPlans } from '@/lib/engines/subscription-payment';
 import type { AssetCardData } from '@/components/marketplace/AssetCard';
 import { appHrefForRole } from '@/lib/i18n/app-href';
+import { routing, type AppLocale } from '@/lib/i18n/routing';
+import {
+  absoluteUrl,
+  languageAlternates,
+  localizedPath,
+  ogImage,
+  openGraphLocale,
+  serializeJsonLd,
+  siteUrl,
+} from '@/lib/seo/site';
+import type { Metadata } from 'next';
+import { hasLocale } from 'next-intl';
+import { getTranslations } from 'next-intl/server';
 import { unstable_cache } from 'next/cache';
 import { Suspense } from 'react';
 
 export const revalidate = 60;
+
+type PageProps = { params: Promise<{ locale: string }> };
+
+async function resolveLocale(params: PageProps['params']): Promise<AppLocale> {
+  const { locale } = await params;
+  return hasLocale(routing.locales, locale) ? locale : routing.defaultLocale;
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const locale = await resolveLocale(params);
+  const t = await getTranslations({ locale, namespace: 'seo.home' });
+  const title = t('title');
+  const description = t('description');
+  const image = ogImage(locale, title);
+
+  return {
+    title: { absolute: title },
+    description,
+    keywords: t.raw('keywords') as string[],
+    alternates: {
+      canonical: localizedPath(locale, '/'),
+      languages: languageAlternates('/'),
+    },
+    openGraph: {
+      type: 'website',
+      siteName: 'VBNB',
+      url: absoluteUrl(locale, '/'),
+      title,
+      description,
+      locale: openGraphLocale[locale],
+      alternateLocale: routing.locales
+        .filter((other) => other !== locale)
+        .map((other) => openGraphLocale[other]),
+      images: [image],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [image.url],
+    },
+  };
+}
+
+async function buildHomeJsonLd(locale: AppLocale) {
+  const tSeo = await getTranslations({ locale, namespace: 'seo.home' });
+  const tFaq = await getTranslations({ locale, namespace: 'landing.faq' });
+  const faqItems = tFaq.raw('items') as FaqItem[];
+  const origin = siteUrl();
+
+  return {
+    '@context': 'https://schema.org',
+    '@graph': [
+      {
+        '@type': 'Organization',
+        '@id': `${origin}/#organization`,
+        name: 'VBNB',
+        legalName: 'Công Ty TNHH Cap Saint Jacques Tek',
+        url: origin,
+        logo: `${origin}/icons/icon-512.png`,
+        description: tSeo('description'),
+      },
+      {
+        '@type': 'WebSite',
+        '@id': `${origin}/#website`,
+        name: 'VBNB',
+        url: absoluteUrl(locale, '/'),
+        inLanguage: locale,
+        publisher: { '@id': `${origin}/#organization` },
+        potentialAction: {
+          '@type': 'SearchAction',
+          target: {
+            '@type': 'EntryPoint',
+            urlTemplate: `${absoluteUrl(locale, '/marketplace')}?q={search_term_string}`,
+          },
+          'query-input': 'required name=search_term_string',
+        },
+      },
+      {
+        '@type': 'FAQPage',
+        '@id': `${absoluteUrl(locale, '/')}#faq`,
+        inLanguage: locale,
+        mainEntity: faqItems.map((item) => ({
+          '@type': 'Question',
+          name: item.question,
+          acceptedAnswer: { '@type': 'Answer', text: item.answer },
+        })),
+      },
+    ],
+  };
+}
 
 const getAllPlansCached = unstable_cache(
   async () => listAllPlans(),
@@ -68,7 +173,8 @@ async function PricingSectionStream() {
   return <PricingSection ownerPlans={ownerPlans} salePlans={salePlans} />;
 }
 
-export default async function HomePage() {
+export default async function HomePage({ params }: PageProps) {
+  const jsonLdPromise = resolveLocale(params).then(buildHomeJsonLd);
   const startedAt = Date.now();
   const roleStartedAt = Date.now();
   const rolePromise = getSessionRoleHint().then((value) => ({
@@ -118,8 +224,14 @@ export default async function HomePage() {
     };
   });
 
+  const jsonLd = await jsonLdPromise;
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(jsonLd) }}
+      />
       <LandingHashScroll />
       <LandingHeader
         isLoggedIn={!!role}
@@ -127,7 +239,7 @@ export default async function HomePage() {
       />
       <main>
         <HeroSection />
-        <TrustStrip />
+        <CommitmentStrip />
         <HowItWorksSection />
         <SalesFeatureSection />
         <OwnerFeatureSection />
@@ -135,10 +247,11 @@ export default async function HomePage() {
           <PricingSectionStream />
         </Suspense>
         <FeaturedStays assets={featured} />
-        {!role ? <GuestSignupSection /> : null}
-        <FinalCTA />
+        <FaqSection />
+        <FinalCTA showGuestSignup={!role} />
       </main>
       <LandingFooter />
+      <FacebookFab />
     </>
   );
 }

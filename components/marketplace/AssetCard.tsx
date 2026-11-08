@@ -35,7 +35,7 @@ export type AssetCardData = {
 };
 
 const PLACEHOLDER =
-  'https://placehold.co/800x500/F3F3EF/536B58?text=VBNB';
+  'https://placehold.co/800x500/F3F3EF/10A18E?text=VBNB';
 
 export function AssetCard({ asset }: { asset: AssetCardData }) {
   const locale = useLocale() as AppLocale;

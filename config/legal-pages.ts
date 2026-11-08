@@ -12,7 +12,7 @@ export const LEGAL_PAGES: Record<LegalSlug, LegalDoc> = {
   terms: {
     slug: 'terms',
     title: 'Điều khoản sử dụng',
-    updated: '12/08/2026',
+    updated: '08/11/2026',
     intro:
       'Khi tạo tài khoản trên VBNB, bạn xác nhận đã đọc và đồng ý với các điều khoản dưới đây. Điều khoản áp dụng cho Khách hàng, Sale và Chủ nhà (Owner).',
     sections: [
@@ -27,8 +27,9 @@ export const LEGAL_PAGES: Record<LegalSlug, LegalDoc> = {
       {
         heading: 'Cảnh báo lừa đảo và chiếm dụng tiền',
         paragraphs: [
-          'Nghiêm cấm giả mạo danh tính, tạo booking ảo, yêu cầu chuyển khoản ngoài luồng VBNB, chiếm dụng tiền cọc / thanh toán, hoặc bất kỳ hành vi nhằm chiếm đoạt tài sản của bên khác.',
-          'Khi có dấu hiệu gian lận, VBNB có quyền khóa tài khoản ngay và cung cấp thông tin liên quan cho cơ quan có thẩm quyền theo pháp luật Việt Nam.',
+          'VBNB không làm trung gian nhận, giữ hay chuyển tiền. Khách hàng, Sale và Chủ nhà chuyển khoản trực tiếp cho nhau; VBNB chỉ ghi nhận và hiển thị trạng thái các khoản thanh toán do các bên xác nhận.',
+          'Người dùng tự chịu trách nhiệm kiểm tra thông tin người nhận (họ tên, số tài khoản, nội dung chuyển khoản) và đối chiếu với thông tin hiển thị trên VBNB trước khi chuyển tiền. VBNB không chịu trách nhiệm đối với các khoản tiền chuyển nhầm, bị chiếm dụng hoặc bị lừa đảo giữa các bên.',
+          'Nghiêm cấm giả mạo danh tính, tạo booking ảo, chiếm dụng tiền cọc / thanh toán, hoặc bất kỳ hành vi nhằm chiếm đoạt tài sản của bên khác. Khi có dấu hiệu gian lận, VBNB có quyền khóa tài khoản ngay và cung cấp thông tin liên quan cho cơ quan có thẩm quyền theo pháp luật Việt Nam.',
         ],
       },
       {

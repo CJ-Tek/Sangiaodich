@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { pageTitle } from '@/lib/seo/page-title';
 import { loadAssetNightBoard } from '@/lib/engines/asset-night-board';
 import { stayRanges } from '@/lib/engines/inventory';
 import { getSessionProfile } from '@/lib/auth/session';
@@ -11,9 +12,13 @@ import {
   AssetDetailGallery,
   AssetDetailInfo,
 } from '@/components/marketplace/AssetDetailBody';
-import { Alert, Paper, SimpleGrid, Stack, Title } from '@mantine/core';
+import { Alert, Paper, SimpleGrid, Stack } from '@mantine/core';
+import { getTranslations } from 'next-intl/server';
 import { notFound } from 'next/navigation';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { colors, radius } from '@/config/design-tokens';
+
+export const generateMetadata = pageTitle('sale.marketplace');
 
 export default async function SaleAssetDetailPage({
   params,
@@ -21,10 +26,11 @@ export default async function SaleAssetDetailPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const t = await getTranslations('sale.marketplace');
   const profile = await getSessionProfile();
   const active = await saleHasActiveSub(profile!.id);
   if (!active) {
-    return <Alert color="red">Subscription inactive</Alert>;
+    return <Alert color="red">{t('subInactiveDetail')}</Alert>;
   }
 
   const admin = await createClient();
@@ -88,9 +94,7 @@ export default async function SaleAssetDetailPage({
             radius={radius.lg}
             style={{ border: `1px solid ${colors.border}` }}
           >
-            <Title order={4} fw={600} mb="md">
-              Lịch
-            </Title>
+            <SectionTitle mb="md">{t('calendar')}</SectionTitle>
             <MarketplaceCalendar
               month={new Date()}
               board={nightBoard}
@@ -105,9 +109,7 @@ export default async function SaleAssetDetailPage({
         radius={radius.lg}
         style={{ border: `1px solid ${colors.border}` }}
       >
-        <Title order={4} fw={600} mb="md">
-          Create booking
-        </Title>
+        <SectionTitle mb="md">{t('createBooking')}</SectionTitle>
         <CreateBookingForm
           assetId={asset.id}
           assetTitle={asset.title}

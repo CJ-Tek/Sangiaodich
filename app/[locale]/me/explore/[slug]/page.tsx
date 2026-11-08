@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { pageTitle } from '@/lib/seo/page-title';
 import { getTranslations } from 'next-intl/server';
 import { localeRedirect } from '@/lib/i18n/navigation';
 import { Box } from '@mantine/core';
@@ -6,6 +7,8 @@ import { getSessionProfile } from '@/lib/auth/session';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
 import { AssetDetailView } from '@/components/marketplace/AssetDetailView';
 import { loadAssetDetail } from '@/lib/engines/asset-detail';
+
+export const generateMetadata = pageTitle('guest.explore');
 
 export default async function GuestExploreDetailPage({
   params,
@@ -29,7 +32,12 @@ export default async function GuestExploreDetailPage({
   return (
     <>
       <Box mb="md">
-        <LinkAnchor href="/me/explore" size="sm" c="vbnbGreen.6">
+        <LinkAnchor
+          href="/me/explore"
+          size="sm"
+          c="vbnbGreen.6"
+          className="vbnb-tap-link"
+        >
           {t('backToAll')}
         </LinkAnchor>
       </Box>

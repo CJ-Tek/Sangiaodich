@@ -6,7 +6,6 @@ import {
   NavLink,
   Stack,
   Text,
-  Title,
   UnstyledButton,
   Divider,
   Box,
@@ -14,9 +13,13 @@ import {
 import { useMediaQuery } from '@mantine/hooks';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/lib/i18n/navigation';
-import { colors, radius } from '@/config/design-tokens';
+import { colors } from '@/config/design-tokens';
+import { RoleTabBar } from '@/components/shells/RoleTabBar';
+import { ShellContent } from '@/components/shells/ShellContent';
+import { ShellLogo } from '@/components/shells/ShellLogo';
 import { LogoutButton } from '@/components/auth/LogoutButton';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import { VbnbLogo } from '@/components/brand/VbnbLogo';
 import {
   IconCalendar,
   IconClipboard,
@@ -98,9 +101,7 @@ export function OwnerMobileShell({
         <AppShell.Header>
           <Group h="100%" px="md" justify="space-between">
             <Group gap="sm">
-              <Title order={3} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
-                VBNB
-              </Title>
+              <VbnbLogo height={28} priority />
               <Text size="sm" c="dimmed">
                 {tShell('roleLabel')}
               </Text>
@@ -109,7 +110,11 @@ export function OwnerMobileShell({
               <LanguageSwitcher compact />
               {headerExtra}
               {simple ? null : (
-                <UnstyledButton component={Link} href="/owner/profile">
+                <UnstyledButton
+                  component={Link}
+                  href="/owner/profile"
+                  className="vbnb-hit"
+                >
                   <Text size="sm" c="dimmed">
                     {tShell('account')}
                   </Text>
@@ -152,59 +157,30 @@ export function OwnerMobileShell({
         </AppShell.Navbar>
 
         <AppShell.Main style={{ minWidth: 0, overflowX: 'clip' }}>
-          {children}
+          <ShellContent>{children}</ShellContent>
         </AppShell.Main>
       </AppShell>
     );
   }
 
   return (
-    <AppShell header={{ height: 56 }} footer={{ height: 64 }} padding="md">
+    <AppShell header={{ height: 56 }} footer={{ height: 68 }} padding="md">
       <AppShell.Header>
-        <Group h="100%" px="md" justify="space-between">
-          <Title order={4} c="vbnbGreen.6" fw={700} style={{ letterSpacing: '-0.03em' }}>
-            VBNB
-          </Title>
-          <Group gap="md">
+        <Group h="100%" px="md" justify="space-between" wrap="nowrap">
+          <ShellLogo />
+          <Group gap={4} wrap="nowrap">
             <LanguageSwitcher compact />
             {headerExtra}
           </Group>
         </Group>
       </AppShell.Header>
 
-      <AppShell.Main pb={80} style={{ minWidth: 0, overflowX: 'clip' }}>
+      <AppShell.Main pb={84} style={{ minWidth: 0, overflowX: 'clip' }}>
         {children}
       </AppShell.Main>
 
       <AppShell.Footer>
-        <Group h="100%" px={4} grow gap={0}>
-          {mobileItems.map((item) => {
-            const active = isActive(item.href);
-            const iconColor = active ? colors.primaryDark : colors.textSecondary;
-            return (
-              <UnstyledButton
-                key={item.href}
-                component={Link}
-                href={item.href}
-                title={item.label}
-                aria-label={item.label}
-                style={{ textAlign: 'center', padding: 8, minHeight: 44 }}
-              >
-                <Box
-                  style={{
-                    borderRadius: radius.sm,
-                    background: active ? colors.primarySoft : 'transparent',
-                    padding: '8px 4px',
-                    display: 'flex',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <item.Icon color={iconColor} />
-                </Box>
-              </UnstyledButton>
-            );
-          })}
-        </Group>
+        <RoleTabBar items={mobileItems} isActive={isActive} />
       </AppShell.Footer>
     </AppShell>
   );

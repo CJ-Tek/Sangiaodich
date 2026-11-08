@@ -10,9 +10,10 @@ export function LogoutButton({ fullWidth }: { fullWidth?: boolean }) {
 
   return (
     <Button
-      color="red"
-      variant="light"
+      color="gray"
+      variant="subtle"
       fullWidth={fullWidth}
+      justify={fullWidth ? 'flex-start' : undefined}
       size="sm"
       onClick={async () => {
         await fetch('/api/auth/logout', { method: 'POST' });
