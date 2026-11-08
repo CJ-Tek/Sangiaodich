@@ -20,6 +20,8 @@ export const colors = {
 
   warning: '#A67C3D',
   warningSoft: '#F5EDE0',
+  /** `warning` darkened for body text (≥ 4.5:1 on white). */
+  warningText: '#8A6428',
 
   danger: '#A65D5D',
   dangerSoft: '#F5E8E8',

@@ -295,6 +295,8 @@ export function LoginForm() {
     }
   }
 
+  const passwordToggleProps = { 'aria-label': t('togglePassword') };
+
   const termsLabel = (
     <Text size="sm">
       {t('termsPrefix')}{' '}
@@ -309,10 +311,14 @@ export function LoginForm() {
       <Stack gap="md">
         <div>
           <Title
-            order={2}
+            order={1}
             fw={600}
             className="vbnb-text-balance"
-            style={{ letterSpacing: typography.title.letterSpacing }}
+            style={{
+              letterSpacing: typography.title.letterSpacing,
+              fontSize: typography.title.fontSize,
+              lineHeight: typography.title.lineHeight,
+            }}
           >
             {tCommon('appName')}
           </Title>
@@ -335,7 +341,14 @@ export function LoginForm() {
         />
 
         {mode === 'login' ? (
-          <Stack gap="sm">
+          <Stack
+            gap="sm"
+            component="form"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!loading) void passwordLogin();
+            }}
+          >
             <TextInput
               label={t('identifierLabel')}
               description={t('identifierPhoneHint')}
@@ -350,6 +363,7 @@ export function LoginForm() {
               value={password}
               autoComplete="current-password"
               onChange={(e) => setPassword(e.currentTarget.value)}
+              visibilityToggleButtonProps={passwordToggleProps}
             />
             <Checkbox
               checked={rememberAccount}
@@ -360,11 +374,7 @@ export function LoginForm() {
               }}
               label={t('rememberAccount')}
             />
-            <Button
-              color="vbnbGreen"
-              loading={loading}
-              onClick={passwordLogin}
-            >
+            <Button type="submit" color="vbnbGreen" loading={loading}>
               {t('loginButton')}
             </Button>
           </Stack>
@@ -448,6 +458,7 @@ export function LoginForm() {
                 <PasswordInput
                   label={t('passwordLabel')}
                   required
+                  visibilityToggleButtonProps={passwordToggleProps}
                   description={t('passwordMinHint')}
                   value={password}
                   onChange={(e) => setPassword(e.currentTarget.value)}
@@ -455,6 +466,7 @@ export function LoginForm() {
                 <PasswordInput
                   label={t('confirmPasswordLabel')}
                   required
+                  visibilityToggleButtonProps={passwordToggleProps}
                   value={password2}
                   onChange={(e) => setPassword2(e.currentTarget.value)}
                 />
@@ -500,6 +512,7 @@ export function LoginForm() {
                 <PasswordInput
                   label={t('passwordLabel')}
                   required
+                  visibilityToggleButtonProps={passwordToggleProps}
                   description={t('passwordMinHint')}
                   value={password}
                   onChange={(e) => setPassword(e.currentTarget.value)}
@@ -507,6 +520,7 @@ export function LoginForm() {
                 <PasswordInput
                   label={t('confirmPasswordLabel')}
                   required
+                  visibilityToggleButtonProps={passwordToggleProps}
                   value={password2}
                   onChange={(e) => setPassword2(e.currentTarget.value)}
                 />

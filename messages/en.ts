@@ -76,6 +76,7 @@ const messages = {
     "passwordLabel": "Password",
     "rememberAccount": "Remember account",
     "loginButton": "Log in",
+    "togglePassword": "Show or hide password",
     "roleQuestion": "Which role are you joining as?",
     "roleFixedNote": "Role is fixed to your account — it cannot be changed after registration.",
     "continue": "Continue",
@@ -394,7 +395,9 @@ const messages = {
       "description": "Filter by location and owner-listed amenities. Prices are not shown.",
       "emptyTitle": "No results",
       "emptyDescription": "Try a different keyword, fewer tags, or adjust budget / guest count.",
-      "clearFilters": "Clear filters"
+      "clearFilters": "Clear filters",
+      "emptyCatalogTitle": "No villas on the marketplace yet",
+      "emptyCatalogDescription": "Villas show up here once owners list them and they are approved. Check back soon."
     },
     "signup": {
       "text": "Create an account so sales can finalize bookings and you can track your history.",

@@ -1,9 +1,10 @@
 'use client';
 
-import { Stack, Text, Button, Title, Box } from '@mantine/core';
+import { Stack, Text, Button, Box } from '@mantine/core';
 import { colors, spacing } from '@/config/design-tokens';
 import { Link } from '@/lib/i18n/navigation';
 import { SurfaceCard } from '@/components/ui/SurfaceCard';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 
 export function EmptyState({
   title,
@@ -11,12 +12,15 @@ export function EmptyState({
   actionLabel,
   onAction,
   href,
+  actionVariant = 'filled',
 }: {
   title: string;
   description?: string;
   actionLabel?: string;
   onAction?: () => void;
   href?: string;
+  /** Use a quieter variant when the page already has its own primary action. */
+  actionVariant?: 'filled' | 'light' | 'default';
 }) {
   return (
     <SurfaceCard py={spacing['5xl']} px="md">
@@ -41,21 +45,32 @@ export function EmptyState({
             }}
           />
         </Box>
-        <Title order={4} fw={600} ta="center" className="vbnb-text-balance">
+        <SectionTitle ta="center" className="vbnb-text-balance">
           {title}
-        </Title>
+        </SectionTitle>
         {description ? (
           <Text c="dimmed" size="sm" ta="center" maw={360} style={{ lineHeight: 1.55 }}>
             {description}
           </Text>
         ) : null}
         {actionLabel && href ? (
-          <Button component={Link} href={href} color="vbnbGreen" mt="xs">
+          <Button
+            component={Link}
+            href={href}
+            color="vbnbGreen"
+            variant={actionVariant}
+            mt="xs"
+          >
             {actionLabel}
           </Button>
         ) : null}
         {actionLabel && onAction && !href ? (
-          <Button onClick={onAction} color="vbnbGreen" mt="xs">
+          <Button
+            onClick={onAction}
+            color="vbnbGreen"
+            variant={actionVariant}
+            mt="xs"
+          >
             {actionLabel}
           </Button>
         ) : null}

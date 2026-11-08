@@ -1,6 +1,6 @@
 'use client';
 
-import { Divider, Group, Paper, Stack, Text } from '@mantine/core';
+import { Divider, Group, Paper, Stack, Text, Timeline } from '@mantine/core';
 import { useLocale, useTranslations } from 'next-intl';
 import { BookingStatusBadge } from '@/components/bookings/BookingStatusBadge';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
@@ -47,6 +47,11 @@ export function GuestBookingDetailCard({
   function money(n: number) {
     return formatCurrency(Number(n || 0), locale);
   }
+
+  const lastDoneStep = booking.timeline.reduce(
+    (last, step, i) => (step.at ? i : last),
+    -1
+  );
 
   function moment(iso: string | null) {
     if (!iso) return null;
@@ -96,7 +101,19 @@ export function GuestBookingDetailCard({
             />
           ) : null}
           <Divider my={4} />
-          <Row label={t('remaining')} value={money(booking.remaining)} />
+          <Group justify="space-between" wrap="nowrap" align="baseline">
+            <Text size="sm" fw={600}>
+              {t('remaining')}
+            </Text>
+            <Text
+              fw={700}
+              size="lg"
+              className="vbnb-tabular-nums"
+              c={booking.remaining > 0 ? colors.warningText : 'vbnbGreen.6'}
+            >
+              {money(booking.remaining)}
+            </Text>
+          </Group>
           {booking.refundAmount > 0 ? (
             <Row label={t('refunded')} value={money(booking.refundAmount)} />
           ) : null}
@@ -115,13 +132,29 @@ export function GuestBookingDetailCard({
           <SectionTitle level="card" order={2}>
             {t('timeline')}
           </SectionTitle>
-          {booking.timeline.map((step) => (
-            <Row
-              key={step.step}
-              label={tTimeline(step.step)}
-              value={moment(step.at) || t('notYet')}
-            />
-          ))}
+          <Timeline
+            active={lastDoneStep}
+            bulletSize={16}
+            lineWidth={2}
+            color="vbnbGreen"
+            mt={6}
+          >
+            {booking.timeline.map((step) => (
+              <Timeline.Item
+                key={step.step}
+                color={step.step === 'cancelled' ? 'red' : undefined}
+                title={
+                  <Text size="sm" fw={step.at ? 600 : 500} c={step.at ? undefined : 'dimmed'}>
+                    {tTimeline(step.step)}
+                  </Text>
+                }
+              >
+                <Text size="xs" c="dimmed">
+                  {moment(step.at) || t('notYet')}
+                </Text>
+              </Timeline.Item>
+            ))}
+          </Timeline>
         </Stack>
       </Card>
 

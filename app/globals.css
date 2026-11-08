@@ -183,6 +183,40 @@ a {
   font-weight: 600;
 }
 
+/* Booking list on phones: each card is one link. */
+.vbnb-booking-card {
+  display: block;
+  padding: 14px 16px;
+  border: 1px solid var(--vbnb-border);
+  border-radius: 14px;
+  background: var(--vbnb-surface);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 200ms var(--vbnb-ease);
+}
+
+.vbnb-booking-card:active {
+  border-color: var(--vbnb-primary);
+}
+
+.vbnb-booking-card:focus-visible,
+.vbnb-row-link:focus-visible {
+  outline: 2px solid var(--vbnb-primary);
+  outline-offset: 2px;
+}
+
+/* Primary cell in a clickable table row: real link for keyboard and new-tab use. */
+.vbnb-row-link {
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  color: var(--vbnb-text);
+  text-decoration: none;
+}
+
+.vbnb-row-link:hover {
+  text-decoration: underline;
+}
+
 /* Subscription plan option: whole card is the button. */
 .vbnb-plan-option {
   display: flex;

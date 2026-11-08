@@ -76,6 +76,7 @@ const messages = {
     "passwordLabel": "Mật khẩu",
     "rememberAccount": "Lưu tài khoản",
     "loginButton": "Đăng nhập",
+    "togglePassword": "Hiện hoặc ẩn mật khẩu",
     "roleQuestion": "Bạn tham gia với vai trò nào?",
     "roleFixedNote": "Role gắn cố định với tài khoản — không đổi sau khi đăng ký.",
     "continue": "Tiếp tục",
@@ -394,7 +395,9 @@ const messages = {
       "description": "Lọc theo địa điểm và thuộc tính chủ nhà đã đăng. Không hiển thị giá.",
       "emptyTitle": "Không tìm thấy",
       "emptyDescription": "Thử từ khóa khác, bớt thuộc tính, hoặc nới ngân sách / số khách.",
-      "clearFilters": "Xóa bộ lọc"
+      "clearFilters": "Xóa bộ lọc",
+      "emptyCatalogTitle": "Chưa có villa nào trên sàn",
+      "emptyCatalogDescription": "Villa sẽ xuất hiện ở đây khi chủ nhà đăng và được duyệt. Bạn quay lại sau nhé."
     },
     "signup": {
       "text": "Tạo tài khoản để sale chốt booking và bạn theo dõi được lịch sử.",
