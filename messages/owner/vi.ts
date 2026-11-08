@@ -5,7 +5,7 @@ export const ownerVi = {
     pending: 'Chờ xác nhận',
     settlements: 'Quyết toán',
     newAsset: 'Thêm căn mới',
-    subscription: 'Gói subscription',
+    subscription: 'Phí sàn',
     profile: 'Hồ sơ',
     calendar: 'Lịch',
     platformFee: 'Phí sàn',
@@ -22,18 +22,18 @@ export const ownerVi = {
   home: {
     greeting: 'Xin chào, {name}',
     greetingFallback: 'Chủ nhà',
-    description: 'Tổng quan danh mục — P&L từ booking đã chốt.',
+    description: 'Tổng quan căn của bạn và thu nhập từ booking đã chốt.',
     settlements: 'Quyết toán',
     newAsset: 'Thêm căn mới',
-    subActiveDesc: 'Tài khoản Owner đã kích hoạt',
-    subInactiveDesc: 'Chưa có gói active — gia hạn để đăng listing',
-    subActiveAction: 'Gói subscription',
+    subActiveDesc: 'Căn của bạn đang hiển thị trên sàn',
+    subInactiveDesc: 'Gia hạn để đăng căn và nhận booking mới',
+    subActiveAction: 'Phí sàn',
     subInactiveAction: 'Gia hạn',
     noPayoutTitle: 'Chưa cấu hình STK nhận tiền',
     noPayoutDesc:
       'Sale cần STK để CK phần cost. Không chặn listing — vào Hồ sơ để điền tài khoản ngân hàng.',
     openProfile: 'Mở hồ sơ',
-    pnl: 'P&L chủ nhà',
+    pnl: 'Thu nhập chủ nhà',
     lifetimeHint: 'Tích lũy từ booking đã chốt',
     settledBookings: 'Booking đã quyết toán',
     settledHint: 'Đã chốt',
@@ -43,7 +43,7 @@ export const ownerVi = {
   assets: {
     title: 'Danh sách căn',
     description:
-      'CRUD + cost WD/WE + chiết khấu Sale theo căn. Nộp duyệt để lên sàn.',
+      'Quản lý căn, giá vốn ngày thường / cuối tuần và chiết khấu cho Sale. Gửi duyệt để căn lên sàn.',
     newAsset: 'Thêm căn mới',
     emptyTitle: 'Chưa có căn',
     emptyDesc: 'Tạo listing đầu tiên để gửi duyệt.',
@@ -254,12 +254,13 @@ export const ownerVi = {
     noPayoutDesc:
       'Sale cần STK để CK phần cost sau khi thu khách. Điền bên dưới — áp dụng mọi căn của bạn.',
     seeAlso: 'Xem thêm:',
-    subscription: 'Gói subscription',
+    subscription: 'Phí sàn',
   },
   subscription: {
-    title: 'Gói subscription',
+    title: 'Phí sàn',
     description:
-      'Chọn gói để duy trì listing trên sàn. Gia hạn sớm được cộng vào ngày hết hạn hiện tại (tháng lịch).',
+      'Chọn gói để căn tiếp tục hiển thị trên sàn. Gia hạn sớm sẽ được cộng nối tiếp vào ngày hết hạn hiện tại.',
+    currentPlan: 'Gói hiện tại',
     status: 'Trạng thái',
     extendNote: 'Gói mới sẽ được cộng thêm vào hạn {periodEnd}.',
     noPeriod:

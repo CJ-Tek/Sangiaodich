@@ -5,13 +5,15 @@ export const subscriptionVi = {
     paymentReceived: 'Đã nhận thanh toán — subscription được kích hoạt',
     gatewayNotReady: 'Gateway chưa sẵn sàng',
     gatewayOpenFailed: 'Lỗi mở cổng SePay',
-    choosePlanTitle: 'Chọn gói subscription',
+    choosePlanTitle: 'Chọn gói gia hạn',
     choosePlanDesc:
       'Chạm gói để tạo QR — số tiền và nội dung CK đã sẵn trong QR, không cần nhập tay.',
     pendingTitle: 'Đang chờ thanh toán',
     pendingDesc:
       'Sau khi chuyển khoản, trang sẽ tự cập nhật trong 1–3 phút, không cần refresh. Nếu quá 15 phút chưa kích hoạt, liên hệ Admin.',
     selectedPlan: 'Gói đã chọn',
+    choosePlanCta: 'Chọn gói này →',
+    selectedPlanShort: 'Đang chọn',
     qrScanHint:
       'Quét QR bằng app ngân hàng — nội dung CK đã điền sẵn mã {paymentCode}.',
     qrAlt: 'QR thanh toán subscription',

@@ -172,6 +172,60 @@ a {
   font-weight: 600;
 }
 
+/* Subscription plan option: whole card is the button. */
+.vbnb-plan-option {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-height: 120px;
+  padding: 16px;
+  text-align: left;
+  border: 2px solid var(--vbnb-border);
+  border-radius: 14px;
+  background: var(--vbnb-surface);
+  box-shadow: var(--vbnb-shadow-card);
+  transition:
+    border-color 200ms var(--vbnb-ease),
+    box-shadow 200ms var(--vbnb-ease),
+    background-color 200ms var(--vbnb-ease),
+    transform 200ms var(--vbnb-ease);
+}
+
+.vbnb-plan-option:hover:not(:disabled) {
+  border-color: var(--vbnb-primary);
+  box-shadow: var(--vbnb-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.vbnb-plan-option:focus-visible {
+  outline: 2px solid var(--vbnb-primary);
+  outline-offset: 2px;
+}
+
+.vbnb-plan-option[data-selected] {
+  border-color: var(--vbnb-primary);
+  background: var(--vbnb-primary-soft);
+}
+
+.vbnb-plan-option__cta {
+  color: var(--vbnb-primary-dark);
+}
+
+.vbnb-plan-option[data-selected] .vbnb-plan-option__cta {
+  color: var(--vbnb-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vbnb-plan-option {
+    transition: none;
+  }
+
+  .vbnb-plan-option:hover:not(:disabled) {
+    transform: none;
+  }
+}
+
 /* Touch targets on phones: ≥ 44px for default controls (WCAG 2.5.5). */
 @media (max-width: 48em) {
   .vbnb-hit {

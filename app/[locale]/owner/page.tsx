@@ -66,59 +66,68 @@ export default async function OwnerDashboard() {
     profile!.full_name?.split(' ')[0] || t('greetingFallback');
 
   return (
-    <Stack gap={40}>
+    <>
       <PageHeader
         title={t('greeting', { name: firstName })}
         description={t('description')}
         action={
-          <Group gap="sm">
-            <LinkButton href="/owner/bookings" variant="default">
-              {t('settlements')}
-            </LinkButton>
-            <LinkButton href="/owner/assets/new" color="vbnbGreen">
-              {t('newAsset')}
-            </LinkButton>
-          </Group>
+          active ? (
+            <Group gap="sm">
+              <LinkButton href="/owner/bookings" variant="default">
+                {t('settlements')}
+              </LinkButton>
+              <LinkButton href="/owner/assets/new" color="vbnbGreen">
+                {t('newAsset')}
+              </LinkButton>
+            </Group>
+          ) : undefined
         }
       />
 
-      <SubscriptionStatusBanner
-        active={active}
-        periodEnd={sub?.period_end}
-        href="/owner/subscription"
-        activeDescription={t('subActiveDesc')}
-        inactiveDescription={t('subInactiveDesc')}
-        activeActionLabel={t('subActiveAction')}
-        inactiveActionLabel={t('subInactiveAction')}
-      />
+      <Stack gap="xl">
+        <SubscriptionStatusBanner
+          active={active}
+          periodEnd={sub?.period_end}
+          href="/owner/subscription"
+          activeDescription={t('subActiveDesc')}
+          inactiveDescription={t('subInactiveDesc')}
+          activeActionLabel={t('subActiveAction')}
+          inactiveActionLabel={t('subInactiveAction')}
+        />
 
-      {!hasPayout ? (
-        <Alert color="yellow" title={t('noPayoutTitle')}>
-          {t('noPayoutDesc')}{' '}
-          <LinkButton href="/owner/profile" variant="light" color="vbnbGreen" size="xs">
-            {t('openProfile')}
-          </LinkButton>
-        </Alert>
-      ) : null}
+        {!hasPayout ? (
+          <Alert color="yellow" title={t('noPayoutTitle')}>
+            {t('noPayoutDesc')}{' '}
+            <LinkButton
+              href="/owner/profile"
+              variant="light"
+              color="vbnbGreen"
+              size="xs"
+            >
+              {t('openProfile')}
+            </LinkButton>
+          </Alert>
+        ) : null}
 
-      <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
-        <StatCard
-          label={t('pnl')}
-          value={formatVnd(pnl, locale)}
-          hint={t('lifetimeHint')}
-          emphasis="hero"
-        />
-        <StatCard
-          label={t('settledBookings')}
-          value={confirmedCount}
-          hint={t('settledHint')}
-        />
-        <StatCard
-          label={t('activeListings')}
-          value={activeListings}
-          hint={t('activeHint')}
-        />
-      </SimpleGrid>
-    </Stack>
+        <SimpleGrid cols={{ base: 1, sm: 3 }} spacing="md">
+          <StatCard
+            label={t('pnl')}
+            value={formatVnd(pnl, locale)}
+            hint={t('lifetimeHint')}
+            emphasis="hero"
+          />
+          <StatCard
+            label={t('settledBookings')}
+            value={confirmedCount}
+            hint={t('settledHint')}
+          />
+          <StatCard
+            label={t('activeListings')}
+            value={activeListings}
+            hint={t('activeHint')}
+          />
+        </SimpleGrid>
+      </Stack>
+    </>
   );
 }

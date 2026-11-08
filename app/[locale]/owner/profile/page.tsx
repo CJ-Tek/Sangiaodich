@@ -9,7 +9,6 @@ import { OwnerPayoutForm } from '@/components/owner/OwnerPayoutForm';
 import { Alert, Stack, Text } from '@mantine/core';
 import { LinkAnchor } from '@/components/ui/LinkAnchor';
 import { signIdDocUrl } from '@/lib/profile/id-docs';
-import { isSimpleUi } from '@/lib/engines/ui-mode';
 import {
   hasOwnerPayoutInfo,
   mapOwnerPayoutInfo,
@@ -36,13 +35,12 @@ export default async function OwnerProfilePage() {
   ]);
 
   const payout = mapOwnerPayoutInfo(row);
-  const simple = isSimpleUi(profile!.uiMode);
 
   return (
     <>
       <PageHeader title={t('title')} description={t('description')} />
       <Stack gap="md" maw={560}>
-        {!simple && !hasOwnerPayoutInfo(payout) ? (
+        {!hasOwnerPayoutInfo(payout) ? (
           <Alert color="yellow" title={t('noPayoutTitle')}>
             {t('noPayoutDesc')}
           </Alert>
@@ -60,7 +58,7 @@ export default async function OwnerProfilePage() {
             nationalIdBackPreview: backPreview || '',
           }}
         />
-        {simple ? null : <OwnerPayoutForm initial={payout} />}
+        <OwnerPayoutForm initial={payout} />
         <Text size="sm" c="dimmed">
           {t('seeAlso')}{' '}
           <LinkAnchor href="/owner/subscription" c="vbnbGreen.6">

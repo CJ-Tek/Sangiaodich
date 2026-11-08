@@ -5,13 +5,15 @@ export const subscriptionEn = {
     paymentReceived: 'Payment received — subscription activated',
     gatewayNotReady: 'Payment gateway not ready',
     gatewayOpenFailed: 'Could not open SePay gateway',
-    choosePlanTitle: 'Choose subscription plan',
+    choosePlanTitle: 'Choose a renewal plan',
     choosePlanDesc:
       'Tap a plan to generate a QR code — amount and transfer memo are pre-filled, no manual entry.',
     pendingTitle: 'Awaiting payment',
     pendingDesc:
       'After transfer, this page updates within 1–3 minutes — no refresh needed. If still not activated after 15 minutes, contact Admin.',
     selectedPlan: 'Selected plan',
+    choosePlanCta: 'Choose plan →',
+    selectedPlanShort: 'Selected',
     qrScanHint:
       'Scan QR with your banking app — transfer memo includes code {paymentCode}.',
     qrAlt: 'Subscription payment QR',

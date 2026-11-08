@@ -5,9 +5,9 @@ import type { AppLocale } from '@/lib/i18n/routing';
 import { createClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { LogoutButton } from '@/components/auth/LogoutButton';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import { SubscriptionPlanPicker } from '@/components/subscription/SubscriptionPlanPicker';
-import { Paper, Text, Stack } from '@mantine/core';
+import { Badge, Group, Paper, Text, Stack } from '@mantine/core';
 import { colors, radius } from '@/config/design-tokens';
 import { listActivePlansForRole } from '@/lib/engines/subscription-payment';
 import { getPendingIntentForProfile } from '@/lib/engines/subscription-payment';
@@ -47,7 +47,7 @@ export default async function OwnerSubscriptionPage() {
   return (
     <>
       <PageHeader title={t('title')} description={t('description')} />
-      <Stack gap="md" maw={640}>
+      <Stack gap="xl" maw={760}>
         <Paper
           p="lg"
           radius={radius.lg}
@@ -55,21 +55,29 @@ export default async function OwnerSubscriptionPage() {
         >
           {sub ? (
             <Stack gap="xs">
-              <Text size="sm" c="dimmed">
-                {t('status')}
-              </Text>
-              <Text fw={600} c={active ? 'vbnbGreen.7' : 'red.8'}>
-                {tStatus(
-                  active
-                    ? 'ACTIVE'
-                    : sub.status === 'PENDING_PAYMENT'
-                      ? 'PENDING_PAYMENT'
-                      : 'EXPIRED'
-                )}
-              </Text>
-              <Text size="sm" c="dimmed">
-                {formatDateRange(sub.period_start, sub.period_end, locale)}
-              </Text>
+              <Group justify="space-between" align="flex-start" wrap="wrap">
+                <div>
+                  <SectionTitle level="card" order={2}>
+                    {t('currentPlan')}
+                  </SectionTitle>
+                  <Text size="sm" c="dimmed" mt={4}>
+                    {formatDateRange(sub.period_start, sub.period_end, locale)}
+                  </Text>
+                </div>
+                <Badge
+                  variant="light"
+                  color={active ? 'vbnbGreen' : 'red'}
+                  size="lg"
+                >
+                  {tStatus(
+                    active
+                      ? 'ACTIVE'
+                      : sub.status === 'PENDING_PAYMENT'
+                        ? 'PENDING_PAYMENT'
+                        : 'EXPIRED'
+                  )}
+                </Badge>
+              </Group>
               {active ? (
                 <Text size="sm" c="dimmed">
                   {t('extendNote', {
@@ -88,7 +96,6 @@ export default async function OwnerSubscriptionPage() {
           initialPending={pending}
           gatewayEnabled={gatewayEnabled}
         />
-        <LogoutButton />
       </Stack>
     </>
   );

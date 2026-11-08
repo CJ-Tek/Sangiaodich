@@ -891,12 +891,12 @@ const messages = {
     "APARTMENT": "Căn hộ"
   },
   "subscriptionLocked": {
-    "expiredTitle": "Subscription hết hạn",
-    "pendingTitle": "Chờ kích hoạt",
-    "pendingDesc": "Chọn gói trên trang Subscription, quét QR (nội dung CK đã sẵn) để kích hoạt.",
-    "expiredDesc": "Kỳ phí đã hết. Chọn gói và thanh toán để mở lại.",
-    "inactiveDesc": "Subscription chưa ACTIVE. Vào Subscription để chọn gói.",
-    "lapsedLabel": "Hết hạn {date}",
+    "expiredTitle": "Gói đã hết hạn",
+    "pendingTitle": "Chờ kích hoạt gói",
+    "pendingDesc": "Chọn gói và quét QR (nội dung chuyển khoản đã điền sẵn) để kích hoạt.",
+    "expiredDesc": "Trang này cần gói còn hạn. Chọn gói và thanh toán để mở lại.",
+    "inactiveDesc": "Bạn chưa có gói đang hoạt động. Chọn gói để bắt đầu.",
+    "lapsedLabel": "Hết hạn từ {date}",
     "statusLabel": "Trạng thái: {status}",
     "choosePlan": "Chọn gói & thanh toán",
     "profile": "Hồ sơ cá nhân"

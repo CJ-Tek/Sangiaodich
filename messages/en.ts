@@ -891,12 +891,12 @@ const messages = {
     "APARTMENT": "Apartment"
   },
   "subscriptionLocked": {
-    "expiredTitle": "Subscription expired",
+    "expiredTitle": "Plan expired",
     "pendingTitle": "Awaiting activation",
-    "pendingDesc": "Choose a plan on the Subscription page and scan the QR code (transfer memo included) to activate.",
-    "expiredDesc": "Your billing period has ended. Choose a plan and pay to restore access.",
-    "inactiveDesc": "Subscription is not active. Go to Subscription to choose a plan.",
-    "lapsedLabel": "Expired {date}",
+    "pendingDesc": "Choose a plan and scan the QR code (transfer memo included) to activate.",
+    "expiredDesc": "This page needs an active plan. Choose a plan and pay to restore access.",
+    "inactiveDesc": "You don't have an active plan yet. Choose one to get started.",
+    "lapsedLabel": "Expired since {date}",
     "statusLabel": "Status: {status}",
     "choosePlan": "Choose plan & pay",
     "profile": "Profile"

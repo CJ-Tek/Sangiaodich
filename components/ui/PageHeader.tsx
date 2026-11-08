@@ -33,30 +33,35 @@ export function PageHeader({
         </Text>
       ) : null}
       <Group justify="space-between" align="flex-start" gap="md" wrap="wrap">
-        <Title
-          order={1}
-          className="vbnb-text-balance"
-          style={{
-            color: colors.textPrimary,
-            letterSpacing: typography.title.letterSpacing,
-            fontSize: typography.title.fontSize,
-            lineHeight: typography.title.lineHeight,
-            fontWeight: typography.title.fontWeight,
-          }}
-        >
-          {title}
-        </Title>
+        <Stack gap={8} style={{ flex: '1 1 20rem', minWidth: 0 }}>
+          <Title
+            order={1}
+            className="vbnb-text-balance"
+            style={{
+              color: colors.textPrimary,
+              letterSpacing: typography.title.letterSpacing,
+              fontSize: typography.title.fontSize,
+              lineHeight: typography.title.lineHeight,
+              fontWeight: typography.title.fontWeight,
+            }}
+          >
+            {title}
+          </Title>
+          {description ? (
+            <Text
+              c="dimmed"
+              size="sm"
+              style={{
+                maxWidth: `${42}rem`,
+                lineHeight: typography.body.lineHeight,
+              }}
+            >
+              {description}
+            </Text>
+          ) : null}
+        </Stack>
         {action}
       </Group>
-      {description ? (
-        <Text
-          c="dimmed"
-          size="sm"
-          style={{ maxWidth: `${42}rem`, lineHeight: typography.body.lineHeight }}
-        >
-          {description}
-        </Text>
-      ) : null}
     </Stack>
   );
 }
