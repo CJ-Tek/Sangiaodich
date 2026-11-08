@@ -20,19 +20,25 @@ function payKind(row: GuestBookingListItem): 'paid' | 'owner' | 'sale' {
   return row.remainderPayee === 'OWNER' ? 'owner' : 'sale';
 }
 
-function PaymentText({ row }: { row: GuestBookingListItem }) {
+function PaymentText({
+  row,
+  align = 'left',
+}: {
+  row: GuestBookingListItem;
+  align?: 'left' | 'right';
+}) {
   const t = useTranslations('guest.bookings');
   const { formatNumber } = useFormat();
   if (row.remaining <= 0) {
     return (
-      <Text size="sm" c="vbnbGreen.6">
+      <Text size="sm" c="vbnbGreen.6" ta={align}>
         {t('paidFull')}
       </Text>
     );
   }
   const amount = formatNumber(row.remaining);
   return (
-    <Text size="sm" fw={500} c={colors.warningText} ta="right">
+    <Text size="sm" fw={500} c={colors.warningText} ta={align}>
       {row.remainderPayee === 'OWNER'
         ? t('remainingOwner', { amount })
         : t('remainingSale', { amount })}
@@ -153,7 +159,7 @@ export function GuestBookingsList({
                   <Text size="sm" fw={600} className="vbnb-tabular-nums">
                     {formatNumber(b.listPrice)}
                   </Text>
-                  <PaymentText row={b} />
+                  <PaymentText row={b} align="right" />
                 </Group>
               </Link>
             ))}
