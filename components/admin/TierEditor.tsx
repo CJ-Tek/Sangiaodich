@@ -127,6 +127,7 @@ export function TierEditor({
         label={t('sort')}
         value={form.sort}
         onChange={(v) => setForm((f) => ({ ...f, sort: Number(v) || 0 }))}
+        hideControls
       />
       <TextInput
         label={t('labelField')}
@@ -143,6 +144,7 @@ export function TierEditor({
           setForm((f) => ({ ...f, minBooks: Number(v) || 0 }))
         }
         min={0}
+        hideControls
       />
       <NumberInput
         label={t('minGmv')}
@@ -152,12 +154,14 @@ export function TierEditor({
         }
         thousandSeparator="."
         decimalSeparator=","
+        hideControls
       />
       <Button
         color="vbnbGreen"
+        variant={compact ? 'light' : 'filled'}
         loading={loading}
         onClick={save}
-        size={compact ? 'xs' : 'sm'}
+        size="sm"
         w="fit-content"
       >
         {t('saveTier')}

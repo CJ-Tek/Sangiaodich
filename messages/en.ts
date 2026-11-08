@@ -1031,7 +1031,7 @@ const messages = {
       "lapsedUntil": "Expired {date}",
       "statusUntil": "{status} · until {date}",
       "removeSub": "Remove sub",
-      "trash": "Trash",
+      "trash": "Move to trash",
       "restore": "Restore",
       "hardDelete": "Delete permanently",
       "cannotTrashSelf": "Cannot trash the currently logged-in account",
@@ -1121,12 +1121,21 @@ const messages = {
       "needAmount": "Need {expected} · received {received}",
       "noPaymentCode": "No payment code",
       "unprocessed": "Unprocessed",
-      "sepayId": "SePay #{id}"
+      "sepayId": "SePay #{id}",
+      "sources": {
+        "bank_webhook": "Bank",
+        "gateway_ipn": "SePay gateway"
+      },
+      "notes": {
+        "NO_PAYMENT_CODE": "Transfer memo has no payment code",
+        "INTENT_NOT_FOUND": "No matching payment code found"
+      }
     },
     "markPaid": {
       "noPlans": "No plans",
       "button": "Mark paid",
       "menuLabel": "Choose plan to activate",
+      "confirm": "Record {amount} as received and activate the {plan} plan? Only do this after checking the bank statement.",
       "success": "Activated / renewed per plan"
     }
   },

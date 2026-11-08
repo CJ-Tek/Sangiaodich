@@ -20,7 +20,16 @@ export function MarkPaidButton({
   const { formatVnd, planDurationLabel } = useFormat();
   const [loading, setLoading] = useState(false);
 
-  async function mark(planId: string) {
+  async function mark(plan: SubscriptionPlan) {
+    const planName = plan.label || planDurationLabel(plan.months);
+    if (
+      !window.confirm(
+        t('confirm', { plan: planName, amount: formatVnd(plan.amount) })
+      )
+    ) {
+      return;
+    }
+    const planId = plan.id;
     setLoading(true);
     try {
       const res = await fetch('/api/admin', {
@@ -49,23 +58,23 @@ export function MarkPaidButton({
 
   if (!plans.length) {
     return (
-      <Button size="xs" color="vbnbGreen" disabled>
+      <Button size="xs" variant="default" disabled>
         {t('noPlans')}
       </Button>
     );
   }
 
   return (
-    <Menu shadow="md" width={220}>
+    <Menu shadow="md" width={240}>
       <Menu.Target>
-        <Button size="xs" color="vbnbGreen" loading={loading}>
+        <Button size="xs" variant="default" loading={loading}>
           {t('button')}
         </Button>
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Label>{t('menuLabel')}</Menu.Label>
         {plans.map((p) => (
-          <Menu.Item key={p.id} onClick={() => mark(p.id)}>
+          <Menu.Item key={p.id} onClick={() => mark(p)}>
             {p.label || planDurationLabel(p.months)} — {formatVnd(p.amount)}
           </Menu.Item>
         ))}

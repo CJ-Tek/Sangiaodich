@@ -3,6 +3,7 @@
 import {
   Badge,
   Button,
+  Divider,
   Group,
   Pagination,
   Stack,
@@ -151,16 +152,17 @@ function UserCard({
                   ) : null}
                 </>
               )}
+              <Divider orientation="vertical" mx={4} />
               {isSelf ? (
                 <Tooltip label={t('cannotTrashSelf')}>
-                  <Button size="xs" variant="light" color="red" disabled>
+                  <Button size="xs" variant="subtle" color="red" disabled>
                     {t('trash')}
                   </Button>
                 </Tooltip>
               ) : (
                 <Button
                   size="xs"
-                  variant="light"
+                  variant="subtle"
                   color="red"
                   loading={loading}
                   onClick={() => onAction('soft_delete_user', user.id)}

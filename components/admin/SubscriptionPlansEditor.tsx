@@ -17,6 +17,7 @@ import { useState } from 'react';
 import { useRouter } from '@/lib/i18n/navigation';
 import { useFormat } from '@/lib/i18n/use-format';
 import { colors, radius } from '@/config/design-tokens';
+import { SectionTitle } from '@/components/ui/SectionTitle';
 import type { SubscriptionPlan } from '@/lib/engines/subscription-plans';
 
 export function SubscriptionPlansEditor({
@@ -139,7 +140,7 @@ function PlanRow({
     >
       <Stack gap="sm">
         <Group justify="space-between">
-          <Text size="sm" fw={600}>
+          <SectionTitle level="card" order={2}>
             {planDurationLabel(plan.months)}
             <Text span size="xs" c="dimmed" fw={400} ml={8}>
               {t('planMonthsCurrent', {
@@ -147,7 +148,7 @@ function PlanRow({
                 amount: formatVnd(plan.amount),
               })}
             </Text>
-          </Text>
+          </SectionTitle>
           <Switch
             label={t('planActive')}
             checked={active}
@@ -167,6 +168,7 @@ function PlanRow({
           thousandSeparator="."
           decimalSeparator=","
           min={1000}
+          hideControls
         />
         <NumberInput
           label={t('planCompareAt')}
@@ -179,6 +181,7 @@ function PlanRow({
           decimalSeparator=","
           min={0}
           allowNegative={false}
+          hideControls
         />
         {preview ? (
           <Text size="xs" c="vbnbGreen.6" fw={500}>
@@ -186,8 +189,9 @@ function PlanRow({
           </Text>
         ) : null}
         <Button
-          size="xs"
+          size="sm"
           color="vbnbGreen"
+          variant="light"
           loading={loading}
           onClick={save}
           w="fit-content"
