@@ -1165,21 +1165,18 @@ a {
   .vbnb-hero__grid {
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
     gap: 56px;
-  }
-
-  .vbnb-hero__copy {
-    padding-bottom: 72px;
+    align-items: stretch;
   }
 
   .vbnb-hero__media {
     aspect-ratio: auto;
-    height: clamp(460px, 62dvh, 580px);
+    height: auto;
+    min-height: 0;
     border-radius: 24px;
   }
 
   .vbnb-hero__search {
-    margin-top: -64px;
-    padding-inline: 32px;
+    margin-top: 28px;
   }
 }
 
